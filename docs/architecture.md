@@ -322,12 +322,12 @@ Le rendu SVG de contrôle (cuivre + trajets FlatCAM superposés) est écrit dans
 
 | Mesure                                                                         | Résultat | Objectif         |
 | ------------------------------------------------------------------------------ | -------- | ---------------- |
-| Parsing d'un fichier de 9,3 Mo (2 cartes denses 10 x 10 cm avec plan de masse) | 0,5 s    | < 3 s pour 5 Mo  |
-| Construction du cuivre de ce fichier                                           | 6,9 s    | (pas d'objectif) |
+| Parsing d'un fichier de 9,2 Mo (2 cartes denses 10 x 10 cm avec plan de masse) | 0,4 s    | < 3 s pour 5 Mo  |
+| Construction du cuivre de ce fichier                                           | 2,6 s    | (pas d'objectif) |
 
-La construction du cuivre coûte environ 3,5 s par carte dense avec plan de masse ; elle tournera dans un Worker
-avec barre de progression. Si cela gêne à l'usage, deux pistes : `clipper2-wasm` pour cette étape, ou fusion
-hiérarchique des lots.
+La construction du cuivre coûte environ 1,3 s par carte dense avec plan de masse ; elle tourne dans un Worker
+avec barre de progression (jalon J4). Correction : la première version de ce document indiquait 6,9 s, mesure
+faussée par un défaut du générateur de test (coordonnées décimales lues en millimètres), corrigé au jalon J4.
 
 ### 7.5 Workers et annulation
 
@@ -383,3 +383,65 @@ Rappel du piège Excellon : `LZ` signifie que les zéros **de tête sont écrits
 
 Aucun fichier Excellon réel n'est encore dans les fixtures. Proteus peut exporter le perçage en Excellon (réglage
 de la sortie CADCAM) ; des fichiers KiCad (`-PTH.drl`, `-NPTH.drl`) ou Eagle seraient aussi utiles.
+
+---
+
+## 9. Résultats du jalon J4 (rendu et interface minimale)
+
+### 9.1 Ce qui est livré
+
+| Module                       | Contenu                                                                                                                                                                                                                                        |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workers/`                   | Worker d'import (`import.worker.ts`) : détection Excellon / Gerber, lecture, construction, renvoi de la géométrie en `Int32Array` transférable (sans copie) ; progression limitée à un message toutes les 50 ms ; annulation par `terminate()` |
+| `project/`                   | couches du projet (fonctions pures) : couleur de la charte par type, empilement naturel (cuivre dessous < cuivre dessus < contour < perçage), visibilité, ordre, suppression, boîte englobante                                                 |
+| `render/viewport.ts`         | conversion carte ↔ écran (mm, Y vers le haut), zoom autour du curseur, déplacement, « tout afficher », pas de grille 1-2-5                                                                                                                     |
+| `render/renderer.ts`         | interface `Renderer` indépendante du moteur ; fond du canvas proposé : **`#1f101c`**, prune très sombre dérivé de `#4b2a46`                                                                                                                    |
+| `render/canvas2dRenderer.ts` | implémentation Canvas 2D                                                                                                                                                                                                                       |
+| `ui/`                        | en-tête avec logo, import par bouton ou glisser-déposer, carte d'exemple embarquée (FTDI_Max), panneau « Projet », vue canvas, barre d'état, FR / EN                                                                                           |
+
+### 9.2 Fluidité (critère du jalon)
+
+Carte dense de référence : 10 x 10 cm, 2 500 pastilles, 9 600 segments de piste et plan de masse, soit
+216 polygones et 280 000 points. Mesures dans Chrome (GPU Intel UHD), moyenne sur 30 images :
+
+| Fenêtre     | Image pendant un zoom / déplacement | Image exacte au repos |
+| ----------- | ----------------------------------- | --------------------- |
+| 1600 x 900  | **2,9 ms**                          | 40 ms                 |
+| 2560 x 1440 | **3,7 ms**                          | 57 ms                 |
+
+Le budget d'une image à 60 fps est de 16,7 ms. Deux techniques combinées :
+
+1. **Niveaux de détail** : à chaque puissance de deux de l'échelle, une copie simplifiée de la géométrie (points
+   espacés d'au moins un demi-pixel) ; erreur invisible, et l'image exacte passe de 113 ms à 24 ms.
+2. **Réutilisation de l'image** pendant le mouvement : la dernière image complète est déplacée et mise à l'échelle,
+   puis une image exacte est dessinée 120 ms après le dernier mouvement. Seul effet visible : pendant un déplacement,
+   les bords nouvellement découverts restent vides un instant.
+
+La transformation utilisée pour réutiliser l'image est testée (`viewChangeTransform`).
+Mesure reproductible : `npm run bench` écrit `test-output/dense-board.gbr`, puis
+`npm run dev` et `http://localhost:5173/?load=/test-output/dense-board.gbr`, et dans la console
+`measureFrames(30, "interactive")` (outil de développement absent de la version de production).
+
+### 9.3 Interface
+
+- Import : bouton « Ouvrir des fichiers », glisser-déposer n'importe où dans la fenêtre, plusieurs fichiers à la fois ;
+  la vue s'ajuste une seule fois, quand tous les fichiers d'un même lot sont lus.
+- Panneau « Projet » : par couche, visibilité, couleur, monter / descendre, retirer ; badge du type détecté et du
+  nombre d'avertissements ; détails (source de la détection, statistiques, temps, forets avec métallisation,
+  avertissements traduits avec leur numéro de ligne).
+- Vue : molette (zoom autour du curseur), glisser (bouton gauche ou milieu), double-clic ou F (tout afficher),
+  flèches et +/− au clavier, grille (G), origine Gerber (O), mesure de distance (M, deux clics, Échap).
+- Barre d'état : coordonnées du curseur en mm (3 décimales, séparateur décimal de la langue), mesure Δx / Δy /
+  distance, pas de grille, échelle.
+- Accessibilité : tous les boutons ont un libellé ARIA et une infobulle simple (`title`) ; le canvas est focalisable
+  et pilotable au clavier.
+
+### 9.4 Limites connues
+
+- Les infobulles sont pour l'instant de simples `title` : le composant `HelpTip` complet (section 6.11) arrive au
+  jalon J4b, avec les polices auto-hébergées et la page `styleguide`. Aucun paramètre d'usinage n'existe encore,
+  donc aucune infobulle illustrée n'est due à ce stade.
+- Le logo est affiché en blanc par un masque CSS appliqué au fichier d'origine (pas de redessin) ; une version
+  blanche officielle du logo horizontal serait préférable.
+- La mesure n'accroche pas encore les centres de trous ni les bords de pastilles.
+- Pas encore de sauvegarde du projet (jalon J10).

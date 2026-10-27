@@ -1,7 +1,8 @@
-# TypeScript, JavaScript and Svelte follow the Allman brace style, which Prettier cannot produce: ESLint formats them.
+# TypeScript, JavaScript, Svelte and CSS follow the Allman brace style, which Prettier cannot produce.
 *.ts
 *.js
 *.svelte
+*.css
 node_modules/
 dist/
 coverage/
