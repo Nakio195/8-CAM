@@ -1,7 +1,11 @@
-/* 8 Fablab Drôme brand tokens (specification section 6.13). Fonts and full components arrive in milestone J4b. */
+/*
+ * 8 Fablab Drôme design tokens (specification section 6.13), single source of truth: the contrast tests read this file.
+ * Theme: automatic (system), or forced with <html data-theme="light"> / <html data-theme="dark">.
+ */
 
 :root
 {
+  /* Brand palette, "Identité visuelle 8 Fablab 2023" */
   --brand-prune: #4b2a46;
   --brand-prune-light: #e4dfe3;
   --brand-rouge: #eb0a4b;
@@ -15,33 +19,79 @@
   --accent-cowork: #7d64d2;
   --accent-cowork-light: #ebe7f8;
 
+  /*
+   * Accessibility derivative: white text on the brand red reaches 4.49:1, just under WCAG AA (4.5:1).
+   * Buttons carrying white text use this slightly deeper red (5.38:1); graphics keep the brand red.
+   */
+  --brand-rouge-strong: #d4083f;
+
   /* Semantic tokens, light theme */
   --surface: #ffffff;
   --surface-panel: #f6f3f5;
-  --surface-sunken: var(--brand-prune-light);
-  --text: var(--brand-prune);
+  --surface-sunken: #e4dfe3;
+  --text: #4b2a46;
   --text-muted: #6f5a6c;
   --border: #d6ccd4;
-  --header-background: var(--brand-prune);
+  --header-background: #4b2a46;
   --header-text: #ffffff;
-  --action: var(--brand-rouge);
+  --focus: #7d64d2;
+
+  --action-background: #d4083f;
   --action-text: #ffffff;
-  --focus: var(--accent-cowork);
-  --warning-background: var(--accent-pro-light);
-  --error-background: var(--brand-rouge-light);
+  --secondary-background: #faa0cd;
+  --secondary-text: #4b2a46;
+
+  --success-background: #ddf5ef;
+  --success-text: #4b2a46;
+  --success-accent: #1ebe96;
+  --warning-background: #fff7b2;
+  --warning-text: #4b2a46;
+  --warning-accent: #ffe600;
+  --error-background: #fbdae3;
+  --error-text: #4b2a46;
+  --error-accent: #eb0a4b;
+  --info-background: #ebe7f8;
+  --info-text: #4b2a46;
+  --info-accent: #7d64d2;
+  --help-background: #ddf5ef;
+  --help-text: #4b2a46;
+  --tooltip-background: #fdebf5;
+  --tooltip-text: #4b2a46;
+  --tooltip-border: #faa0cd;
+
+  /* Stickers (badges): solid brand colours, text chosen for contrast */
+  --sticker-success: #1ebe96;
+  --sticker-success-text: #4b2a46;
+  --sticker-warning: #ffe600;
+  --sticker-warning-text: #4b2a46;
+  --sticker-error: #d4083f;
+  --sticker-error-text: #ffffff;
+  --sticker-info: #7d64d2;
+  --sticker-info-text: #ffffff;
+  --sticker-neutral: #4b2a46;
+  --sticker-neutral-text: #ffffff;
+  --sticker-accent: #faa0cd;
+  --sticker-accent-text: #4b2a46;
+
+  /* Board view: very dark plum derived from #4b2a46 */
   --canvas-background: #1f101c;
+  --canvas-text: #f1ecf0;
 
   --radius: 6px;
-  --font-ui: "Karla", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-title: "Bebas Neue", "Karla", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --radius-large: 12px;
+  --shadow: 0 6px 24px rgba(31, 16, 28, 0.25);
+  --font-ui: "Karla Variable", "Karla", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-title: "Bebas Neue", "Karla Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --stroke: 2px;
 
   color-scheme: light;
 }
 
+/* Dark theme values, applied by the system preference or forced */
 @media (prefers-color-scheme: dark)
 {
-  :root
+  :root:not([data-theme="light"])
   {
     --surface: #2a1727;
     --surface-panel: #24131f;
@@ -50,11 +100,50 @@
     --text-muted: #bfaebb;
     --border: #4a3446;
     --header-background: #1a0c17;
-    --warning-background: #4a4317;
+    --success-background: #123b31;
+    --success-text: #f1ecf0;
+    --warning-background: #3d3610;
+    --warning-text: #f1ecf0;
     --error-background: #4d1426;
+    --error-text: #f1ecf0;
+    --info-background: #2c2350;
+    --info-text: #f1ecf0;
+    --help-background: #123b31;
+    --help-text: #f1ecf0;
+    --tooltip-background: #3a1f35;
+    --tooltip-text: #f1ecf0;
+    --tooltip-border: #faa0cd;
+    --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
 
     color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"]
+{
+  --surface: #2a1727;
+  --surface-panel: #24131f;
+  --surface-sunken: #1f101c;
+  --text: #f1ecf0;
+  --text-muted: #bfaebb;
+  --border: #4a3446;
+  --header-background: #1a0c17;
+  --success-background: #123b31;
+  --success-text: #f1ecf0;
+  --warning-background: #3d3610;
+  --warning-text: #f1ecf0;
+  --error-background: #4d1426;
+  --error-text: #f1ecf0;
+  --info-background: #2c2350;
+  --info-text: #f1ecf0;
+  --help-background: #123b31;
+  --help-text: #f1ecf0;
+  --tooltip-background: #3a1f35;
+  --tooltip-text: #f1ecf0;
+  --tooltip-border: #faa0cd;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
 }
 
 *,
@@ -73,11 +162,13 @@ body
   color: var(--text);
   font-family: var(--font-ui);
   font-size: 14px;
+  line-height: 1.4;
 }
 
 button,
 input,
-select
+select,
+textarea
 {
   font: inherit;
   color: inherit;
@@ -89,9 +180,21 @@ select
   outline-offset: 2px;
 }
 
+.visually-hidden
+{
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 @media (prefers-reduced-motion: reduce)
 {
-  *
+  *,
+  *::before,
+  *::after
   {
     animation: none !important;
     transition: none !important;
