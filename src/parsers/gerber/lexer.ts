@@ -5,7 +5,7 @@
 // - word commands, terminated by '*': "X100Y200D01*", "G04 comment*";
 // - extended commands, enclosed in '%': "%FSLAX46Y46*%", possibly holding several '*'-terminated blocks
 //   as in aperture macros ("%AMDONUT*1,1,$1,0,0*1,0,$2,0,0*%") or old files ("%FSLAX24Y24*MOIN*%").
-// Line breaks carry no meaning and are removed; spaces are kept only inside G04 comments.
+// Line breaks carry no meaning and are removed; spaces are kept inside G04 comments and extended blocks.
 
 export interface WordCommand
 {
@@ -49,9 +49,10 @@ function cleanWord(raw: string): string
     return trimmed.replace(/\s+/g, "");
 }
 
+// Spaces inside extended blocks are kept because X2 attribute values may contain them; the parser removes them elsewhere
 function cleanBlock(raw: string): string
 {
-    return raw.replace(/\s+/g, "");
+    return raw.replace(/[\r\n]+/g, "").trim();
 }
 
 export function lexGerber(source: string): LexResult

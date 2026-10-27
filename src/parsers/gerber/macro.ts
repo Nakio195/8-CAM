@@ -165,19 +165,21 @@ export function evaluateExpression(expression: Expression, variables: ReadonlyMa
  */
 export function parseApertureMacro(blocks: readonly string[]): ApertureMacro
 {
-    const name = (blocks[0] ?? "").slice(2);
+    const name = (blocks[0] ?? "").slice(2).trim();
     if (name.length === 0)
     {
         throw new MacroSyntaxError("Aperture macro without a name");
     }
     const statements: MacroStatement[] = [];
-    for (const block of blocks.slice(1))
+    for (const raw of blocks.slice(1))
     {
-        if (block.length === 0 || /^0(?![\d.])/.test(block))
+        const trimmed = raw.trim();
+        if (trimmed.length === 0 || /^0(?![\d.])/.test(trimmed))
         {
             // Empty block or comment primitive "0 ..."
             continue;
         }
+        const block = trimmed.replace(/\s+/g, "");
         const assignment = /^\$(\d+)=(.+)$/.exec(block);
         if (assignment)
         {
