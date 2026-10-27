@@ -16,3 +16,9 @@ export type ImportResponse =
     | { id: number; kind: "progress"; stage: ImportStage; fraction: number }
     | { id: number; kind: "result"; file: ImportedFile }
     | { id: number; kind: "error"; message: string };
+
+/** Reply of a computation worker: progress messages, then one result or error. */
+export type WorkerReply<Result> =
+    | { id: number; kind: "progress"; fraction: number }
+    | { id: number; kind: "result"; value: Result }
+    | { id: number; kind: "error"; message: string };

@@ -103,3 +103,29 @@ describe("analysis at import", () =>
         expect(importFile("test.drl", fixture("flatcam/flatcam-test.drl")).analysis).toBeNull();
     });
 });
+
+describe("isolation job", () =>
+{
+    it("packs loops, travels and zones and estimates the duration", async () =>
+    {
+        const { runIsolation } = await import("@workers/isolationJob");
+        const { defaultLibrary } = await import("@cam/tools/index");
+        const { DEFAULT_ISOLATION } = await import("@cam/isolation/index");
+        const file = importFile("Bottom Copper.GBR", fixture("proteus/ftdi-max-bottom-copper.gbr"));
+        const endmill = defaultLibrary().find((tool) => tool.id === "endmill-0.8");
+        if (!endmill || !file.analysis)
+        {
+            throw new Error("Missing test data");
+        }
+        const fractions: number[] = [];
+        const output = runIsolation({ copper: file.geometry, spots: file.analysis.spots, tool: endmill, params: DEFAULT_ISOLATION },
+            (fraction) => fractions.push(fraction));
+        const loops = unpackPolygons(output.loops);
+        expect(loops).toHaveLength(output.loopsPerPass.reduce((sum, count) => sum + count, 0));
+        expect(unpackPolygons(output.travels)).toHaveLength(loops.length - 1);
+        expect(output.zones).toHaveLength(62);
+        expect(packedPointCount(output.zoneShapes)).toBeGreaterThan(0);
+        expect(output.duration).toBeGreaterThan((output.cutLength / endmill.feedXY) * 60);
+        expect(fractions[fractions.length - 1]).toBe(1);
+    });
+});
