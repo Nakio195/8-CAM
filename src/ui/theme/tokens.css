@@ -1,0 +1,99 @@
+/* 8 Fablab Drôme brand tokens (specification section 6.13). Fonts and full components arrive in milestone J4b. */
+
+:root
+{
+  --brand-prune: #4b2a46;
+  --brand-prune-light: #e4dfe3;
+  --brand-rouge: #eb0a4b;
+  --brand-rouge-light: #fbdae3;
+  --brand-rose: #faa0cd;
+  --brand-rose-light: #fdebf5;
+  --accent-formation: #1ebe96;
+  --accent-formation-light: #ddf5ef;
+  --accent-pro: #ffe600;
+  --accent-pro-light: #fff7b2;
+  --accent-cowork: #7d64d2;
+  --accent-cowork-light: #ebe7f8;
+
+  /* Semantic tokens, light theme */
+  --surface: #ffffff;
+  --surface-panel: #f6f3f5;
+  --surface-sunken: var(--brand-prune-light);
+  --text: var(--brand-prune);
+  --text-muted: #6f5a6c;
+  --border: #d6ccd4;
+  --header-background: var(--brand-prune);
+  --header-text: #ffffff;
+  --action: var(--brand-rouge);
+  --action-text: #ffffff;
+  --focus: var(--accent-cowork);
+  --warning-background: var(--accent-pro-light);
+  --error-background: var(--brand-rouge-light);
+  --canvas-background: #1f101c;
+
+  --radius: 6px;
+  --font-ui: "Karla", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-title: "Bebas Neue", "Karla", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark)
+{
+  :root
+  {
+    --surface: #2a1727;
+    --surface-panel: #24131f;
+    --surface-sunken: #1f101c;
+    --text: #f1ecf0;
+    --text-muted: #bfaebb;
+    --border: #4a3446;
+    --header-background: #1a0c17;
+    --warning-background: #4a4317;
+    --error-background: #4d1426;
+
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after
+{
+  box-sizing: border-box;
+}
+
+html,
+body
+{
+  margin: 0;
+  height: 100%;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+
+button,
+input,
+select
+{
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible
+{
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce)
+{
+  *
+  {
+    animation: none !important;
+    transition: none !important;
+  }
+}

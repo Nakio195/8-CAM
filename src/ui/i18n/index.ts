@@ -14,6 +14,11 @@ const CATALOGS: Record<Locale, Record<MessageKey, string>> = {
 
 export const LOCALES: readonly Locale[] = ["fr", "en"];
 
+export function isMessageKey(key: string): key is MessageKey
+{
+    return key in fr;
+}
+
 /**
  * Returns the message for a key, replacing {name} placeholders with the given values.
  */
@@ -41,4 +46,13 @@ export function detectLocale(languages: readonly string[]): Locale
         }
     }
     return "fr";
+}
+
+/** Formats a number with the locale's decimal separator. */
+export function formatNumber(locale: Locale, value: number, decimals: number): string
+{
+    return value.toLocaleString(locale === "fr" ? "fr-FR" : "en-GB", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
 }
