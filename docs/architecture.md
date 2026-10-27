@@ -315,7 +315,7 @@ Choix à noter :
 Sur la carte FTDI_Max (Proteus, cuivre face inférieure), **tous les points de coupe** du G-code d'isolation FlatCAM
 (1 723 points, première passe) sont à **0,1536 mm ± 0,0004 mm** de notre contour de cuivre : les deux logiciels
 construisent la même géométrie à moins d'un micron près. Les 0,1536 mm correspondent au rayon de l'outil
-(0,2072 / 2 = 0,1036 mm) plus 0,05 mm propres au réglage de ce travail FlatCAM (à confirmer par To).
+(0,2072 / 2 = 0,1036 mm) plus 0,05 mm de décalage réglé dans ce travail FlatCAM (confirmé par To : décalage personnalisé de 0,05 mm).
 Le rendu SVG de contrôle (cuivre + trajets FlatCAM superposés) est écrit dans `test-output/` par `npm test`.
 
 ### 7.4 Performances (`npm run bench`)
@@ -340,3 +340,46 @@ calcul synchrone ne peut pas lire de message d'annulation : l'annulation se fera
 Seuls deux fichiers réels sont testés (Proteus et l'exemple FlatCAM). Des Gerber KiCad, Eagle, EasyEDA et Altium
 réels seront ajoutés dès que To les fournira ; les cas particuliers (macros KiCad `RoundRect`, polarité claire,
 step and repeat, arcs G74/G75, régions avec trous) sont déjà couverts par des fichiers écrits à la main.
+
+---
+
+## 8. Résultats du jalon J3 (perçage)
+
+### 8.1 Un modèle de perçage, deux formats d'entrée
+
+`src/parsers/excellon/` produit un `DrillDocument` unique (outils avec diamètre et métallisation, trous, rainures)
+à partir de :
+
+- **fichiers Excellon** (`parseExcellon`) ;
+- **fichiers de perçage Gerber X2** (`drillFromGerber`) : c'est ce que produit Proteus (`%TF.FileFunction,Plated`),
+  chaque ouverture ronde devient un outil, les flashs des trous, les tracés des rainures.
+
+`looksLikeExcellon()` distingue les deux formats à l'import.
+
+### 8.2 Excellon pris en charge
+
+| Élément       | Détail                                                                                                                                                                           |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| En-tête       | `M48` … `%` / `M95`, `METRIC` / `INCH` avec `,LZ` / `,TZ` et `,000.000`, `M71` / `M72`, commandes d'en-tête ignorées (`FMAT`, `ICI`, `VER`…)                                     |
+| Format        | `;FILE_FORMAT=2:5` (Altium) ; zéros non déclarés **devinés** d'après les coordonnées (`012500` ne peut venir que d'un fichier LZ) ; format forçable depuis l'interface (`force`) |
+| Outils        | `TnnC…` dans l'en-tête ou dans le corps, paramètres F/S/B/H/Z tolérés, `T0`                                                                                                      |
+| Trous         | coordonnées modales, `G90` / `G91`, origine `G93`, répétition `R`                                                                                                                |
+| Rainures      | `G85` ; routage `G00` / `M15` / `G01` / `G02` / `G03` / `M16`-`M17`, arcs par rayon `A` (négatif = grand arc) ou centre `I` / `J`                                                |
+| Métallisation | attributs KiCad `;#@! TF/TA`, commentaires Altium `;TYPE=PLATED`, sinon nom du fichier (`PTH`, `NPTH`, `Plated`, `NonPlated`)                                                    |
+
+Rappel du piège Excellon : `LZ` signifie que les zéros **de tête sont écrits** (ceux de queue omis), l'inverse de
+`%FSL` en Gerber.
+
+### 8.3 Vérifications
+
+- Exemple FlatCAM (`INCH,LZ`, 2:4) : 16 trous, 2 outils, coordonnées exactes.
+- Fichiers écrits à la manière de KiCad, Altium et Eagle (zéros devinés), et cas limites.
+- **Carte FTDI_Max** : 41 trous en 4 outils (0,762 / 0,762 / 1,016 / 3 mm), tous métallisés ; la surface des trous
+  située hors du cuivre est **nulle** : chaque trou tombe dans sa pastille (rendu
+  `test-output/ftdi-max-copper-and-drills.svg`). Le fichier « Filled and Plated » est vide (pas de via bouchée).
+- 50 fichiers aléatoires lus sans exception.
+
+### 8.4 À fournir
+
+Aucun fichier Excellon réel n'est encore dans les fixtures. Proteus peut exporter le perçage en Excellon (réglage
+de la sortie CADCAM) ; des fichiers KiCad (`-PTH.drl`, `-NPTH.drl`) ou Eagle seraient aussi utiles.
