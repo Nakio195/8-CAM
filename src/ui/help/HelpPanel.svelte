@@ -4,6 +4,7 @@
     import { help } from "../state/help.svelte";
     import { i18n } from "../state/i18n.svelte";
     import Icon from "../components/Icon.svelte";
+    import { ILLUSTRATIONS } from "../illustrations/registry";
     import { HELP_GROUPS, HELP_TOPICS } from "./topics";
 
     // Side help panel (specification 6.11): every topic grouped by theme, opened at the requested one.
@@ -51,6 +52,13 @@
                         <article id={`help-topic-${topic.id}`} tabindex="-1" class:current={help.panelTopic === topic.id}>
                             <h4>{text(`help.${topic.id}.title`)}</h4>
                             <p>{text(`help.${topic.id}.body`)}</p>
+                            {#if ILLUSTRATIONS[topic.id]}
+                                {@const illustration = ILLUSTRATIONS[topic.id]}
+                                {#if illustration}
+                                    {@const Illustration = illustration.component}
+                                    <div class="figure"><Illustration {...illustration.props({})} /></div>
+                                {/if}
+                            {/if}
                             {#if text(`help.${topic.id}.advice`)}
                                 <p class="advice">
                                     <Icon name="check" size={14} />
@@ -174,6 +182,12 @@
     {
         margin: 4px 0;
         line-height: 1.45;
+    }
+
+    .figure
+    {
+        max-width: 280px;
+        margin: 6px 0;
     }
 
     .advice,

@@ -3,6 +3,7 @@
     import { i18n } from "../state/i18n.svelte";
     import { help } from "../state/help.svelte";
     import Icon from "../components/Icon.svelte";
+    import { ILLUSTRATIONS } from "../illustrations/registry";
     import { TOOLTIP_ID } from "./helpAction";
 
     // The single tooltip of the application (specification 6.11): title, explanation, advice, warning,
@@ -95,6 +96,13 @@
         </div>
         {#if content.body}
             <p>{content.body}</p>
+        {/if}
+        {#if ILLUSTRATIONS[help.tip.id]}
+            {@const illustration = ILLUSTRATIONS[help.tip.id]}
+            {#if illustration}
+                {@const Illustration = illustration.component}
+                <div class="figure"><Illustration {...illustration.props(help.tip.values ?? {})} /></div>
+            {/if}
         {/if}
         {#if content.advice}
             <p class="advice">
@@ -192,6 +200,14 @@
     p
     {
         margin: 6px 0 0;
+    }
+
+    .figure
+    {
+        margin-top: 8px;
+        padding: 4px;
+        border-radius: 4px;
+        background: var(--surface);
     }
 
     .advice,

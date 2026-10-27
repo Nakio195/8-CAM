@@ -6,9 +6,13 @@ import { help, LONG_PRESS_DELAY } from "../state/help.svelte";
 
 export const TOOLTIP_ID = "helptip";
 
-export function helpAction(element: HTMLElement, topic: string): { update: (next: string) => void; destroy: () => void }
+/** A topic, or a topic with the values of the field it describes (shown by its illustration). */
+export type HelpTarget = string | { topic: string; values?: Readonly<Record<string, number>> };
+
+export function helpAction(element: HTMLElement, target: HelpTarget): { update: (next: HelpTarget) => void; destroy: () => void }
 {
-    let id = topic;
+    let id = typeof target === "string" ? target : target.topic;
+    let values = typeof target === "string" ? undefined : target.values;
     let pressTimer = 0;
     let suppressClick = false;
 
@@ -23,7 +27,7 @@ export function helpAction(element: HTMLElement, topic: string): { update: (next
     {
         if (id && (event.pointerType === "mouse" || event.pointerType === "pen"))
         {
-            help.scheduleShow(id, element);
+            help.scheduleShow(id, element, values);
         }
     };
     const onPointerLeave = (event: PointerEvent): void =>
@@ -41,7 +45,7 @@ export function helpAction(element: HTMLElement, topic: string): { update: (next
             pressTimer = window.setTimeout(() =>
             {
                 suppressClick = true;
-                help.show(id, element, true);
+                help.show(id, element, true, values);
             }, LONG_PRESS_DELAY);
         }
         else
@@ -68,7 +72,7 @@ export function helpAction(element: HTMLElement, topic: string): { update: (next
     {
         if (id && element.matches(":focus-visible"))
         {
-            help.show(id, element);
+            help.show(id, element, false, values);
         }
     };
     const onBlur = (): void =>
@@ -85,7 +89,7 @@ export function helpAction(element: HTMLElement, topic: string): { update: (next
         {
             // F1 pins the help of the focused element, as in many desktop applications
             event.preventDefault();
-            help.show(id, element, true);
+            help.show(id, element, true, values);
         }
     };
     const onContextMenu = (event: Event): void =>
@@ -109,12 +113,13 @@ export function helpAction(element: HTMLElement, topic: string): { update: (next
     element.addEventListener("contextmenu", onContextMenu);
 
     return {
-        update: (next: string) =>
+        update: (next: HelpTarget) =>
         {
-            id = next;
+            id = typeof next === "string" ? next : next.topic;
+            values = typeof next === "string" ? undefined : next.values;
             if (help.tip?.anchor === element)
             {
-                help.show(id, element, help.tip.pinned);
+                help.show(id, element, help.tip.pinned, values);
             }
         },
         destroy: () =>

@@ -40,7 +40,8 @@ describe("help texts", () =>
     it("gives every machining parameter of the specification a recommended value", () =>
     {
         const parameters = HELP_TOPICS.filter((topic) => ["tool", "machining", "setup"].includes(topic.group));
-        expect(parameters.length).toBe(21);
+        // The 21 parameters of the specification table, plus the board thickness of section 6.10
+        expect(parameters.length).toBe(22);
         expect(parameters.filter((topic) => !fr[`help.${topic.id}.advice` as keyof typeof fr])).toEqual([]);
     });
 

@@ -67,7 +67,8 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     { id: "safeZ", group: "setup", geometric: true },
     { id: "origin", group: "setup", geometric: true },
     { id: "mirror", group: "setup", geometric: true },
-    { id: "postProcessor", group: "setup" }
+    { id: "postProcessor", group: "setup" },
+    { id: "boardThickness", group: "setup", geometric: true }
 ];
 
 export type HelpId = (typeof HELP_TOPICS)[number]["id"];

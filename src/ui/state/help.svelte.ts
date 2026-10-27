@@ -5,6 +5,8 @@ export interface ShownTip
     id: string;
     anchor: HTMLElement;
     pinned: boolean;
+    /** Values of the field showing the help, drawn by the topic illustration. */
+    values?: Readonly<Record<string, number>>;
 }
 
 /** Hover delay before a tooltip appears (specification 6.11). */
@@ -24,7 +26,7 @@ class HelpState
     private mShowTimer = 0;
     private mHideTimer = 0;
 
-    public show(id: string, anchor: HTMLElement, pinned = false): void
+    public show(id: string, anchor: HTMLElement, pinned = false, values?: Readonly<Record<string, number>>): void
     {
         this.cancelTimers();
         if (this.tip?.pinned && this.tip.anchor !== anchor && !pinned)
@@ -32,13 +34,13 @@ class HelpState
             // A pinned tooltip stays until it is closed
             return;
         }
-        this.tip = { id, anchor, pinned };
+        this.tip = { id, anchor, pinned, values };
     }
 
-    public scheduleShow(id: string, anchor: HTMLElement): void
+    public scheduleShow(id: string, anchor: HTMLElement, values?: Readonly<Record<string, number>>): void
     {
         this.cancelTimers();
-        this.mShowTimer = window.setTimeout(() => this.show(id, anchor), SHOW_DELAY);
+        this.mShowTimer = window.setTimeout(() => this.show(id, anchor, false, values), SHOW_DELAY);
     }
 
     public scheduleHide(): void
