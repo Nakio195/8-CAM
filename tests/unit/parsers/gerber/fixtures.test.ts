@@ -5,8 +5,9 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { buildGerberGeometry, detectLayerType, parseGerber } from "@parsers/gerber/index";
-import { distanceToRings, geometryToSvg, polygonRings, type Path, type SvgLayer } from "@core/geometry/index";
+import { distanceToRings, geometryToSvg, polygonRings, type SvgLayer } from "@core/geometry/index";
 import { mmToInternal } from "@core/units/index";
+import { flatcamCutPaths } from "../../../helpers/flatcam";
 
 const FIXTURES = join(import.meta.dirname, "..", "..", "..", "fixtures");
 const OUTPUT = join(import.meta.dirname, "..", "..", "..", "..", "test-output");
@@ -20,42 +21,6 @@ function writeSvg(name: string, layers: SvgLayer[]): void
 {
     mkdirSync(OUTPUT, { recursive: true });
     writeFileSync(join(OUTPUT, name), geometryToSvg(layers, { margin: 1, background: "#2a1727" }));
-}
-
-/** Cutting moves (Z below the surface) of a FlatCAM G-code file, as polylines in internal units. */
-function flatcamCutPaths(gcode: string, maxDepth: number): Path[]
-{
-    const paths: Path[] = [];
-    let z = Infinity;
-    let current: Path = [];
-    let position = { x: 0, y: 0 };
-    for (const line of gcode.split(/\r?\n/))
-    {
-        const zMatch = /\bZ(-?[\d.]+)/.exec(line);
-        const xy = /^G0[01] X(-?[\d.]+) Y(-?[\d.]+)/.exec(line);
-        if (zMatch)
-        {
-            z = Number(zMatch[1]);
-            if (current.length > 1)
-            {
-                paths.push(current);
-            }
-            current = z < 0 && z >= maxDepth ? [position] : [];
-        }
-        if (xy)
-        {
-            position = { x: mmToInternal(Number(xy[1])), y: mmToInternal(Number(xy[2])) };
-            if (z < 0 && z >= maxDepth && line.startsWith("G01"))
-            {
-                current.push(position);
-            }
-        }
-    }
-    if (current.length > 1)
-    {
-        paths.push(current);
-    }
-    return paths;
 }
 
 describe("Proteus FTDI_Max bottom copper", () =>
