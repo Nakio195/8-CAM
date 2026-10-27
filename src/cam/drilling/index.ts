@@ -1,3 +1,3 @@
-// Drilling: tool matching, hole ordering (nearest neighbour + 2-opt), peck cycles, slots.
-// Implemented in milestone J7 (see docs/architecture.md).
-export {};
+// Drilling: tool matching, hole ordering (nearest neighbour + 2-opt), simple and peck cycles, milled holes, slots.
+export * from "./drilling";
+export * from "./order";

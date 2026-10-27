@@ -1,9 +1,10 @@
 // Machining operations of a project and their computed results (what the CAM worker sends back).
 
 import type { ClearanceSpot } from "@cam/analysis/index";
+import { DEFAULT_DRILLING, type DrillingIssue, type DrillingParams, type DrillMethod, type RouteDistances } from "@cam/drilling/index";
 import { DEFAULT_ISOLATION, type IsolationParams } from "@cam/isolation/index";
 import type { Tool } from "@cam/tools/index";
-import type { PackedPolygons, Point } from "@core/geometry/index";
+import type { Path, PackedPolygons, Point } from "@core/geometry/index";
 
 export interface IsolationZoneOutput
 {
@@ -47,11 +48,81 @@ export interface IsolationOperation
     visible: boolean;
 }
 
-export type Operation = IsolationOperation;
+/** What one tool does in a drilling operation. */
+export interface DrillRunOutput
+{
+    /** Tool as it was when computing. */
+    tool: Tool;
+    method: DrillMethod;
+    /** Hole diameters made by the tool, internal units. */
+    diameters: number[];
+    hits: number;
+    milled: number;
+    slots: number;
+    distances: RouteDistances;
+}
+
+export interface DrillingOutput
+{
+    runs: DrillRunOutput[];
+    issues: DrillingIssue[];
+    distances: RouteDistances;
+    /** Route of every tool in cutting order (one open path per tool, from where the previous tool ended). */
+    route: PackedPolygons;
+    /** The same holes in the order of the file, to compare. */
+    fileRoute: PackedPolygons;
+    /** Circles followed by the tool centre in milled holes, and slot paths, as open lines. */
+    milledPaths: PackedPolygons;
+    toolChanges: number;
+    /** Estimated machining time, seconds. */
+    duration: number;
+    /** Machine safety problems found in the generated moves (none expected). */
+    safetyIssues: number;
+    computeMs: number;
+}
+
+export interface DrillingOperation
+{
+    id: string;
+    kind: "drilling";
+    /** Drill layers whose holes are machined together. */
+    layerIds: string[];
+    /** Tool chosen for each hole diameter (internal units as a string key); null: hole size left out. */
+    assignments: Record<string, string | null>;
+    params: DrillingParams;
+    result: DrillingOutput | null;
+    visible: boolean;
+    /** Also draws the route in the order of the file, to see what the optimisation saves. */
+    showFileOrder: boolean;
+}
+
+export type Operation = IsolationOperation | DrillingOperation;
 
 export function createIsolation(id: string, layerId: string, toolId: string): IsolationOperation
 {
     return { id, kind: "isolation", layerId, toolId, params: { ...DEFAULT_ISOLATION }, result: null, visible: true };
+}
+
+export function createDrilling(id: string, layerIds: string[], assignments: Record<string, string | null>, depth: number): DrillingOperation
+{
+    return { id, kind: "drilling", layerIds, assignments, params: { ...DEFAULT_DRILLING, depth }, result: null, visible: true,
+        showFileOrder: false };
+}
+
+/** Holes of one diameter, with the tool chosen for them (null: left out). */
+export interface DrillingSetData
+{
+    diameter: number;
+    holes: Point[];
+    slots: Path[];
+    tool: Tool | null;
+}
+
+/** What the CAM worker needs to plan a drilling operation. */
+export interface DrillingRequestData
+{
+    sets: DrillingSetData[];
+    params: DrillingParams;
 }
 
 /** What the CAM worker needs to compute an isolation. */

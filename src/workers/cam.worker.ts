@@ -2,6 +2,7 @@
 // The independent parts of an isolation run in parallel sub-workers; terminating this worker (cancel) ends them too.
 
 import type { IsolationOutput, IsolationRequestData } from "@project/operations";
+import { runDrilling } from "./drillingJob";
 import {
     assembleIsolationOutput,
     isolationParts,
@@ -9,7 +10,7 @@ import {
     type IsolationPart,
     type IsolationPartOutput
 } from "./isolationJob";
-import type { WorkerReply } from "./protocol";
+import type { CamRequest, WorkerReply } from "./protocol";
 
 const scope = self as unknown as DedicatedWorkerGlobalScope;
 
@@ -63,15 +64,24 @@ async function runInParallel(data: IsolationRequestData, onProgress: (fraction: 
     return output;
 }
 
-scope.onmessage = async (event: MessageEvent<{ id: number; data: IsolationRequestData }>) =>
+scope.onmessage = async (event: MessageEvent<{ id: number; data: CamRequest }>) =>
 {
-    const { id, data } = event.data;
+    const { id, data: request } = event.data;
     const onProgress = (fraction: number): void =>
     {
         scope.postMessage({ id, kind: "progress", fraction } satisfies WorkerReply<never>);
     };
     try
     {
+        if (request.kind === "drilling")
+        {
+            const output = runDrilling(request.data);
+            onProgress(1);
+            scope.postMessage({ id, kind: "result", value: output } satisfies WorkerReply<typeof output>,
+                [output.route.buffer, output.fileRoute.buffer, output.milledPaths.buffer]);
+            return;
+        }
+        const data = request.data;
         // Browsers without nested workers compute the parts one after the other
         const output = typeof Worker === "undefined" ? runIsolation(data, onProgress) : await runInParallel(data, onProgress);
         scope.postMessage({ id, kind: "result", value: output } satisfies WorkerReply<typeof output>,

@@ -2,6 +2,7 @@
 // Cancellation is done by terminating the worker: a worker busy in a synchronous computation cannot read messages.
 
 import type { ImportedFile } from "@project/importedFile";
+import type { DrillingRequestData, IsolationRequestData } from "@project/operations";
 
 export type ImportStage = "parsing" | "building" | "analysing";
 
@@ -22,3 +23,8 @@ export type WorkerReply<Result> =
     | { id: number; kind: "progress"; fraction: number }
     | { id: number; kind: "result"; value: Result }
     | { id: number; kind: "error"; message: string };
+
+/** Requests of the CAM worker. */
+export type CamRequest =
+    | { kind: "isolation"; data: IsolationRequestData }
+    | { kind: "drilling"; data: DrillingRequestData };
