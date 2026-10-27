@@ -1,6 +1,7 @@
 // Main thread side of the import worker: one worker per job, so cancelling is simply terminating it.
 
-import type { ImportedFile, ImportRequest, ImportResponse, ImportStage } from "./protocol";
+import type { ImportedFile } from "@project/importedFile";
+import type { ImportRequest, ImportResponse, ImportStage } from "./protocol";
 
 export interface ImportJob
 {

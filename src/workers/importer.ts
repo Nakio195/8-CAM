@@ -11,7 +11,8 @@ import {
     type DrillDocument
 } from "@parsers/excellon/index";
 import { buildGerberGeometry, detectLayerType, parseGerber, type LayerType } from "@parsers/gerber/index";
-import type { FileFormat, ImportedDrill, ImportedFile, ImportStage, ImportWarning } from "./protocol";
+import type { FileFormat, ImportedDrill, ImportedFile, ImportWarning } from "@project/importedFile";
+import type { ImportStage } from "./protocol";
 
 export type ProgressCallback = (stage: ImportStage, fraction: number) => void;
 
