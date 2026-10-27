@@ -29,7 +29,14 @@
         clock: "M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18 M12 7v5l3 2",
         tool: "M14 4l6 6 M17 7l-9 9 M8 16l-4 4 M11 13l-3 3",
         drill: "M10 3h4v8l-2 4-2-4z M10 7h4 M12 15v6",
-        about: "M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18 M12 11v6 M12 7.5v.5"
+        about: "M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18 M12 11v6 M12 7.5v.5",
+        copy: "M9 9h11v11H9z M5 15V4h11",
+        edit: "M4 20h4L19 9l-4-4L4 16z M13.5 6.5l4 4",
+        plus: "M12 5v14 M5 12h14",
+        download: "M12 4v11 M7 10l5 5 5-5 M5 20h14",
+        upload: "M12 20V9 M7 14l5-5 5 5 M5 4h14",
+        reset: "M4 12a8 8 0 1 0 2.3-5.7 M4 4v4h4",
+        target: "M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18 M12 8a4 4 0 1 0 0 8 4 4 0 1 0 0-8 M12 1v4 M12 19v4 M1 12h4 M19 12h4"
     } as const;
 
     export type IconName = keyof typeof ICONS;

@@ -1,5 +1,8 @@
-// Project state of the user interface: layers and running imports.
+// Project state of the user interface: layers, running imports, board thickness and board analysis.
 
+import { DEFAULT_BOARD_THICKNESS, summarizeBoard, type BoardSummary } from "@cam/analysis/index";
+import type { Point } from "@core/geometry/index";
+import { INTERNAL_UNITS_PER_MM } from "@core/units/index";
 import {
     addLayer,
     createLayer,
@@ -17,6 +20,14 @@ export interface ImportTask
     stage: ImportStage;
     fraction: number;
     cancel: () => void;
+}
+
+/** Board area the view is asked to show, in millimetres, with an optional spot to highlight. */
+export interface FocusRequest
+{
+    id: number;
+    rect: { minX: number; minY: number; maxX: number; maxY: number };
+    highlight: { from: { x: number; y: number }; to: { x: number; y: number } } | null;
 }
 
 export interface ImportFailure
@@ -40,6 +51,16 @@ class ProjectState
     public failures: ImportFailure[] = $state([]);
     /** Incremented to ask the view to show the whole board. */
     public fitRequest = $state(0);
+    public focus: FocusRequest | null = $state.raw(null);
+    /** Board thickness used by the analysis and recommendations, mm. */
+    public thickness = $state(DEFAULT_BOARD_THICKNESS);
+
+    /** Analysis of the whole board: copper layers with their clearances, and every drill layer. */
+    public board: BoardSummary = $derived(summarizeBoard(
+        this.layers.flatMap((layer) => (layer.file.analysis ? [{ id: layer.id, analysis: layer.file.analysis }] : [])),
+        this.layers.flatMap((layer) => (layer.file.drill ? [{ summary: layer.file.drill.summary }] : [])),
+        this.thickness
+    ));
 
     private mNextId = 1;
     private mFitPending = false;
@@ -126,6 +147,23 @@ class ProjectState
     public remove(id: string): void
     {
         this.layers = removeLayer(this.layers, id);
+    }
+
+    /** Asks the view to show the area between two points (internal units), with a margin, and to highlight them. */
+    public focusOn(a: Point, b: Point, marginMm = 1.5): void
+    {
+        const from = { x: a.x / INTERNAL_UNITS_PER_MM, y: a.y / INTERNAL_UNITS_PER_MM };
+        const to = { x: b.x / INTERNAL_UNITS_PER_MM, y: b.y / INTERNAL_UNITS_PER_MM };
+        this.focus = {
+            id: (this.focus?.id ?? 0) + 1,
+            rect: {
+                minX: Math.min(from.x, to.x) - marginMm,
+                minY: Math.min(from.y, to.y) - marginMm,
+                maxX: Math.max(from.x, to.x) + marginMm,
+                maxY: Math.max(from.y, to.y) + marginMm
+            },
+            highlight: { from, to }
+        };
     }
 
     public dismissFailure(id: number): void

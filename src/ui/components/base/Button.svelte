@@ -27,6 +27,7 @@
     .button
     {
         display: inline-flex;
+        white-space: nowrap;
         align-items: center;
         gap: 6px;
         min-height: 34px;

@@ -157,13 +157,13 @@ export function vbitSection(params: VbitSectionParams): VbitSectionShape
     // Show the groove with some board around it, same scale on both axes
     const scale = Math.min(140 / Math.max(width * 2.2, 0.2), 70 / Math.max(depth * 1.6, 0.05));
     const centre = FRAME_WIDTH / 2;
-    const surfaceY = 50;
+    const surfaceY = 60;
     const depthY = surfaceY + depth * scale;
     const copperBottomY = surfaceY + Math.max(6, COPPER_THICKNESS * scale);
     const tipHalf = (params.tipDiameter * scale) / 2;
     const halfWidth = (width * scale) / 2;
     // The cone continues above the surface to show the tool
-    const aboveHeight = 38;
+    const aboveHeight = 30;
     const aboveHalf = halfWidth + aboveHeight * Math.tan(halfAngle);
     return {
         width,
@@ -178,8 +178,9 @@ export function vbitSection(params: VbitSectionParams): VbitSectionShape
             { x: centre - halfWidth, y: surfaceY }, { x: centre + halfWidth, y: surfaceY },
             { x: centre + tipHalf, y: depthY }, { x: centre - tipHalf, y: depthY }
         ],
-        widthDimension: { left: centre - halfWidth, right: centre + halfWidth, y: surfaceY - aboveHeight - 6 },
-        depthDimension: { x: centre + Math.max(halfWidth, 20) + 24, top: surfaceY, bottom: depthY }
+        widthDimension: { left: centre - halfWidth, right: centre + halfWidth, y: surfaceY - aboveHeight - 8 },
+        // Kept far enough from the right edge for its label
+        depthDimension: { x: Math.min(centre + Math.max(halfWidth, 20) + 24, FRAME_WIDTH - 64), top: surfaceY, bottom: depthY }
     };
 }
 
@@ -197,9 +198,10 @@ export interface DepthPassesShape
 export function depthPasses(depth: number, depthPerPass: number, boardThickness = 1.6): DepthPassesShape
 {
     const depths = passDepths(depth, depthPerPass);
-    const surfaceY = 30;
+    const surfaceY = 16;
     const reference = Math.max(depth, boardThickness);
-    const scale = 95 / Math.max(reference, 0.1);
+    // Room is left below the board for two lines of text
+    const scale = 88 / Math.max(reference, 0.1);
     return {
         surfaceY,
         bottomY: surfaceY + boardThickness * scale,

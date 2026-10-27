@@ -30,6 +30,8 @@ export interface RenderOverlay
     showOrigin: boolean;
     /** Measurement segment in board millimetres, end point following the cursor while measuring. */
     measure: { from: ScreenPoint; to: ScreenPoint } | null;
+    /** Spot to point out (board millimetres), e.g. the tightest clearance: a ring and the segment between the two points. */
+    highlight?: { from: ScreenPoint; to: ScreenPoint } | null;
 }
 
 /**

@@ -115,6 +115,10 @@ export class Canvas2DRenderer implements Renderer
         {
             this.drawOrigin(view);
         }
+        if (overlay.highlight)
+        {
+            this.drawHighlight(view, overlay.highlight.from, overlay.highlight.to);
+        }
         if (overlay.measure)
         {
             this.drawMeasure(view, overlay.measure.from, overlay.measure.to);
@@ -234,6 +238,28 @@ export class Canvas2DRenderer implements Renderer
         context.beginPath();
         context.moveTo(origin.x, origin.y);
         context.lineTo(origin.x, origin.y - length);
+        context.stroke();
+    }
+
+    /** Ring around a spot and the segment joining its two points, visible on any layer colour. */
+    private drawHighlight(view: Viewport, from: { x: number; y: number }, to: { x: number; y: number }): void
+    {
+        const context = this.mContext;
+        const start = worldToScreen(view, from.x, from.y);
+        const end = worldToScreen(view, to.x, to.y);
+        const centre = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+        const radius = Math.max(16, Math.hypot(end.x - start.x, end.y - start.y) / 2 + 10);
+        context.lineWidth = 3;
+        context.strokeStyle = "rgba(31, 16, 28, 0.85)";
+        context.beginPath();
+        context.arc(centre.x, centre.y, radius + 2, 0, 2 * Math.PI);
+        context.stroke();
+        context.lineWidth = 2;
+        context.strokeStyle = this.mTheme.measure;
+        context.beginPath();
+        context.arc(centre.x, centre.y, radius, 0, 2 * Math.PI);
+        context.moveTo(start.x, start.y);
+        context.lineTo(end.x, end.y);
         context.stroke();
     }
 

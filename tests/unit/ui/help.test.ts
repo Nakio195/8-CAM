@@ -39,10 +39,15 @@ describe("help texts", () =>
 
     it("gives every machining parameter of the specification a recommended value", () =>
     {
-        const parameters = HELP_TOPICS.filter((topic) => ["tool", "machining", "setup"].includes(topic.group));
-        // The 21 parameters of the specification table, plus the board thickness of section 6.10
-        expect(parameters.length).toBe(22);
-        expect(parameters.filter((topic) => !fr[`help.${topic.id}.advice` as keyof typeof fr])).toEqual([]);
+        // The 21 parameters of the specification table (section 6.11), plus the board thickness of section 6.10
+        const parameters = [
+            "diameter", "tipAngle", "tipDiameter", "cutDepth", "depthPerPass", "passes", "overlap", "millingDirection",
+            "feedXY", "feedZ", "spindleSpeed", "travelZ", "safeZ", "peck", "tabs", "tabHeight", "cutoutMargin", "origin",
+            "mirror", "postProcessor", "nonIsolated", "boardThickness"
+        ];
+        const ids = HELP_TOPICS.map((topic) => topic.id);
+        expect(parameters.filter((id) => !ids.includes(id))).toEqual([]);
+        expect(parameters.filter((id) => !fr[`help.${id}.advice` as keyof typeof fr])).toEqual([]);
     });
 
     it("has unique topic identifiers and no orphan help text", () =>

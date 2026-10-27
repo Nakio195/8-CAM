@@ -13,7 +13,8 @@
         max,
         step = "any",
         id,
-        helpLabel
+        helpLabel,
+        helpValues
     }: {
         label: string;
         help: string;
@@ -25,7 +26,11 @@
         id: string;
         /** Accessible name of the "?" button, e.g. "Help: Diameter". */
         helpLabel: string;
+        /** Values drawn by the illustration of the help topic (this field and its neighbours). */
+        helpValues?: Readonly<Record<string, number>>;
     } = $props();
+
+    let target = $derived({ topic: help, values: helpValues });
 
     let invalid = $derived(!Number.isFinite(value) || (min !== undefined && value < min) || (max !== undefined && value > max));
 </script>
@@ -33,12 +38,12 @@
 <div class="field" class:invalid>
     <div class="label-row">
         <label for={id}>{label}</label>
-        <button class="help" type="button" aria-label={helpLabel} use:helpAction={help}>
+        <button class="help" type="button" aria-label={helpLabel} use:helpAction={target}>
             <Icon name="help" size={14} />
         </button>
     </div>
     <div class="input-row">
-        <input {id} type="number" bind:value {min} {max} {step} aria-invalid={invalid} use:helpAction={help} />
+        <input {id} type="number" bind:value {min} {max} {step} aria-invalid={invalid} use:helpAction={target} />
         {#if invalid}
             <!-- Never by colour alone: an icon marks the invalid value besides the red border -->
             <span class="invalid-icon"><Icon name="warning" size={14} /></span>

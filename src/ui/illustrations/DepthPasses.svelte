@@ -1,5 +1,6 @@
 <script lang="ts">
     import { i18n } from "../state/i18n.svelte";
+    import { decimalsFor } from "../tools/labels";
     import { depthPasses, FRAME_HEIGHT, FRAME_WIDTH, round } from "./geometry";
 
     // Depth reached pass after pass (specification 6.12): one band per pass in the board edge
@@ -7,25 +8,28 @@
 
     const t = i18n.t;
     let shape = $derived(depthPasses(depth, depthPerPass, thickness));
-    const LEFT = 40;
-    const RIGHT = 150;
+    const LEFT = 30;
+    const RIGHT = 190;
+    const n = (value: number): string => i18n.number(value, decimalsFor(value));
 </script>
 
 <svg class="illustration" viewBox="0 0 {FRAME_WIDTH} {FRAME_HEIGHT}" role="img"
-    aria-label={t("illus.depthPasses", { count: shape.passCount, depth: i18n.number(depth, 2), perPass: i18n.number(depthPerPass, 2) })}>
+    aria-label={t("illus.depthPasses", { count: shape.passCount, depth: n(depth), perPass: n(depthPerPass) })}>
     <rect class="board" x={LEFT} y={round(shape.surfaceY)} width={RIGHT - LEFT} height={round(shape.bottomY - shape.surfaceY)} />
     {#each shape.passes as passY, index (index)}
         {@const top = index === 0 ? shape.surfaceY : (shape.passes[index - 1] ?? shape.surfaceY)}
         <rect class="pass" class:odd={index % 2 === 1} x={LEFT} y={round(top)} width="40" height={round(passY - top)} />
         <line class="level" x1={LEFT} y1={round(passY)} x2={RIGHT + 6} y2={round(passY)} />
-        <text class="label" x={RIGHT + 10} y={round(passY + 4)}>{index + 1}</text>
+        {#if shape.passCount <= 8}
+            <text class="label" x={RIGHT + 10} y={round(passY + 4)}>{index + 1}</text>
+        {/if}
     {/each}
     <line class="dimension" x1={LEFT - 12} y1={round(shape.surfaceY)} x2={LEFT - 12} y2={round(shape.passes[shape.passes.length - 1] ?? shape.surfaceY)} />
-    <text class="label strong" x={RIGHT + 26} y={round(shape.surfaceY + 12)}>
-        {t("illus.passCount", { count: shape.passCount })}
+    <text class="label" x={LEFT} y={FRAME_HEIGHT - 20}>
+        <tspan class="strong">{t("illus.passCount", { count: shape.passCount })}</tspan>
+        <tspan dx="8">{t("illus.perPass", { value: n(depthPerPass) })}</tspan>
     </text>
-    <text class="label" x={RIGHT + 26} y={round(shape.surfaceY + 28)}>{t("illus.perPass", { value: i18n.number(depthPerPass, 2) })}</text>
-    <text class="caption" x={LEFT} y={FRAME_HEIGHT - 6}>{t("illus.boardEdge", { thickness: i18n.number(thickness, 1) })}</text>
+    <text class="caption" x={LEFT} y={FRAME_HEIGHT - 6}>{t("illus.boardEdge", { thickness: n(thickness) })}</text>
 </svg>
 
 <style>

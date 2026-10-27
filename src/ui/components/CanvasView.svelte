@@ -3,6 +3,7 @@
     import { isEmptyBBox } from "@core/geometry/index";
     import { INTERNAL_UNITS_PER_MM } from "@core/units/index";
     import { layersBBox, type ProjectLayer } from "@project/index";
+    import type { FocusRequest } from "../state/project.svelte";
     import {
         Canvas2DRenderer,
         fitRect,
@@ -20,7 +21,7 @@
     import { help as helpState } from "../state/help.svelte";
     import IconButton from "./base/IconButton.svelte";
 
-    let { layers, fitRequest }: { layers: ProjectLayer[]; fitRequest: number } = $props();
+    let { layers, fitRequest, focus = null }: { layers: ProjectLayer[]; fitRequest: number; focus?: FocusRequest | null } = $props();
 
     const t = i18n.t;
 
@@ -45,6 +46,7 @@
     let measureTo = $state<ScreenPoint | null>(null);
     let measureFixed = $state(false);
     let cursor = $state<ScreenPoint | null>(null);
+    let highlight = $state<FocusRequest["highlight"]>(null);
     let drag: { x: number; y: number; pointer: number } | null = null;
     // While panning or zooming, frames reuse the last full image; an exact frame follows once the user stops
     let interacting = false;
@@ -61,7 +63,8 @@
                 renderer?.render(view, {
                     showGrid,
                     showOrigin,
-                    measure: measureFrom && measureTo ? { from: measureFrom, to: measureTo } : null
+                    measure: measureFrom && measureTo ? { from: measureFrom, to: measureTo } : null,
+                    highlight
                 }, interacting ? "interactive" : "full");
             });
         }
@@ -80,6 +83,7 @@
 
     function fitAll(): void
     {
+        highlight = null;
         const box = layersBBox(layers);
         if (isEmptyBBox(box))
         {
@@ -294,8 +298,24 @@
     $effect(() =>
     {
         // Redraw whenever something shown changes
-        void [view, showGrid, showOrigin, measureFrom, measureTo];
+        void [view, showGrid, showOrigin, measureFrom, measureTo, highlight];
         requestRender();
+    });
+
+    // Areas requested by other panels (analysis: tightest clearance), shown once per request
+    let handledFocus = 0;
+    $effect(() =>
+    {
+        if (focus && focus.id > handledFocus && view.width > MIN_FIT_SIZE && view.height > MIN_FIT_SIZE)
+        {
+            handledFocus = focus.id;
+            const request = focus;
+            untrack(() =>
+            {
+                view = fitRect(view, request.rect);
+                highlight = request.highlight;
+            });
+        }
     });
 
     // Fit once per request, as soon as the canvas has a size (not again on later resizes)

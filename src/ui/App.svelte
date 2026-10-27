@@ -17,12 +17,17 @@
     import EmptyState from "./components/EmptyState.svelte";
     import Icon from "./components/Icon.svelte";
     import LayerPanel from "./components/LayerPanel.svelte";
+    import SidebarTabs from "./components/SidebarTabs.svelte";
+    import AnalysisPanel from "./analysis/AnalysisPanel.svelte";
+    import { toolLibrary } from "./state/tools.svelte";
+    import ToolLibraryPanel from "./tools/ToolLibraryPanel.svelte";
 
     const t = i18n.t;
 
     let fileInput: HTMLInputElement;
     let dragDepth = $state(0);
     let aboutOpen = $state(false);
+    let sidebarTab = $state("project");
 
     function openFiles(): void
     {
@@ -88,6 +93,8 @@
     onMount(() =>
     {
         document.documentElement.lang = i18n.locale;
+        // The analysis needs the tool library even before the Tools tab is opened
+        void toolLibrary.load();
         // Development helper: ?load=url1,url2 imports files served by the dev server (performance checks)
         if (import.meta.env.DEV)
         {
@@ -144,11 +151,24 @@
 
     <main>
         <aside>
-            <LayerPanel />
+            <SidebarTabs label={t("tabs.label")} bind:active={sidebarTab} tabs={[
+                { id: "project", label: t("tabs.project"), help: "tabProject" },
+                { id: "tools", label: t("tabs.tools"), help: "tabTools" },
+                { id: "analysis", label: t("tabs.analysis"), help: "tabAnalysis" }
+            ]} />
+            <div class="tab-panel" id={`panel-${sidebarTab}`} role="tabpanel" aria-labelledby={`tab-${sidebarTab}`}>
+                {#if sidebarTab === "project"}
+                    <LayerPanel />
+                {:else if sidebarTab === "tools"}
+                    <ToolLibraryPanel />
+                {:else}
+                    <AnalysisPanel />
+                {/if}
+            </div>
             <p class="version">{t("app.version", { version: APP_VERSION })}</p>
         </aside>
         <section class="viewport">
-            <CanvasView layers={project.layers} fitRequest={project.fitRequest} />
+            <CanvasView layers={project.layers} fitRequest={project.fitRequest} focus={project.focus} />
             {#if showEmpty}
                 <EmptyState onOpen={openFiles} onExample={() => project.loadExample()} />
             {/if}
@@ -196,6 +216,7 @@
     h1
     {
         margin: 0;
+        white-space: nowrap;
         font-family: var(--font-title);
         font-size: 26px;
         font-weight: 400;
@@ -206,6 +227,10 @@
     {
         font-size: 13px;
         opacity: 0.8;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .spacer
@@ -240,8 +265,16 @@
         display: flex;
         flex-direction: column;
         min-height: 0;
+        overflow: hidden;
         border-right: 1px solid var(--border);
         background: var(--surface-panel);
+    }
+
+    .tab-panel
+    {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
     }
 
     .version
@@ -274,6 +307,15 @@
         font-size: 18px;
         pointer-events: none;
         z-index: 10;
+    }
+
+    /* The tagline gives way first when the header gets crowded */
+    @media (max-width: 1180px)
+    {
+        .tagline
+        {
+            display: none;
+        }
     }
 
     @media (max-width: 760px)

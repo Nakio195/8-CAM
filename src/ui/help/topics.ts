@@ -1,7 +1,7 @@
 // Help topics shown by HelpTip and the help panel (specification 6.11).
 // Texts live in the i18n files: help.<id>.title, help.<id>.body, and optionally help.<id>.advice / help.<id>.warning.
 
-export type HelpGroup = "view" | "project" | "application" | "tool" | "machining" | "setup";
+export type HelpGroup = "view" | "project" | "application" | "tool" | "analysis" | "machining" | "setup";
 
 export interface HelpTopic
 {
@@ -14,7 +14,7 @@ export interface HelpTopic
     geometric?: boolean;
 }
 
-export const HELP_GROUPS: readonly HelpGroup[] = ["view", "project", "application", "tool", "machining", "setup"];
+export const HELP_GROUPS: readonly HelpGroup[] = ["view", "project", "application", "tool", "analysis", "machining", "setup"];
 
 export const HELP_TOPICS: readonly HelpTopic[] = [
     // Board view
@@ -44,6 +44,9 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     { id: "theme", group: "application" },
     { id: "helpPanel", group: "application" },
     { id: "about", group: "application" },
+    { id: "tabProject", group: "application" },
+    { id: "tabTools", group: "application" },
+    { id: "tabAnalysis", group: "application" },
     // Tools (specification 6.11 table)
     { id: "diameter", group: "tool", geometric: true },
     { id: "tipAngle", group: "tool", geometric: true },
@@ -51,6 +54,30 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     { id: "feedXY", group: "tool" },
     { id: "feedZ", group: "tool" },
     { id: "spindleSpeed", group: "tool" },
+    { id: "toolWidth", group: "tool" },
+    { id: "toolName", group: "tool" },
+    { id: "toolType", group: "tool" },
+    { id: "toolUsage", group: "tool" },
+    { id: "toolNotes", group: "tool" },
+    { id: "toolBuiltIn", group: "tool" },
+    { id: "toolAdd", group: "tool" },
+    { id: "toolEdit", group: "tool" },
+    { id: "toolDuplicate", group: "tool" },
+    { id: "toolDelete", group: "tool" },
+    { id: "toolSave", group: "tool" },
+    { id: "toolCancel", group: "tool" },
+    { id: "toolImport", group: "tool" },
+    { id: "toolExport", group: "tool" },
+    { id: "toolReset", group: "tool" },
+    // Board analysis and recommendations
+    { id: "minClearance", group: "analysis" },
+    { id: "minTrackWidth", group: "analysis" },
+    { id: "holeSizes", group: "analysis" },
+    { id: "zoomToSpot", group: "analysis" },
+    { id: "isolationAdvice", group: "analysis" },
+    { id: "drillingAdvice", group: "analysis" },
+    { id: "drillGrouping", group: "analysis" },
+    { id: "cutoutAdvice", group: "analysis" },
     // Machining
     { id: "cutDepth", group: "machining", geometric: true },
     { id: "depthPerPass", group: "machining", geometric: true },
