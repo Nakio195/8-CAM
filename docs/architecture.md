@@ -506,3 +506,75 @@ toutes les icônes, motifs et logos, avec bascule de langue et de thème.
 - Le glossaire illustré et le guide « Ma première carte » complètent le panneau d'aide en J11.
 - La charte PDF n'a pas pu être relue (aucun outil de rendu PDF sur ce poste) : les choix reposent sur la section
   6.13 du cahier des charges et les fichiers de logo fournis.
+
+---
+
+## 11. Résultats du jalon J5 (outils, analyse, recommandations)
+
+### 11.1 Bibliothèque d'outils (`src/cam/tools/`)
+
+- Modèle de la section 6.3 (millimètres, mm/min, tr/min tels que saisis), usages (isolation, perçage, fraisage de
+  trous, détourage), marqueur « outil d'origine à valider ».
+- **Largeur effective** : `pointe + 2 · profondeur · tan(angle / 2)`, plafonnée au diamètre. Vérifiée contre le
+  travail FlatCAM de référence : V-bit 30°, pointe 0,1 mm, profondeur 0,2 mm → **0,2072 mm**, la valeur de l'en-tête
+  du G-code FlatCAM.
+- Découpage en passes (dernière passe exactement à la profondeur), validation des valeurs impossibles (codes traduits).
+- Bibliothèque d'origine = tableau 6.10 (V-bits 20° et 30°, fraise 0,8, fraise maïs 1,5, forets 0,6 à 1,2) ;
+  profondeurs de perçage et de détourage calculées pour 1,6 mm ; hauteurs 2 mm / 15 mm.
+- Export / import JSON (`8cam-tools`, version 1) : outils invalides ignorés et comptés, fusion par identifiant.
+- Interface : persistance **IndexedDB** dans le navigateur (message si le navigateur refuse, avec conseil
+  d'exporter), fiches illustrées, éditeur, duplication, suppression, retour aux valeurs d'origine.
+
+### 11.2 Analyse de la carte (`src/cam/analysis/`)
+
+- **Espacement minimal exact** entre éléments de cuivre distincts : distance de bord à bord, accélérée par une grille
+  de segments ; une « zone » par paire d'éléments à moins de 2 mm, avec les deux points les plus proches.
+  Calculée dans le Worker d'import (3e étape « analyse »).
+- **Piste la plus fine** : lue dans les ouvertures des tracés Gerber (cercles, et côté le plus court des rectangles).
+- **Trous** : tailles réunies sur tous les fichiers de perçage (métallisés et non), du plus petit au plus grand.
+- **Épaisseur** : 1,6 mm par défaut, modifiable (champ avec infobulle illustrée).
+
+Sur la carte FTDI_Max : espacement minimal **0,399 mm** (règle de conception 0,4 mm), pistes de **0,254 mm**,
+trous 0,762 (×12), 1,016 (×27) et 3 mm (×2). Analyse en 27 ms ; 1,5 s sur la carte dense de 10 x 10 cm.
+
+### 11.3 Recommandations
+
+| Opération | Règle                                                                                                                                                             | FTDI_Max avec la bibliothèque d'origine                                                  |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Isolation | « Adapté » si la largeur passe partout avec ≥ 10 % de marge, « Limite » sous 10 %, « Trop large » + nombre de zones ; adaptés classés du plus robuste au plus fin | V-bit 30° adapté (marge 36 %), V-bit 20° adapté (68 %), fraise 0,8 trop large (62 zones) |
+| Perçage   | foret le plus proche (tolérance 0,1 mm ou 10 %), écart en mm et %, trous trop grands fraisés, regroupements et changements d'outil économisés                     | 0,762 → foret 0,8 (+0,038 mm, +5 %), 1,016 → foret 1,0 (−1,6 %), 3 mm → fraise maïs 1,5  |
+| Détourage | fraises d'au moins 0,8 mm, outils « détourage » d'abord, puis le moins de passes                                                                                  | fraise maïs 1,5 mm, 5 passes pour 1,7 mm                                                 |
+
+Le nombre de « zones non isolables » compte les paires d'éléments trop proches ; deux passages étroits entre les
+deux mêmes éléments comptent pour une zone.
+
+### 11.4 Illustrations paramétriques (`src/ui/illustrations/`)
+
+Profil d'outil vu de côté (V-bit, fraise, foret), V-bit dans le cuivre avec sa largeur effective, empilement des
+passes, hauteurs Z (non à l'échelle, signalé), coupe de la carte, et dessin du **cuivre réel autour de l'endroit le
+plus serré** avec la cote. Géométrie dans un module pur testé ; composants avec instantanés de rendu ; description
+accessible pour chaque dessin. Les infobulles des paramètres géométriques affichent leur illustration **avec les
+valeurs du champ** ; un test échoue si un sujet géométrique n'est ni illustré ni planifié avec son paramètre
+(passes, recouvrement, sens de coupe et zone non isolée en J6, débourrage en J7, attaches et marge en J8, origine
+et miroir en J10).
+
+### 11.5 Interface
+
+Onglets du panneau latéral **Projet / Outils / Analyse** (clavier : flèches, Début, Fin). « Zoomer sur la zone »
+cadre la vue sur l'endroit le plus serré et l'entoure en jaune. Chaque nouveau bouton, champ et indicateur a son
+infobulle (75 sujets d'aide au total).
+
+### 11.6 Défauts trouvés en test navigateur et corrigés
+
+- La validation native des champs numériques (pas `step`) bloquait silencieusement l'enregistrement de valeurs comme
+  3,175 mm ou 10 000 tr/min : la validation est confiée à `validateTool()`.
+- IndexedDB ne sait pas enregistrer les objets réactifs de Svelte : la bibliothèque n'était pas conservée au
+  rechargement. Une copie simple est enregistrée ; le message « le navigateur refuse d'enregistrer » a permis de le
+  voir.
+- Illustrations : libellés coupés en bord de cadre et 0,075 arrondi à « 0,08 » ; en-tête trop chargé sur écran
+  étroit.
+
+### 11.7 Reporté
+
+Le **comparateur d'outils** (section 6.10 : largeur, temps d'usinage estimé, zones non isolées et aperçu côte à
+côte) a besoin des parcours d'isolation et de l'estimation de durée : il est reporté au jalon J6.
