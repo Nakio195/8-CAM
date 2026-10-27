@@ -1,3 +1,3 @@
-// Tool model (endmill, V-bit, drill) and the reusable tool library.
-// Implemented in milestone J5 (see docs/architecture.md).
-export {};
+// Tool model (endmill, V-bit, drill), effective cutting width, built-in library and JSON import / export.
+export * from "./tool";
+export * from "./library";
