@@ -12,6 +12,8 @@ import {
     circlePath,
     DEFAULT_ARC_TOLERANCE,
     distance,
+    distanceToRings,
+    distanceToSegment,
     emptyBBox,
     inflateBBox,
     isCounterClockwise,
@@ -208,5 +210,17 @@ describe("arcs", () =>
         const radius = distance(middle, center);
         expect(radius).toBeGreaterThan(2 * MM);
         expect(radius).toBeLessThan(2 * MM + 200);
+    });
+});
+
+describe("distances to edges", () =>
+{
+    it("measures the distance to segments and rings", () =>
+    {
+        expect(distanceToSegment({ x: 5, y: 3 }, { x: 0, y: 0 }, { x: 10, y: 0 })).toBe(3);
+        expect(distanceToSegment({ x: -4, y: 3 }, { x: 0, y: 0 }, { x: 10, y: 0 })).toBe(5);
+        expect(distanceToSegment({ x: 3, y: 4 }, { x: 0, y: 0 }, { x: 0, y: 0 })).toBe(5);
+        expect(distanceToRings({ x: 5, y: 5 }, [rectanglePath(0, 0, 10, 10)])).toBe(5);
+        expect(distanceToRings({ x: 5, y: 5 }, [])).toBe(Infinity);
     });
 });

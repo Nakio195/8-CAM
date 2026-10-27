@@ -86,3 +86,32 @@ export function translatePath(path: Path, dx: number, dy: number): Path
 {
     return path.map((point) => ({ x: point.x + dx, y: point.y + dy }));
 }
+
+/** Distance from a point to the segment [a, b]. */
+export function distanceToSegment(point: Point, a: Point, b: Point): number
+{
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const lengthSquared = dx * dx + dy * dy;
+    let ratio = lengthSquared === 0 ? 0 : ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSquared;
+    ratio = Math.max(0, Math.min(1, ratio));
+    return Math.hypot(point.x - a.x - ratio * dx, point.y - a.y - ratio * dy);
+}
+
+/** Distance from a point to the nearest edge of closed rings (brute force, for checks and small inputs). */
+export function distanceToRings(point: Point, rings: readonly Path[]): number
+{
+    let best = Infinity;
+    for (const ring of rings)
+    {
+        for (let i = 0; i < ring.length; i++)
+        {
+            const distanceToEdge = distanceToSegment(point, ring[i] as Point, ring[(i + 1) % ring.length] as Point);
+            if (distanceToEdge < best)
+            {
+                best = distanceToEdge;
+            }
+        }
+    }
+    return best;
+}
