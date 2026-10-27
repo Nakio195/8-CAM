@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { analyzeCopper, findClearances, CLEARANCE_SEARCH_RADIUS } from "@cam/analysis/index";
-import { computeIsolation, DEFAULT_ISOLATION, nonIsolatedZones, passOffsets, type IsolationParams } from "@cam/isolation/index";
+import { computeIsolation, DEFAULT_ISOLATION, isolationPasses, nonIsolatedZones, passGroups, passOffsets, type IsolationParams } from "@cam/isolation/index";
 import { checkMoves, segmentsToMoves } from "@cam/toolpath/index";
 import { defaultLibrary, type Tool } from "@cam/tools/index";
 import { distance, distanceToRings, distanceToSegment, isCounterClockwise, rectanglePath, totalArea, type Path, type Point, type Polygon } from "@core/geometry/index";
@@ -38,6 +38,27 @@ describe("pass offsets", () =>
         expect(close(passOffsets(0.8, { passes: 3, overlap: 0.25, extraOffset: 0 }))).toEqual([0.4, 1, 1.6]);
         expect(close(passOffsets(0.2, { passes: 1, overlap: 0, extraOffset: 0.05 }))).toEqual([0.15]);
         expect(passOffsets(1, { passes: 0, overlap: 0, extraOffset: 0 })).toEqual([0.5]);
+    });
+
+    it("are grouped so that only far passes are grown from the previous one", () =>
+    {
+        expect(passGroups([0.1, 0.28, 0.45])).toEqual([[0], [1], [2]]);
+        expect(passGroups([0.4, 1, 1.6])).toEqual([[0, 1, 2]]);
+        expect(passGroups([0.6, 1.2])).toEqual([[0, 1]]);
+        expect(passGroups([])).toEqual([]);
+    });
+
+    it("grown from the previous pass give the same loops as from the copper", () =>
+    {
+        const copper: Polygon[] = [
+            { outer: rectanglePath(0, 0, mmToInternal(3), mmToInternal(1)), holes: [] },
+            { outer: rectanglePath(0, mmToInternal(1.5), mmToInternal(3), mmToInternal(2.5)), holes: [] }
+        ];
+        const area = (loops: { points: Path }[]): number => totalArea(loops.map((loop) => ({ outer: loop.points, holes: [] })));
+        const [, chained] = isolationPasses(copper, [0.2, 0.9], "climb");
+        const [direct] = isolationPasses(copper, [0.9], "climb");
+        expect(chained).toHaveLength(direct?.length ?? -1);
+        expect(Math.abs(area(chained ?? []) - area(direct ?? [])) / area(direct ?? [])).toBeLessThan(1e-4);
     });
 });
 

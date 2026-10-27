@@ -9,10 +9,12 @@ import {
     FillRule,
     JoinType,
     PolyTree64,
+    rectClip,
     type Paths64,
     type PolyPath64
 } from "clipper2-ts";
 import { DEFAULT_ARC_TOLERANCE } from "./arc";
+import type { BBox } from "./bbox";
 import { withOrientation } from "./path";
 import type { Path, Polygon, Polyline } from "./types";
 
@@ -121,6 +123,21 @@ export function polygonsFromRings(rings: readonly Path[], fill: FillStyle = "eve
 export function differencePolygons(subject: readonly Polygon[], clip: readonly Polygon[]): Polygon[]
 {
     return booleanOperation(ClipType.Difference, toPaths(subject), toPaths(clip), FillRule.NonZero);
+}
+
+/**
+ * Part of the polygons inside an axis-aligned box. Linear in the number of points, much faster than a general
+ * intersection: used to cut a huge polygon (a ground pour) down to the area that matters before other operations.
+ */
+export function clipToBox(polygons: readonly Polygon[], box: BBox): Polygon[]
+{
+    if (box.minX >= box.maxX || box.minY >= box.maxY)
+    {
+        return [];
+    }
+    const paths = rectClip({ left: box.minX, top: box.minY, right: box.maxX, bottom: box.maxY }, toPaths(polygons));
+    // Rings keep their orientation, so the non-zero rule rebuilds outer rings and holes
+    return booleanOperation(ClipType.Union, paths, null, FillRule.NonZero);
 }
 
 export function intersectPolygons(subject: readonly Polygon[], clip: readonly Polygon[]): Polygon[]

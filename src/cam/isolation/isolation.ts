@@ -3,11 +3,15 @@
 // joins, each offset outline becoming a closed toolpath.
 
 import {
+    bboxOfPolygons,
+    clipToBox,
+    inflateBBox,
     intersectPolygons,
     offsetPolygons,
     polygonRings,
     totalArea,
     withOrientation,
+    type BBox,
     type Point,
     type Polygon
 } from "@core/geometry/index";
@@ -88,6 +92,17 @@ export interface IsolationResult
 export function nonIsolatedZones(copper: readonly Polygon[], spots: readonly ClearanceSpot[], firstOffset: number): NonIsolatedZone[]
 {
     const zones: NonIsolatedZone[] = [];
+    const boxes = new Map<number, BBox>();
+    const boxOf = (index: number, polygon: Polygon): BBox =>
+    {
+        let box = boxes.get(index);
+        if (!box)
+        {
+            box = bboxOfPolygons([polygon]);
+            boxes.set(index, box);
+        }
+        return box;
+    };
     for (const spot of spots)
     {
         // One internal unit of tolerance, as in the recommendations: a tool exactly as wide as the gap passes
@@ -102,7 +117,18 @@ export function nonIsolatedZones(copper: readonly Polygon[], spots: readonly Cle
         {
             continue;
         }
-        const shape = intersectPolygons(offsetPolygons([a], firstOffset), offsetPolygons([b], firstOffset));
+        // A point of the area is within the offset of a point of each feature, those two points within twice the
+        // offset of each other: each feature is cut down to the part near the other one, a few times in turn, so a
+        // ground pour taking part in hundreds of spots is never offset as a whole. The cut parts are subsets of the
+        // features that keep every such point: the intersection of their offsets is exact.
+        const reach = 2 * firstOffset + 1;
+        let nearA = clipToBox([a], inflateBBox(boxOf(second, b), reach));
+        let nearB = clipToBox([b], inflateBBox(bboxOfPolygons(nearA), reach));
+        nearA = clipToBox(nearA, inflateBBox(bboxOfPolygons(nearB), reach));
+        nearB = clipToBox(nearB, inflateBBox(bboxOfPolygons(nearA), reach));
+        const envelopeA = offsetPolygons(nearA, firstOffset);
+        const envelopeB = offsetPolygons(nearB, firstOffset);
+        const shape = intersectPolygons(envelopeA, envelopeB);
         if (totalArea(shape) > 0)
         {
             zones.push({
@@ -116,10 +142,9 @@ export function nonIsolatedZones(copper: readonly Polygon[], spots: readonly Cle
     return zones;
 }
 
-/** Closed loops of one pass, oriented for the milling direction. */
-function passLoops(copper: readonly Polygon[], offset: number, direction: MillingDirection): ToolpathSegment[]
+/** Closed loops along the outline of an envelope, oriented for the milling direction. */
+function envelopeLoops(envelope: readonly Polygon[], direction: MillingDirection): ToolpathSegment[]
 {
-    const envelope = offsetPolygons(copper, offset);
     return polygonRings(envelope.map((polygon) => ({
         outer: withOrientation(polygon.outer, true),
         holes: polygon.holes.map((hole) => withOrientation(hole, false))
@@ -128,6 +153,50 @@ function passLoops(copper: readonly Polygon[], offset: number, direction: Millin
         points: direction === "climb" ? ring : [...ring].reverse(),
         closed: true
     }));
+}
+
+/**
+ * Offsets (mm) beyond which a pass is grown from the previous pass envelope instead of from the copper. Growing by a
+ * then by b is growing by a + b (Minkowski sums of discs), and the previous envelope has already merged most features:
+ * on the dense benchmark board with a ground pour, 1.1 mm takes 33 s from the copper but 0.3 s from the 0.4 mm
+ * envelope. For small offsets the envelope, rounded with many arc points, is slower to grow than the copper itself.
+ */
+export const CHAIN_OFFSET = 0.5;
+
+/**
+ * Passes computed together, as indices into offsets (increasing): a group starts from the copper, later passes of the
+ * group are grown from the previous one. Groups are independent, computed in parallel by the CAM worker.
+ */
+export function passGroups(offsets: readonly number[]): number[][]
+{
+    const groups: number[][] = [];
+    offsets.forEach((offset, index) =>
+    {
+        const last = groups[groups.length - 1];
+        if (last && offset > CHAIN_OFFSET)
+        {
+            last.push(index);
+        }
+        else
+        {
+            groups.push([index]);
+        }
+    });
+    return groups;
+}
+
+/** Closed loops of passes at the given offsets (mm, increasing), the first from the copper, each next one from the previous. */
+export function isolationPasses(copper: readonly Polygon[], offsets: readonly number[], direction: MillingDirection): ToolpathSegment[][]
+{
+    let envelope: readonly Polygon[] = copper;
+    let reached = 0;
+    return offsets.map((offset) =>
+    {
+        // Arc errors add up along a chain: at most one arc tolerance per pass of the group
+        envelope = offsetPolygons(envelope, mmToInternal(offset) - mmToInternal(reached));
+        reached = offset;
+        return envelopeLoops(envelope, direction);
+    });
 }
 
 function loopLength(segment: ToolpathSegment): number
@@ -144,20 +213,12 @@ function loopLength(segment: ToolpathSegment): number
 }
 
 /**
- * Isolation toolpaths of a copper layer with one tool.
- * spots are the clearance spots of the same copper (layer analysis), used to locate non-isolated areas.
+ * Isolation result from its parts, computed separately (in parallel workers): the loops of every pass (passes[i] at
+ * offsets[i]) and the non-isolated areas. Orders the loops for cutting.
  */
-export function computeIsolation(copper: readonly Polygon[], spots: readonly ClearanceSpot[], tool: Tool,
-    params: IsolationParams, onProgress: (fraction: number) => void = () => undefined): IsolationResult
+export function assembleIsolation(passes: readonly ToolpathSegment[][], zones: NonIsolatedZone[], width: number,
+    offsets: number[], params: Pick<IsolationParams, "combinePasses">): IsolationResult
 {
-    const width = toolWidth(tool);
-    const offsets = passOffsets(width, params);
-    const passes = offsets.map((offset, index) =>
-    {
-        onProgress(index / (offsets.length + 1));
-        return passLoops(copper, mmToInternal(offset), params.direction);
-    });
-    onProgress(offsets.length / (offsets.length + 1));
     const segments = params.combinePasses
         ? orderSegments(passes.flat())
         : passes.reduce<ToolpathSegment[]>((ordered, loops) =>
@@ -165,8 +226,6 @@ export function computeIsolation(copper: readonly Polygon[], spots: readonly Cle
             const last = ordered[ordered.length - 1]?.points[0];
             return ordered.concat(orderSegments(loops, last));
         }, []);
-    const zones = nonIsolatedZones(copper, spots, mmToInternal(offsets[0] ?? width / 2));
-    onProgress(1);
     return {
         segments,
         loopsPerPass: passes.map((loops) => loops.length),
@@ -176,4 +235,26 @@ export function computeIsolation(copper: readonly Polygon[], spots: readonly Cle
         cutLength: internalToMm(segments.reduce((sum, segment) => sum + loopLength(segment), 0)),
         travelLength: internalToMm(travelLength(segments))
     };
+}
+
+/**
+ * Isolation toolpaths of a copper layer with one tool.
+ * spots are the clearance spots of the same copper (layer analysis), used to locate non-isolated areas.
+ */
+export function computeIsolation(copper: readonly Polygon[], spots: readonly ClearanceSpot[], tool: Tool,
+    params: IsolationParams, onProgress: (fraction: number) => void = () => undefined): IsolationResult
+{
+    const width = toolWidth(tool);
+    const offsets = passOffsets(width, params);
+    const passes: ToolpathSegment[][] = [];
+    passGroups(offsets).forEach((group, index, groups) =>
+    {
+        onProgress(index / (groups.length + 1));
+        const loops = isolationPasses(copper, group.map((pass) => offsets[pass] ?? 0), params.direction);
+        group.forEach((pass, rank) => (passes[pass] = loops[rank] ?? []));
+    });
+    onProgress(1 - 1 / (offsets.length + 1));
+    const zones = nonIsolatedZones(copper, spots, mmToInternal(offsets[0] ?? width / 2));
+    onProgress(1);
+    return assembleIsolation(passes, zones, width, offsets, params);
 }

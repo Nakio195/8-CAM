@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
     circlePath,
+    clipToBox,
     DEFAULT_ARC_TOLERANCE,
     differencePolygons,
     distance,
@@ -208,5 +209,19 @@ describe("strokes", () =>
     {
         const frame = differencePolygons([square(0, 0, 10 * MM)], [square(4 * MM, 4 * MM, 2 * MM)]);
         expect(polygonRings([...frame, square(20 * MM, 0, MM)])).toHaveLength(3);
+    });
+});
+
+describe("clipping to a box", () =>
+{
+    it("keeps the part inside the box, holes included", () =>
+    {
+        const frame = differencePolygons([square(0, 0, 10 * MM)], [square(4 * MM, 4 * MM, 2 * MM)]);
+        const clipped = clipToBox(frame, { minX: 3 * MM, minY: 3 * MM, maxX: 7 * MM, maxY: 7 * MM });
+        expect(clipped).toHaveLength(1);
+        expect(clipped[0]?.holes).toHaveLength(1);
+        expect(totalArea(clipped)).toBe(12 * MM * MM);
+        expect(clipToBox(frame, { minX: 20 * MM, minY: 0, maxX: 30 * MM, maxY: 10 * MM })).toEqual([]);
+        expect(clipToBox(frame, { minX: 5, minY: 5, maxX: 5, maxY: 9 })).toEqual([]);
     });
 });

@@ -169,3 +169,45 @@ export function segmentsToMoves(segments: readonly ToolpathSegment[], cut: CutPa
     moves.push({ kind: "spindle", on: false });
     return moves;
 }
+
+/**
+ * Duration of segmentsToMoves(segments, cut) without building the moves (seconds): the same cut, plunge and rapid
+ * lengths, starting at safe height above (0, 0). Large boards produce hundreds of thousands of moves.
+ */
+export function estimateDuration(segments: readonly ToolpathSegment[], cut: CutParameters, rapidFeed: number): number
+{
+    const depths = passDepths(cut.cutDepth, cut.depthPerPass);
+    const deepest = depths[depths.length - 1] ?? 0;
+    let cutMinutes = 0;
+    let plungeMinutes = 0;
+    let rapidLength = 0;
+    let position: Point = { x: 0, y: 0 };
+    let atSafe = true;
+    for (const segment of segments)
+    {
+        const first = segment.points[0];
+        if (!first)
+        {
+            continue;
+        }
+        let planeLength = 0;
+        for (let i = 1; i < segment.points.length; i++)
+        {
+            planeLength += Math.sqrt(distanceSquared(segment.points[i - 1] as Point, segment.points[i] as Point));
+        }
+        if (segment.closed && segment.points.length > 1)
+        {
+            planeLength += Math.sqrt(distanceSquared(segment.points[segment.points.length - 1] as Point, first));
+        }
+        // Down from travel height, then from depth to depth; up to travel height at the end
+        rapidLength += (atSafe ? cut.safeZ - cut.travelZ : 0) + internalToMm(Math.sqrt(distanceSquared(position, first)));
+        plungeMinutes += (cut.travelZ + deepest) / cut.feedZ;
+        cutMinutes += (internalToMm(planeLength) * depths.length) / cut.feedXY;
+        rapidLength += deepest + cut.travelZ;
+        const last = segment.closed || depths.length % 2 === 0 ? first : segment.points[segment.points.length - 1] as Point;
+        position = last;
+        atSafe = false;
+    }
+    rapidLength += atSafe ? 0 : cut.safeZ - cut.travelZ;
+    return (cutMinutes + plungeMinutes + rapidLength / rapidFeed) * 60;
+}

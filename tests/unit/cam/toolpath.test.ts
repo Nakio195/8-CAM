@@ -102,3 +102,23 @@ describe("moves", () =>
         expect(reasons([{ kind: "arc", cw: true, x: 1, y: 1, i: 1, j: 0, feed: 10 }])).toEqual([]);
     });
 });
+
+describe("direct duration estimate", () =>
+{
+    it("matches the statistics of the generated moves", async () =>
+    {
+        const { estimateDuration } = await import("@cam/toolpath/index");
+        const segments: ToolpathSegment[] = [
+            square(3, 4, 2),
+            { points: [{ x: 10 * MM, y: 0 }, { x: 14 * MM, y: 3 * MM }, { x: 20 * MM, y: 3 * MM }], closed: false },
+            square(-5, 2, 1)
+        ];
+        for (const depthPerPass of [0.2, 0.1, 0.07])
+        {
+            const cut = { ...CUT, depthPerPass };
+            const expected = moveStatistics(segmentsToMoves(segments, cut), 1000, { x: 0, y: 0, z: cut.safeZ }).duration;
+            expect(estimateDuration(segments, cut, 1000)).toBeCloseTo(expected, 6);
+        }
+        expect(estimateDuration([], CUT, 1000)).toBe(0);
+    });
+});

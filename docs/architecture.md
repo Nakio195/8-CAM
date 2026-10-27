@@ -578,3 +578,107 @@ infobulle (75 sujets d'aide au total).
 
 Le **comparateur d'outils** (section 6.10 : largeur, temps d'usinage estimé, zones non isolées et aperçu côte à
 côte) a besoin des parcours d'isolation et de l'estimation de durée : il est reporté au jalon J6.
+
+---
+
+## 12. Résultats du jalon J6 (isolation, zones non isolées, comparateur)
+
+### 12.1 Isolation (`src/cam/isolation/`)
+
+- **Passes** comme FlatCAM (`ToolIsolation._pass_offset`) : la passe _i_ (à partir de 0) est à
+  `l·(2i+1)/2 − i·r·l + d` du cuivre, avec _l_ la largeur effective de l'outil, _r_ le recouvrement et _d_ le
+  décalage. Offsets à joints ronds (Shapely `buffer` chez FlatCAM), un parcours fermé par contour.
+- **Sens de coupe** : en avalant, le cuivre conservé est à gauche de l'outil (broche horaire vue de dessus) ; en
+  opposition, le sens inverse, plus tolérant au jeu des axes (choix par défaut, comme FlatCAM).
+- **Ordre** : plus proche voisin, chaque boucle entrée à son sommet le plus proche ; passes combinées (par défaut) ou
+  passe après passe sur toute la carte.
+- **Mouvements** (`src/cam/toolpath/`) : changement d'outil, hauteur de sécurité, broche, puis pour chaque boucle
+  rapide à la hauteur de déplacement, plongée à l'avance Z à chaque profondeur, coupe à l'avance XY, remontée. Un
+  contrôle signale tout rapide sous la hauteur de déplacement ou dans la matière. La **durée estimée** compte
+  chaque profondeur, chaque plongée et les rapides à 1 000 mm/min ; elle est calculée directement depuis les
+  parcours (testée égale au parcours des mouvements), sans créer 500 000 objets sur une carte dense.
+
+### 12.2 Comparaison avec FlatCAM Plus (FTDI_Max, travail Proteus de To)
+
+Le G-code FlatCAM de référence est relu (`tests/helpers/flatcam.ts`) et comparé à nos parcours avec les mêmes
+réglages (V-bit 30°, 0,2 mm de profondeur, décalage personnalisé 0,05 mm confirmé par To) :
+
+| Critère                                       | Résultat         |
+| --------------------------------------------- | ---------------- |
+| Nombre de boucles                             | identique        |
+| Chaque point FlatCAM sur un de nos parcours   | à moins de 2 µm  |
+| Chacun de nos sommets sur un parcours FlatCAM | à moins de 70 µm |
+| Longueur totale coupée                        | écart < 1 %      |
+
+L'écart de 70 µm vient des arcs : FlatCAM les découpe en un nombre fixe de pas par cercle, nous par tolérance de
+corde (0,5 µm), donc nos sommets tombent entre les siens. **Question pour To** : le décalage personnalisé existe
+dans le moteur (`extraOffset`) mais n'est pas proposé dans l'interface. Faut-il l'ajouter ?
+
+Avec les réglages par défaut (2 passes, recouvrement 15 %, opposition) :
+
+| Outil         | Largeur  | Boucles | Longueur coupée | Durée estimée | Zones non isolées | Calcul |
+| ------------- | -------- | ------- | --------------- | ------------- | ----------------- | ------ |
+| V-bit 30° 0,2 | 0,254 mm | 41 + 21 | 1 593 mm        | 13,5 min      | 0                 | 30 ms  |
+| V-bit 20° 0,1 | 0,126 mm | 41 + 41 | 1 815 mm        | 18,9 min      | 0                 | 13 ms  |
+| Fraise 0,8 mm | 0,800 mm | 28 + 13 | 983 mm          | 8,5 min       | 62                | 53 ms  |
+
+### 12.3 Zones non isolées
+
+Pour chaque paire d'éléments plus proches que le diamètre de la première passe (les zones de l'analyse J5), la zone
+est **l'intersection des enveloppes de première passe des deux éléments** : le cuivre que l'outil ne peut pas
+enlever entre eux. FlatCAM ne donne qu'un ratio global ; ici chaque zone est située, dessinée en jaune et listée
+(« Zoomer sur la zone »). Chaque élément est d'abord réduit à sa partie proche de l'autre (découpages successifs
+par boîtes, exacts) : un plan de masse présent dans des centaines de zones n'est jamais grossi en entier.
+
+### 12.4 Calcul en parallèle et performances
+
+Le Worker CAM découpe l'isolation en parties indépendantes, calculées chacune dans un **sous-Worker** :
+
+- chaque passe directement depuis le cuivre ;
+- sauf les passes à plus de 0,5 mm du cuivre, grossies depuis la passe précédente. Grossir de a puis de b revient à
+  grossir de a + b, et l'enveloppe précédente a déjà fusionné presque tout : 1,1 mm prend 33 s depuis le cuivre et
+  0,3 s depuis l'enveloppe à 0,4 mm. Pour les petites distances, c'est l'inverse : l'enveloppe arrondie contient
+  bien plus de points que le cuivre ;
+- les zones non isolées.
+
+L'assemblage (ordre des boucles, durée, emballage) se fait ensuite dans le Worker CAM. L'annulation termine le
+Worker CAM, donc aussi ses sous-Workers. Un navigateur sans Workers imbriqués calcule les parties à la suite.
+Un test vérifie que le résultat par parties est identique au calcul d'un seul tenant.
+
+Banc `tests/bench/isolation.perf.ts` (Node 22, temps d'attente = partie la plus lente + assemblage) :
+
+| Carte                                    | V-bit 30° 0,2 | V-bit 20° 0,1 | Fraise 0,8 | Objectif |
+| ---------------------------------------- | ------------- | ------------- | ---------- | -------- |
+| Carte dense de J1 (sans plan de masse)   | 0,9 s         | 0,8 s         | 1,7 s      | < 5 s    |
+| Même carte avec plan de masse (pire cas) | 5,5 s         | 3,3 s         | 6,8 s      | —        |
+
+Mesuré dans le navigateur avec le plan de masse : 6,1 s, 2,8 s et 6,5 s. **L'objectif de 5 s est tenu pour la carte
+dense de référence, pas encore pour le pire cas avec plan de masse** : ses 140 dégagements très détaillés (100 000
+points) coûtent cher à chaque offset. Pistes explorées et écartées :
+
+- `clipper2-wasm` : seulement 1,3 fois plus rapide sur ces cas, pas de quoi justifier le chargement WASM ;
+- découpage en tuiles : gain faible et raccords visibles ;
+- calcul anneau par anneau : exact, mais gain seulement sur certaines distances.
+
+Le banc avec plan de masse sert de garde-fou contre les régressions (limite 10 s).
+
+### 12.5 Comparateur d'outils et interface
+
+- 4e onglet **Usinage** : opérations d'isolation par couche (couche, outil, passes, recouvrement, sens, passes
+  combinées), calcul avec barre de progression et annulation, résultat périmé signalé dès qu'un réglage change,
+  visibilité, suppression.
+- Superposition sur la carte : bande réellement fraisée (largeur de l'outil, à l'échelle), ligne centrale,
+  déplacements en pointillés, zones non isolées en jaune.
+- **Comparateur** : jusqu'à 3 outils calculés en parallèle sur la même couche. Largeur, longueur, durée estimée et
+  zones non isolées côte à côte, avec un aperçu de la carte par outil. « Utiliser cet outil » le reporte dans
+  l'opération.
+- Illustrations : passes et recouvrement, sens de coupe (animé, arrêté si l'utilisateur réduit les animations),
+  zone non isolée. Infobulles sur chaque nouveau contrôle.
+
+### 12.6 Défauts trouvés et corrigés
+
+- Le comparateur n'affichait que le premier résultat (comparaison par identité d'un objet remplacé) : chaque
+  comparaison porte désormais un numéro.
+- Modules périmés après rechargement à chaud de Vite (« does not provide an export named ») : redémarrage du serveur
+  de développement, sans effet sur la version construite.
+- Zones non isolées : 8,7 s sur la carte dense, ramenées à 3,4 s par le découpage autour de chaque paire.

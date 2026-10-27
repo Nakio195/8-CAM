@@ -128,4 +128,26 @@ describe("isolation job", () =>
         expect(output.duration).toBeGreaterThan((output.cutLength / endmill.feedXY) * 60);
         expect(fractions[fractions.length - 1]).toBe(1);
     });
+
+    it("gives the result of the isolation computed in one piece", async () =>
+    {
+        const { runIsolation } = await import("@workers/isolationJob");
+        const { defaultLibrary } = await import("@cam/tools/index");
+        const { computeIsolation, DEFAULT_ISOLATION } = await import("@cam/isolation/index");
+        const file = importFile("Bottom Copper.GBR", fixture("proteus/ftdi-max-bottom-copper.gbr"));
+        const tool = defaultLibrary().find((entry) => entry.id === "vbit-30-0.2");
+        if (!tool || !file.analysis)
+        {
+            throw new Error("Missing test data");
+        }
+        const params = { ...DEFAULT_ISOLATION, passes: 3 };
+        const output = runIsolation({ copper: file.geometry, spots: file.analysis.spots, tool, params });
+        const reference = computeIsolation(unpackPolygons(file.geometry), file.analysis.spots, tool, params);
+        expect(output.loopsPerPass).toEqual(reference.loopsPerPass);
+        expect(output.zones).toHaveLength(reference.zones.length);
+        expect(output.cutLength).toBeCloseTo(reference.cutLength, 6);
+        // Clipper points carry an unused z: only the coordinates are compared
+        const plain = (path: readonly { x: number; y: number }[]): number[] => path.flatMap((point) => [point.x, point.y]);
+        expect(unpackPolygons(output.loops).map((loop) => plain(loop.outer))).toEqual(reference.segments.map((segment) => plain(segment.points)));
+    });
 });
