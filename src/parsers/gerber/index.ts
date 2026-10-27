@@ -5,3 +5,4 @@ export type { CoordinateFormat } from "./format";
 export type { ApertureMacro } from "./macro";
 export { parseGerber, type GerberParseOptions } from "./parser";
 export { buildGerberGeometry, type GerberBuildOptions, type GerberGeometry } from "./builder";
+export { detectLayerType, layerTypeFromAttributes, layerTypeFromFileName, type LayerKind, type LayerSide, type LayerType } from "./layer";
