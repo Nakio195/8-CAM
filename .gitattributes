@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.GBR -text
+*.gbr -text
+*.drl -text
+*.cnc -text
+*.png binary
+*.pdf binary

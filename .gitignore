@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+Thumbs.db
+*.TMP
+*~RF*
+# Raw material supplied by 8 Fablab; the files we use are copied into assets/ and tests/fixtures/
+ressources/
