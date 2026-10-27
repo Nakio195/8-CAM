@@ -1,3 +1,4 @@
 // Web Worker entry points and the typed request / progress / cancel / result message protocol.
-// Implemented from milestone J2 (see docs/architecture.md).
-export {};
+export type * from "./protocol";
+export { importFile, type ProgressCallback } from "./importer";
+export { startImport, ImportCancelledError, type ImportJob } from "./client";

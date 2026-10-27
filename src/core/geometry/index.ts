@@ -7,3 +7,4 @@ export * from "./transform";
 export * from "./hull";
 export * from "./clipper";
 export * from "./svg";
+export * from "./packing";
