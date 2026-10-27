@@ -1,6 +1,7 @@
 // Geometry of the parametric illustrations (specification 6.12), kept apart from the Svelte components so it can be
 // tested. Every scene is drawn in a fixed SVG frame; real proportions are kept unless stated (copper is thickened).
 
+import { passOffsets } from "@cam/isolation/index";
 import { effectiveWidth, passDepths, type ToolType } from "@cam/tools/index";
 
 export const FRAME_WIDTH = 240;
@@ -235,5 +236,67 @@ export function zHeights(travelZ: number, safeZ: number, depth: number): ZHeight
         travelY: surfaceY - compress(travelZ) * scale,
         safeY: surfaceY - compress(safeZ) * scale,
         depthY: surfaceY + Math.max(6, compress(depth) * scale * 0.6)
+    };
+}
+
+// ----- Isolation passes (top view) -----
+
+export interface IsolationPassesShape
+{
+    /** y of the copper edge; the copper is above it. */
+    edgeY: number;
+    /** Each pass as a band of the tool width, nearest first. */
+    bands: { top: number; bottom: number; centre: number }[];
+    /** Overlap of consecutive bands, px (0 for a single pass). */
+    overlapPx: number;
+}
+
+/** Copper edge at the top, passes below it, to scale: the overlap between bands is what the user sees change. */
+export function isolationPasses(width: number, passes: number, overlap: number): IsolationPassesShape
+{
+    const count = Math.max(1, Math.min(6, Math.round(passes)));
+    const offsets = passOffsets(width, { passes: count, overlap, extraOffset: 0 });
+    const reach = (offsets[offsets.length - 1] ?? width / 2) + width / 2;
+    const edgeY = 28;
+    const scale = 96 / Math.max(reach, 0.01);
+    const bands = offsets.map((offset) => ({
+        top: edgeY + (offset - width / 2) * scale,
+        bottom: edgeY + (offset + width / 2) * scale,
+        centre: edgeY + offset * scale
+    }));
+    return { edgeY, bands, overlapPx: count > 1 ? overlap * width * scale : 0 };
+}
+
+// ----- Non isolated area -----
+
+export interface NonIsolatedShape
+{
+    /** Two pads, x ranges (same y range). */
+    left: { x1: number; x2: number };
+    right: { x1: number; x2: number };
+    padTop: number;
+    padBottom: number;
+    /** Tool circle drawn in the gap. */
+    toolRadius: number;
+    toolX: number;
+    toolY: number;
+    /** True when the tool is wider than the gap. */
+    blocked: boolean;
+}
+
+export function nonIsolated(gap: number, width: number): NonIsolatedShape
+{
+    const scale = 70 / Math.max(gap, width, 0.05);
+    const centre = FRAME_WIDTH / 2;
+    const halfGap = (gap * scale) / 2;
+    return {
+        left: { x1: 20, x2: centre - halfGap },
+        right: { x1: centre + halfGap, x2: FRAME_WIDTH - 20 },
+        padTop: 40,
+        padBottom: 120,
+        toolRadius: (width * scale) / 2,
+        toolX: centre,
+        toolY: 80,
+        blocked: width > gap
     };
 }

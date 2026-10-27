@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import { render } from "svelte/server";
 import { effectiveWidth } from "@cam/tools/index";
 import { HELP_TOPICS } from "@ui/help/topics";
-import { depthPasses, toolProfile, vbitSection, zHeights } from "@ui/illustrations/geometry";
+import { depthPasses, isolationPasses, nonIsolated, toolProfile, vbitSection, zHeights } from "@ui/illustrations/geometry";
 import { ILLUSTRATIONS, PENDING_ILLUSTRATIONS } from "@ui/illustrations/registry";
 import BoardThickness from "@ui/illustrations/BoardThickness.svelte";
 import DepthPasses from "@ui/illustrations/DepthPasses.svelte";
+import IsolationPasses from "@ui/illustrations/IsolationPasses.svelte";
+import MillingDirection from "@ui/illustrations/MillingDirection.svelte";
+import NonIsolated from "@ui/illustrations/NonIsolated.svelte";
 import ToolProfile from "@ui/illustrations/ToolProfile.svelte";
 import VbitSection from "@ui/illustrations/VbitSection.svelte";
 import ZHeights from "@ui/illustrations/ZHeights.svelte";
@@ -45,6 +48,25 @@ describe("illustration geometry", () =>
         expect(shape.passes[4]).toBeGreaterThan(shape.bottomY);
     });
 
+    it("lays the isolation passes below the copper edge with their overlap", () =>
+    {
+        const shape = isolationPasses(0.8, 2, 0.25);
+        expect(shape.bands).toHaveLength(2);
+        expect(shape.bands[0]?.top).toBeCloseTo(shape.edgeY, 6);
+        // The second band starts inside the first one by the overlap
+        expect((shape.bands[0]?.bottom ?? 0) - (shape.bands[1]?.top ?? 0)).toBeCloseTo(shape.overlapPx, 6);
+        expect(isolationPasses(0.8, 1, 0.25).overlapPx).toBe(0);
+        expect(isolationPasses(0.8, 20, 0.1).bands).toHaveLength(6);
+    });
+
+    it("shows a tool blocked by a gap narrower than its width", () =>
+    {
+        expect(nonIsolated(0.4, 0.8).blocked).toBe(true);
+        expect(nonIsolated(0.4, 0.25).blocked).toBe(false);
+        const shape = nonIsolated(0.4, 0.8);
+        expect(shape.right.x1 - shape.left.x2).toBeLessThan(2 * shape.toolRadius);
+    });
+
     it("orders the heights: safe above travel above the surface above the cut", () =>
     {
         const shape = zHeights(2, 15, 0.1);
@@ -71,6 +93,9 @@ describe("illustration components", () =>
         expect(render(DepthPasses, { props: { depth: 1.7, depthPerPass: 0.4 } }).body).toMatchSnapshot();
         expect(render(ZHeights, { props: { travelZ: 2, safeZ: 15, depth: 0.1 } }).body).toMatchSnapshot();
         expect(render(BoardThickness, { props: { thickness: 1.6 } }).body).toMatchSnapshot();
+        expect(render(IsolationPasses, { props: { width: 0.254, passes: 2, overlap: 0.15 } }).body).toMatchSnapshot();
+        expect(render(MillingDirection, { props: { direction: "conventional" } }).body).toMatchSnapshot();
+        expect(render(NonIsolated, { props: { gap: 0.4, width: 0.8 } }).body).toMatchSnapshot();
     });
 
     it("describes each drawing for screen readers", () =>

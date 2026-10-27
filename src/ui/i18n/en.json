@@ -454,5 +454,17 @@
   "help.cutoutAdvice.advice": "A 1.5 to 2 mm corn cob mill at 0.4 mm per pass suits FR4.",
   "help.group.analysis": "Analysis and advice",
   "unit.rpm": "rpm",
-  "tools.exportFileName": "8cam-tools.json"
+  "tools.exportFileName": "8cam-tools.json",
+  "illus.isolationPasses": "{passes} isolation pass(es) of {width} mm with {overlap} % overlap, seen from above",
+  "illus.track": "Track",
+  "illus.pass": "pass {number}",
+  "illus.passesCaption": "Tool {width} mm, overlap {overlap} %",
+  "illus.climb": "Climb milling: the tool turns with the feed, the copper kept is on the left of the path",
+  "illus.conventional": "Conventional milling: the tool turns against the feed, the copper kept is on the right of the path",
+  "illus.climbShort": "Climb",
+  "illus.conventionalShort": "Conventional",
+  "illus.nonIsolated": "{width} mm tool wider than the {gap} mm gap: both pads stay connected",
+  "illus.isolated": "{width} mm tool in a {gap} mm gap: the pads are separated",
+  "illus.gap": "Gap {value} mm",
+  "illus.toolWidth": "Tool {value} mm"
 }

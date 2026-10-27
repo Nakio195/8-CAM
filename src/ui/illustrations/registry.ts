@@ -4,6 +4,9 @@
 import type { Component } from "svelte";
 import BoardThickness from "./BoardThickness.svelte";
 import DepthPasses from "./DepthPasses.svelte";
+import IsolationPasses from "./IsolationPasses.svelte";
+import MillingDirection from "./MillingDirection.svelte";
+import NonIsolated from "./NonIsolated.svelte";
 import ToolProfile from "./ToolProfile.svelte";
 import VbitSection from "./VbitSection.svelte";
 import ZHeights from "./ZHeights.svelte";
@@ -28,6 +31,12 @@ const vbit = (values: IllustrationValues): Record<string, unknown> => ({
     tipDiameter: values.tipDiameter ?? 0.2,
     tipAngle: values.tipAngle ?? 30,
     depth: values.cutDepth ?? 0.1
+});
+
+const passes = (values: IllustrationValues): Record<string, unknown> => ({
+    width: values.width ?? 0.25,
+    passes: values.passes ?? 2,
+    overlap: values.overlap ?? 0.15
 });
 
 const heights = (values: IllustrationValues): Record<string, unknown> => ({
@@ -60,7 +69,18 @@ export const ILLUSTRATIONS: Readonly<Record<string, TopicIllustration>> = {
     },
     travelZ: { component: as(ZHeights), props: heights },
     safeZ: { component: as(ZHeights), props: heights },
-    boardThickness: { component: as(BoardThickness), props: (values) => ({ thickness: values.thickness ?? 1.6 }) }
+    boardThickness: { component: as(BoardThickness), props: (values) => ({ thickness: values.thickness ?? 1.6 }) },
+    passes: { component: as(IsolationPasses), props: passes },
+    overlap: { component: as(IsolationPasses), props: passes },
+    millingDirection: {
+        component: as(MillingDirection),
+        // values.direction: 0 climb, 1 conventional
+        props: (values) => ({ direction: values.direction === 0 ? "climb" : "conventional" })
+    },
+    nonIsolated: {
+        component: as(NonIsolated),
+        props: (values) => ({ gap: values.gap ?? 0.4, width: values.width ?? 0.8 })
+    }
 };
 
 /**
@@ -68,10 +88,6 @@ export const ILLUSTRATIONS: Readonly<Record<string, TopicIllustration>> = {
  * The help test fails if a geometric topic is neither illustrated nor listed here.
  */
 export const PENDING_ILLUSTRATIONS: Readonly<Record<string, string>> = {
-    passes: "J6",
-    overlap: "J6",
-    millingDirection: "J6",
-    nonIsolated: "J6",
     peck: "J7",
     tabs: "J8",
     tabHeight: "J8",

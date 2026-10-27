@@ -454,5 +454,17 @@
   "help.cutoutAdvice.advice": "Une fraise maïs de 1,5 à 2 mm à 0,4 mm par passe convient au FR4.",
   "help.group.analysis": "Analyse et conseils",
   "unit.rpm": "tr/min",
-  "tools.exportFileName": "8cam-outils.json"
+  "tools.exportFileName": "8cam-outils.json",
+  "illus.isolationPasses": "{passes} passe(s) d’isolation de {width} mm avec {overlap} % de recouvrement, vues de dessus",
+  "illus.track": "Piste",
+  "illus.pass": "passe {number}",
+  "illus.passesCaption": "Outil {width} mm, recouvrement {overlap} %",
+  "illus.climb": "En avalant : l’outil tourne dans le sens d’avance, le cuivre gardé est à gauche du trajet",
+  "illus.conventional": "En opposition : l’outil tourne contre le sens d’avance, le cuivre gardé est à droite du trajet",
+  "illus.climbShort": "En avalant",
+  "illus.conventionalShort": "Opposition",
+  "illus.nonIsolated": "Outil de {width} mm plus large que l’écart de {gap} mm : les deux pastilles restent reliées",
+  "illus.isolated": "Outil de {width} mm dans un écart de {gap} mm : les pastilles sont séparées",
+  "illus.gap": "Écart {value} mm",
+  "illus.toolWidth": "Outil {value} mm"
 }
