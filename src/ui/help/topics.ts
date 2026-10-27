@@ -38,6 +38,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     { id: "layerType", group: "project" },
     { id: "layerWarnings", group: "project" },
     { id: "importCancel", group: "project" },
+    { id: "messageDismiss", group: "project" },
     // Application
     { id: "language", group: "application" },
     { id: "theme", group: "application" },

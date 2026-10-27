@@ -241,5 +241,8 @@
   "help.mirror.advice": "Required for the back side of a double sided board.",
   "help.postProcessor.title": "Post-processor",
   "help.postProcessor.body": "Translates the toolpaths into the G-code dialect of the machine.",
-  "help.postProcessor.advice": "GRBL for most hobby CNCs."
+  "help.postProcessor.advice": "GRBL for most hobby CNCs.",
+  "help.messageDismiss.title": "Close the message",
+  "help.messageDismiss.body": "Hides this error message. The file was not added to the project: you can import it again once corrected.",
+  "view.toolbar": "View tools"
 }

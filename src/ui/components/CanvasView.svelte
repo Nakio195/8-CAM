@@ -16,11 +16,18 @@
         type Viewport
     } from "@render/index";
     import { i18n } from "../state/i18n.svelte";
-    import Icon from "./Icon.svelte";
+    import { help } from "../help";
+    import { help as helpState } from "../state/help.svelte";
+    import IconButton from "./base/IconButton.svelte";
 
     let { layers, fitRequest }: { layers: ProjectLayer[]; fitRequest: number } = $props();
 
     const t = i18n.t;
+
+    function pinHelp(topic: string, event: MouseEvent): void
+    {
+        helpState.show(topic, event.currentTarget as HTMLElement, true);
+    }
     const WHEEL_SENSITIVITY = 0.0015;
     const KEY_PAN = 60;
     const MIN_FIT_SIZE = 64;
@@ -309,29 +316,17 @@
 </script>
 
 <div class="view">
-    <div class="toolbar" role="toolbar" aria-label={t("layers.title")}>
-        <button type="button" title={t("view.fit")} aria-label={t("view.fit")} onclick={fitAll}>
-            <Icon name="fit" />
-        </button>
-        <button type="button" title={t("view.zoomIn")} aria-label={t("view.zoomIn")} onclick={() => zoomCenter(1.25)}>
-            <Icon name="zoomIn" />
-        </button>
-        <button type="button" title={t("view.zoomOut")} aria-label={t("view.zoomOut")} onclick={() => zoomCenter(0.8)}>
-            <Icon name="zoomOut" />
-        </button>
+    <div class="toolbar" role="toolbar" aria-label={t("view.toolbar")}>
+        <IconButton icon="fit" tone="onDark" label={t("view.fit")} help="viewFit" onclick={fitAll} />
+        <IconButton icon="zoomIn" tone="onDark" label={t("view.zoomIn")} help="viewZoomIn" onclick={() => zoomCenter(1.25)} />
+        <IconButton icon="zoomOut" tone="onDark" label={t("view.zoomOut")} help="viewZoomOut" onclick={() => zoomCenter(0.8)} />
         <span class="separator"></span>
-        <button type="button" aria-pressed={showGrid} title={t("view.grid")} aria-label={t("view.grid")}
-            onclick={() => (showGrid = !showGrid)}>
-            <Icon name="grid" />
-        </button>
-        <button type="button" aria-pressed={showOrigin} title={t("view.origin")} aria-label={t("view.origin")}
-            onclick={() => (showOrigin = !showOrigin)}>
-            <Icon name="origin" />
-        </button>
-        <button type="button" aria-pressed={measuring} title={t("view.measure")} aria-label={t("view.measure")}
-            onclick={toggleMeasure}>
-            <Icon name="measure" />
-        </button>
+        <IconButton icon="grid" tone="onDark" label={t("view.grid")} help="viewGrid" pressed={showGrid}
+            onclick={() => (showGrid = !showGrid)} />
+        <IconButton icon="origin" tone="onDark" label={t("view.origin")} help="viewOrigin" pressed={showOrigin}
+            onclick={() => (showOrigin = !showOrigin)} />
+        <IconButton icon="measure" tone="onDark" label={t("view.measure")} help="viewMeasure" pressed={measuring}
+            onclick={toggleMeasure} />
     </div>
 
     <div class="canvas-box" bind:this={container}>
@@ -353,26 +348,32 @@
         {/if}
     </div>
 
-    <div class="status" aria-live="polite">
-        <span class="mono">
+    <!-- Indicators are buttons so their help is reachable from the keyboard; a click pins it -->
+    <div class="status">
+        <button class="indicator mono" type="button" use:help={"viewCursor"} onclick={(event) => pinHelp("viewCursor", event)}>
             {#if cursor}
                 {t("status.cursor", { x: i18n.number(cursor.x, 3), y: i18n.number(cursor.y, 3) })}
             {:else}
                 {t("status.idle")}
             {/if}
-        </span>
-        {#if measure}
-            <span class="mono measure">
+        </button>
+        <!-- Only the measurement is announced: the cursor position changes far too often -->
+        <span class="mono measure" aria-live="polite">
+            {#if measure}
                 {t("status.measure", {
                     dx: i18n.number(measure.dx, 3),
                     dy: i18n.number(measure.dy, 3),
                     distance: i18n.number(Math.hypot(measure.dx, measure.dy), 3)
                 })}
-            </span>
-        {/if}
+            {/if}
+        </span>
         <span class="spacer"></span>
-        <span class="mono">{t("status.grid", { step: i18n.number(gridStep(view.scale), gridStep(view.scale) < 1 ? 2 : 0) })}</span>
-        <span class="mono">{t("status.zoom", { zoom: i18n.number(view.scale, view.scale < 10 ? 2 : 0) })}</span>
+        <button class="indicator mono" type="button" use:help={"viewGridStep"} onclick={(event) => pinHelp("viewGridStep", event)}>
+            {t("status.grid", { step: i18n.number(gridStep(view.scale), gridStep(view.scale) < 1 ? 2 : 0) })}
+        </button>
+        <button class="indicator mono" type="button" use:help={"viewScale"} onclick={(event) => pinHelp("viewScale", event)}>
+            {t("status.zoom", { zoom: i18n.number(view.scale, view.scale < 10 ? 2 : 0) })}
+        </button>
     </div>
 </div>
 
@@ -401,30 +402,20 @@
         color: #f1ecf0;
     }
 
-    .toolbar button
+    .toolbar :global(.icon-button)
     {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
         width: 32px;
         height: 32px;
+    }
+
+    .indicator
+    {
         padding: 0;
         border: none;
-        border-radius: 4px;
-        background: transparent;
+        background: none;
         color: inherit;
-        cursor: pointer;
-    }
-
-    .toolbar button:hover
-    {
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .toolbar button[aria-pressed="true"]
-    {
-        background: var(--brand-rouge);
-        color: #ffffff;
+        font-size: inherit;
+        cursor: help;
     }
 
     .separator

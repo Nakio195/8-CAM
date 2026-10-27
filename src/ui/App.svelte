@@ -3,8 +3,16 @@
     import { APP_VERSION } from "@core/index";
     import logoUrl from "../../assets/brand/logo-generique-horizontal.svg";
     import { LOCALES, type Locale } from "./i18n";
+    import { help } from "./help";
+    import HelpPanel from "./help/HelpPanel.svelte";
+    import HelpTipLayer from "./help/HelpTipLayer.svelte";
+    import { help as helpState } from "./state/help.svelte";
     import { i18n } from "./state/i18n.svelte";
     import { project } from "./state/project.svelte";
+    import { theme, type ThemeMode } from "./state/theme.svelte";
+    import AboutDialog from "./components/AboutDialog.svelte";
+    import Button from "./components/base/Button.svelte";
+    import IconButton from "./components/base/IconButton.svelte";
     import CanvasView from "./components/CanvasView.svelte";
     import EmptyState from "./components/EmptyState.svelte";
     import Icon from "./components/Icon.svelte";
@@ -14,6 +22,7 @@
 
     let fileInput: HTMLInputElement;
     let dragDepth = $state(0);
+    let aboutOpen = $state(false);
 
     function openFiles(): void
     {
@@ -102,22 +111,33 @@
         <h1>{t("app.title")}</h1>
         <span class="tagline">{t("app.tagline")}</span>
         <span class="spacer"></span>
-        <button class="header-button" type="button" title={t("header.openHint")} onclick={openFiles}>
-            <Icon name="open" />
-            <span>{t("header.open")}</span>
-        </button>
-        <button class="header-button" type="button" title={t("header.exampleHint")} onclick={() => project.loadExample()}>
-            <Icon name="board" />
-            <span>{t("header.example")}</span>
-        </button>
-        <label class="language" title={t("app.language")}>
+        <Button variant="onDark" icon="open" help="fileOpen" onclick={openFiles}>
+            <span class="button-text">{t("header.open")}</span>
+        </Button>
+        <Button variant="onDark" icon="board" help="fileExample" onclick={() => project.loadExample()}>
+            <span class="button-text">{t("header.example")}</span>
+        </Button>
+        <label class="select">
             <span class="visually-hidden">{t("app.language")}</span>
-            <select value={i18n.locale} onchange={(event) => i18n.setLocale(event.currentTarget.value as Locale)}>
+            <select value={i18n.locale} use:help={"language"}
+                onchange={(event) => i18n.setLocale(event.currentTarget.value as Locale)}>
                 {#each LOCALES as option (option)}
                     <option value={option}>{option.toUpperCase()}</option>
                 {/each}
             </select>
         </label>
+        <label class="select">
+            <span class="visually-hidden">{t("help.theme.title")}</span>
+            <select value={theme.mode} use:help={"theme"}
+                onchange={(event) => theme.setMode(event.currentTarget.value as ThemeMode)}>
+                <option value="auto">{t("theme.auto")}</option>
+                <option value="light">{t("theme.light")}</option>
+                <option value="dark">{t("theme.dark")}</option>
+            </select>
+        </label>
+        <IconButton icon="help" label={t("header.help")} help="helpPanel" tone="onDark" pressed={helpState.panelOpen}
+            onclick={() => (helpState.panelOpen ? helpState.closePanel() : helpState.openPanel())} />
+        <IconButton icon="about" label={t("header.about")} help="about" tone="onDark" onclick={() => (aboutOpen = true)} />
         <input bind:this={fileInput} class="visually-hidden" type="file" multiple tabindex="-1" aria-hidden="true"
             onchange={onFilesChosen} />
     </header>
@@ -132,8 +152,12 @@
             {#if showEmpty}
                 <EmptyState onOpen={openFiles} onExample={() => project.loadExample()} />
             {/if}
+            <HelpPanel />
         </section>
     </main>
+
+    <HelpTipLayer />
+    <AboutDialog bind:open={aboutOpen} />
 
     {#if dragDepth > 0}
         <div class="drop" aria-hidden="true">
@@ -189,25 +213,7 @@
         flex: 1;
     }
 
-    .header-button
-    {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border: 1px solid rgba(255, 255, 255, 0.35);
-        border-radius: var(--radius);
-        background: transparent;
-        color: inherit;
-        cursor: pointer;
-    }
-
-    .header-button:hover
-    {
-        background: rgba(255, 255, 255, 0.12);
-    }
-
-    .language select
+    .select select
     {
         padding: 5px 6px;
         border: 1px solid rgba(255, 255, 255, 0.35);
@@ -216,7 +222,7 @@
         color: inherit;
     }
 
-    .language option
+    .select option
     {
         color: #4b2a46;
     }
@@ -270,16 +276,6 @@
         z-index: 10;
     }
 
-    .visually-hidden
-    {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip-path: inset(50%);
-        white-space: nowrap;
-    }
-
     @media (max-width: 760px)
     {
         main
@@ -289,7 +285,7 @@
         }
 
         .tagline,
-        .header-button span
+        .button-text
         {
             display: none;
         }

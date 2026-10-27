@@ -1,4 +1,4 @@
-// Svelte action attaching a help topic to any element: use:help={"viewFit"}.
+// Svelte action attaching a help topic to any element: use:help={"viewFit"} (an empty topic does nothing).
 // Mouse: shown after 400 ms of hover. Keyboard: shown on focus. Touch: long press opens it pinned.
 // The element is described by the shared tooltip (aria-describedby), which HelpTipLayer renders once for the app.
 
@@ -12,13 +12,16 @@ export function helpAction(element: HTMLElement, topic: string): { update: (next
     let pressTimer = 0;
     let suppressClick = false;
 
-    element.setAttribute("aria-describedby", TOOLTIP_ID);
-    // Native tooltips would duplicate the help
-    element.removeAttribute("title");
+    if (id)
+    {
+        element.setAttribute("aria-describedby", TOOLTIP_ID);
+        // Native tooltips would duplicate the help
+        element.removeAttribute("title");
+    }
 
     const onPointerEnter = (event: PointerEvent): void =>
     {
-        if (event.pointerType === "mouse" || event.pointerType === "pen")
+        if (id && (event.pointerType === "mouse" || event.pointerType === "pen"))
         {
             help.scheduleShow(id, element);
         }
@@ -32,7 +35,7 @@ export function helpAction(element: HTMLElement, topic: string): { update: (next
     };
     const onPointerDown = (event: PointerEvent): void =>
     {
-        if (event.pointerType === "touch")
+        if (id && event.pointerType === "touch")
         {
             window.clearTimeout(pressTimer);
             pressTimer = window.setTimeout(() =>
@@ -63,7 +66,7 @@ export function helpAction(element: HTMLElement, topic: string): { update: (next
     };
     const onFocus = (): void =>
     {
-        if (element.matches(":focus-visible"))
+        if (id && element.matches(":focus-visible"))
         {
             help.show(id, element);
         }
@@ -78,7 +81,7 @@ export function helpAction(element: HTMLElement, topic: string): { update: (next
         {
             help.hide(true);
         }
-        else if (event.key === "F1")
+        else if (id && event.key === "F1")
         {
             // F1 pins the help of the focused element, as in many desktop applications
             event.preventDefault();

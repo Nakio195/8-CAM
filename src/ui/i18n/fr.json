@@ -241,5 +241,8 @@
   "help.mirror.advice": "Obligatoire pour la face arrière d'une carte double face.",
   "help.postProcessor.title": "Post-processeur",
   "help.postProcessor.body": "Traduit les parcours dans le dialecte G-code de la machine.",
-  "help.postProcessor.advice": "GRBL pour la plupart des CNC hobby."
+  "help.postProcessor.advice": "GRBL pour la plupart des CNC hobby.",
+  "help.messageDismiss.title": "Fermer le message",
+  "help.messageDismiss.body": "Masque ce message d’erreur. Le fichier n’a pas été ajouté au projet : vous pouvez le réimporter après l’avoir corrigé.",
+  "view.toolbar": "Outils de la vue"
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
     import type { HTMLButtonAttributes } from "svelte/elements";
+    import { help as helpAction } from "../../help";
     import Icon, { type IconName } from "../Icon.svelte";
 
     type Variant = "primary" | "secondary" | "ghost" | "onDark";
@@ -8,13 +9,14 @@
     let {
         variant = "primary",
         icon,
+        help = "",
         children,
         type = "button",
         ...rest
-    }: { variant?: Variant; icon?: IconName; children: Snippet } & HTMLButtonAttributes = $props();
+    }: { variant?: Variant; icon?: IconName; help?: string; children: Snippet } & HTMLButtonAttributes = $props();
 </script>
 
-<button class="button {variant}" {type} {...rest}>
+<button class="button {variant}" {type} use:helpAction={help} {...rest}>
     {#if icon}
         <Icon name={icon} />
     {/if}

@@ -4,6 +4,9 @@
     import { isMessageKey } from "../i18n";
     import { i18n } from "../state/i18n.svelte";
     import { project } from "../state/project.svelte";
+    import { help } from "../help";
+    import { help as helpState } from "../state/help.svelte";
+    import IconButton from "./base/IconButton.svelte";
     import Icon from "./Icon.svelte";
 
     const t = i18n.t;
@@ -34,10 +37,7 @@
                 {t(task.stage === "parsing" ? "import.parsing" : "import.building", { file: task.fileName })}
             </span>
             <progress max="1" value={task.fraction}></progress>
-            <button class="icon-button" type="button" title={t("import.cancel")} aria-label={t("import.cancel")}
-                onclick={() => task.cancel()}>
-                <Icon name="close" size={16} />
-            </button>
+            <IconButton icon="close" size={16} label={t("import.cancel")} help="importCancel" onclick={() => task.cancel()} />
         </div>
     {/each}
 
@@ -45,10 +45,8 @@
         <div class="failure" role="alert">
             <Icon name="warning" size={16} />
             <span>{t("import.failed", { file: failure.fileName, message: failure.message })}</span>
-            <button class="icon-button" type="button" title={t("import.dismiss")} aria-label={t("import.dismiss")}
-                onclick={() => project.dismissFailure(failure.id)}>
-                <Icon name="close" size={16} />
-            </button>
+            <IconButton icon="close" size={16} label={t("import.dismiss")} help="messageDismiss"
+                onclick={() => project.dismissFailure(failure.id)} />
         </div>
     {/each}
 
@@ -60,40 +58,33 @@
         {#each ordered as layer, index (layer.id)}
             <li class="layer" class:hidden={!layer.visible}>
                 <div class="row">
-                    <button class="icon-button" type="button" aria-pressed={layer.visible}
-                        title={t(layer.visible ? "layers.hide" : "layers.show")}
-                        aria-label={t(layer.visible ? "layers.hide" : "layers.show")}
-                        onclick={() => project.setVisible(layer.id, !layer.visible)}>
-                        <Icon name={layer.visible ? "eye" : "eyeOff"} size={16} />
-                    </button>
-                    <input class="swatch" type="color" value={layer.color} title={t("layers.color")}
-                        aria-label={t("layers.color")}
+                    <!-- The eye shows the current state; the button is not a toggle "pressed" state for screen readers -->
+                    <IconButton icon={layer.visible ? "eye" : "eyeOff"} size={16} help="layerVisibility"
+                        label={t(layer.visible ? "layers.hide" : "layers.show")}
+                        onclick={() => project.setVisible(layer.id, !layer.visible)} />
+                    <input class="swatch" type="color" value={layer.color} aria-label={t("layers.color")}
+                        use:help={"layerColor"}
                         oninput={(event) => project.setColor(layer.id, event.currentTarget.value)} />
                     <!-- Full name, wrapped if needed: files of one board often share a long common start -->
                     <span class="name">{layer.name}</span>
                 </div>
                 <div class="meta">
-                    <span class="badge">{typeLabel(layer)}</span>
+                    <button class="badge" type="button" use:help={"layerType"}
+                        onclick={(event) => helpState.show("layerType", event.currentTarget, true)}>{typeLabel(layer)}</button>
                     {#if layer.file.warnings.length > 0}
-                        <span class="badge warning">
+                        <button class="badge warning" type="button" use:help={"layerWarnings"}
+                            onclick={(event) => helpState.show("layerWarnings", event.currentTarget, true)}>
                             <Icon name="warning" size={12} />
                             {layer.file.warnings.length}
-                        </span>
+                        </button>
                     {/if}
                     <span class="spacer"></span>
-                    <button class="icon-button" type="button" disabled={index === 0} title={t("layers.up")}
-                        aria-label={t("layers.up")} onclick={() => project.move(layer.id, "up")}>
-                        <Icon name="up" size={16} />
-                    </button>
-                    <button class="icon-button" type="button" disabled={index === ordered.length - 1}
-                        title={t("layers.down")} aria-label={t("layers.down")}
-                        onclick={() => project.move(layer.id, "down")}>
-                        <Icon name="down" size={16} />
-                    </button>
-                    <button class="icon-button" type="button" title={t("layers.remove")} aria-label={t("layers.remove")}
-                        onclick={() => project.remove(layer.id)}>
-                        <Icon name="remove" size={16} />
-                    </button>
+                    <IconButton icon="up" size={16} label={t("layers.up")} help="layerUp" disabled={index === 0}
+                        onclick={() => project.move(layer.id, "up")} />
+                    <IconButton icon="down" size={16} label={t("layers.down")} help="layerDown"
+                        disabled={index === ordered.length - 1} onclick={() => project.move(layer.id, "down")} />
+                    <IconButton icon="remove" size={16} label={t("layers.remove")} help="layerRemove"
+                        onclick={() => project.remove(layer.id)} />
                 </div>
                 <details>
                     <summary>{t("layers.details")}</summary>
@@ -239,6 +230,9 @@
     .badge
     {
         display: inline-flex;
+        border: none;
+        color: inherit;
+        cursor: help;
         align-items: center;
         gap: 3px;
         padding: 1px 6px;
@@ -280,31 +274,6 @@
     {
         font-family: var(--font-mono);
         margin-right: 4px;
-    }
-
-    .icon-button
-    {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 26px;
-        height: 26px;
-        padding: 0;
-        border: none;
-        border-radius: 4px;
-        background: transparent;
-        cursor: pointer;
-    }
-
-    .icon-button:hover:not(:disabled)
-    {
-        background: var(--surface-sunken);
-    }
-
-    .icon-button:disabled
-    {
-        opacity: 0.3;
-        cursor: default;
     }
 
     .task,
