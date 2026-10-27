@@ -57,7 +57,7 @@ export function createDenseBoard(): DenseBoard
             // Horizontal track to the right neighbour with a dogleg
             if (column + 1 < count && random() < 0.6)
             {
-                const offset = (random() - 0.5) * 0.4 * MM;
+                const offset = Math.round((random() - 0.5) * 0.4 * MM);
                 target.push([
                     { x, y },
                     { x: x + 0.6 * MM, y: y + offset },

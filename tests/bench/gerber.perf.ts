@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { expect, it } from "vitest";
 import {
     bboxOfPolygons,
@@ -16,6 +18,7 @@ import { createDenseBoard } from "./denseBoard";
 // Target of specification section 8: parsing a 5 MB Gerber file in < 3 s
 const MM = mmToInternal(1);
 const TARGET_BYTES = 5 * 1024 * 1024;
+const OUTPUT = join(import.meta.dirname, "..", "..", "test-output");
 
 /** Coordinates in the 4.6 mm format: internal units are 10 nm, the file unit is 1 nm. */
 function coordinate(value: number): string
@@ -82,6 +85,9 @@ function createLargeGerber(): string
     }
     const tileText = tile.join("\n");
     const header = "%FSLAX46Y46*%\n%MOMM*%\n%ADD10C,0.2*%\n%ADD11C,1*%\n%ADD12C,0.3*%\n";
+    // One tile is a dense 10 x 10 cm board: kept for checking the viewer (npm run dev, then ?load=/test-output/dense-board.gbr)
+    mkdirSync(OUTPUT, { recursive: true });
+    writeFileSync(join(OUTPUT, "dense-board.gbr"), `${header}${tileText}\nM02*\n`);
     const copies = Math.ceil(TARGET_BYTES / tileText.length);
     const parts = [header];
     for (let i = 0; i < copies; i++)
