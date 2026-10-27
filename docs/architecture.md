@@ -274,3 +274,69 @@ pour surveiller les régressions (il ne fait pas partie de `npm test`, trop dép
 Tests à l'appui : offset d'un cercle exact à moins de 1 µm, erreur de corde des arcs ≤ 0,5 µm (+ 1 unité d'arrondi),
 aller-retour mm ↔ unités internes sans perte au-delà de 0,01 µm, carte de 1 m traitée sans débordement.
 Couverture de `src/core` : 100 % des lignes, 98 % des branches.
+
+---
+
+## 7. Résultats du jalon J2 (parser Gerber)
+
+### 7.1 Organisation
+
+| Fichier `src/parsers/gerber/` | Rôle                                                                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `lexer.ts`                    | découpe le fichier en commandes « mot » (`…*`) et étendues (`%…%`), avec numéros de ligne                                |
+| `format.ts`                   | `%FS` (zéros de tête / queue, absolu / incrémental), décodage des coordonnées                                            |
+| `macro.ts`                    | `%AM` : variables, expressions (analyseur maison, jamais d'`eval`), primitives                                           |
+| `aperture.ts`                 | `%AD` et formes : C, R, O, P avec trou ; primitives 1, 2/20, 21, 22, 4, 5, 6, 7                                          |
+| `parser.ts`                   | machine à états : D01/D02/D03, G01/02/03, G74/G75, G36/G37, `%LP`, `%SR`, `%LM/%LR/%LS`, attributs X2                    |
+| `builder.ts`                  | construction du cuivre : lots consécutifs de même polarité, union (sombre) / différence (claire) dans l'ordre du fichier |
+| `layer.ts`                    | type de couche par `%TF.FileFunction`, sinon par le nom de fichier (KiCad, Eagle, EasyEDA, Altium, Proteus)              |
+
+Le document produit (`GerberDocument`) garde les **entités sources** (flashs, pistes, régions avec ouverture,
+polarité, attributs X2 et ligne d'origine) pour l'affichage et le débogage ; le cuivre unifié est calculé à part
+par `buildGerberGeometry`, l'étape lourde destinée au Worker.
+
+### 7.2 Robustesse
+
+Le parser ne lève jamais d'exception sur le contenu d'un fichier : chaque problème devient un avertissement
+`{ code, line, detail }`. Le `code` est stable et sera traduit par l'interface (i18n), `detail` est en anglais pour
+les logs. Un test envoie 50 fichiers aléatoires sans planter. Commandes obsolètes tolérées : `G54`, `G55`,
+`G70/G71`, `G90/G91`, `G10-12`, `M00/M01`, opération modale (coordonnées sans `D0x`), `%IN`, `%LN`, `%OF`, `%MI`…
+Non pris en charge (signalés) : `%IPNEG` (image négative), `%AB` (block apertures).
+
+Choix à noter :
+
+- arc sans `G74`/`G75` : mode multi-quadrant supposé (avertissement) ;
+- `%LMX` retourne les coordonnées X de l'ouverture ;
+- une piste tracée avec une ouverture autre qu'un cercle balaie l'enveloppe convexe de la forme (exact pour
+  rectangles, oblongs et polygones ; avertissement pour les macros).
+
+### 7.3 Comparaison avec FlatCAM Plus
+
+Sur la carte FTDI_Max (Proteus, cuivre face inférieure), **tous les points de coupe** du G-code d'isolation FlatCAM
+(1 723 points, première passe) sont à **0,1536 mm ± 0,0004 mm** de notre contour de cuivre : les deux logiciels
+construisent la même géométrie à moins d'un micron près. Les 0,1536 mm correspondent au rayon de l'outil
+(0,2072 / 2 = 0,1036 mm) plus 0,05 mm propres au réglage de ce travail FlatCAM (à confirmer par To).
+Le rendu SVG de contrôle (cuivre + trajets FlatCAM superposés) est écrit dans `test-output/` par `npm test`.
+
+### 7.4 Performances (`npm run bench`)
+
+| Mesure                                                                         | Résultat | Objectif         |
+| ------------------------------------------------------------------------------ | -------- | ---------------- |
+| Parsing d'un fichier de 9,3 Mo (2 cartes denses 10 x 10 cm avec plan de masse) | 0,5 s    | < 3 s pour 5 Mo  |
+| Construction du cuivre de ce fichier                                           | 6,9 s    | (pas d'objectif) |
+
+La construction du cuivre coûte environ 3,5 s par carte dense avec plan de masse ; elle tournera dans un Worker
+avec barre de progression. Si cela gêne à l'usage, deux pistes : `clipper2-wasm` pour cette étape, ou fusion
+hiérarchique des lots.
+
+### 7.5 Workers et annulation
+
+Le parser et le builder sont des fonctions pures synchrones avec un rappel de progression. Un Worker occupé par un
+calcul synchrone ne peut pas lire de message d'annulation : l'annulation se fera donc en **terminant le Worker**
+(`worker.terminate()`) et en le recréant. Le protocole de messages sera écrit au jalon J4, avec l'interface.
+
+### 7.6 Fixtures manquantes
+
+Seuls deux fichiers réels sont testés (Proteus et l'exemple FlatCAM). Des Gerber KiCad, Eagle, EasyEDA et Altium
+réels seront ajoutés dès que To les fournira ; les cas particuliers (macros KiCad `RoundRect`, polarité claire,
+step and repeat, arcs G74/G75, régions avec trous) sont déjà couverts par des fichiers écrits à la main.
