@@ -1,0 +1,12 @@
+# TypeScript, JavaScript and Svelte follow the Allman brace style, which Prettier cannot produce: ESLint formats them.
+*.ts
+*.js
+*.svelte
+node_modules/
+dist/
+coverage/
+ressources/
+specs/
+tests/fixtures/
+assets/brand/
+package-lock.json
