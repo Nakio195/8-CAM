@@ -239,3 +239,38 @@ le profil actif. L'éditeur de profil arrive avec le post-processeur (J9) ; chaq
 | `workers` | `core`, `parsers`, `cam`, `post`, `project` |
 | `render`  | `core`, `parsers`, `cam`, `project`         |
 | `ui`      | tout                                        |
+
+---
+
+## 6. Résultats du jalon J1 (géométrie)
+
+### 6.1 Ce qui est livré
+
+| Module                  | Contenu                                                                                                                                                                                                                                                                             |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core/units`            | unités internes de 10 nm (100 000 par mm), conversions mm / pouce, contrôle de plage des coordonnées                                                                                                                                                                                |
+| `core/geometry/types`   | `Point`, `Path`, `Polygon` (contour + trous), `Polyline` ; Y vers le haut, contour extérieur anti-horaire, trous horaires                                                                                                                                                           |
+| `core/geometry/path`    | aire signée, orientation, normalisation, longueurs, rectangles, translation                                                                                                                                                                                                         |
+| `core/geometry/bbox`    | boîtes englobantes (fusion, marge, intersection)                                                                                                                                                                                                                                    |
+| `core/geometry/arc`     | discrétisation des arcs **par tolérance de corde** (0,5 µm par défaut) au lieu d'un nombre fixe de pas par cercle comme FlatCAM ; arcs G02 / G03 avec extrémités exactes et rayon interpolé                                                                                         |
+| `core/geometry/clipper` | union, différence, intersection, offset (rond, onglet, chanfrein), épaississement de pistes (bouts ronds, carrés, francs), construction depuis des contours bruts (pair-impair ou non nul) ; résultats en polygones avec trous, îlots dans les trous rendus comme polygones séparés |
+
+### 6.2 Benchmark (`npm run bench`)
+
+Carte synthétique dense de 100 x 100 mm : 2 500 pastilles au pas de 2 mm, 9 600 segments de piste de 0,2 et 0,3 mm,
+isolement d'environ 0,3 mm. Outil 0,2 mm, recouvrement 10 %, médiane de 3 mesures sous Node 22 :
+
+| Étape                                                                       | Durée                      |
+| --------------------------------------------------------------------------- | -------------------------- |
+| Cuivre : épaississement des pistes + union (215 polygones, 109 000 sommets) | 0,6 s                      |
+| Isolation : 2 passes d'offset                                               | 1,1 s                      |
+| **Total**                                                                   | **1,7 s** (objectif < 5 s) |
+
+`clipper2-ts` est donc conservé ; le repli sur `clipper2-wasm` n'est pas nécessaire. Le benchmark reste dans le dépôt
+pour surveiller les régressions (il ne fait pas partie de `npm test`, trop dépendant de la machine).
+
+### 6.3 Précision
+
+Tests à l'appui : offset d'un cercle exact à moins de 1 µm, erreur de corde des arcs ≤ 0,5 µm (+ 1 unité d'arrondi),
+aller-retour mm ↔ unités internes sans perte au-delà de 0,01 µm, carte de 1 m traitée sans débordement.
+Couverture de `src/core` : 100 % des lignes, 98 % des branches.
