@@ -12,6 +12,7 @@
         screenToWorld,
         zoomAt,
         type Renderer,
+        type RenderLayer,
         type RenderQuality,
         type ScreenPoint,
         type Viewport
@@ -21,7 +22,13 @@
     import { help as helpState } from "../state/help.svelte";
     import IconButton from "./base/IconButton.svelte";
 
-    let { layers, fitRequest, focus = null }: { layers: ProjectLayer[]; fitRequest: number; focus?: FocusRequest | null } = $props();
+    let { layers, fitRequest, focus = null, overlays = [] }: {
+        layers: ProjectLayer[];
+        fitRequest: number;
+        focus?: FocusRequest | null;
+        /** Drawn above the layers: toolpaths, non isolated areas. */
+        overlays?: RenderLayer[];
+    } = $props();
 
     const t = i18n.t;
 
@@ -285,13 +292,16 @@
 
     $effect(() =>
     {
-        renderer?.setLayers(layers.map((layer) => ({
-            id: layer.id,
-            geometry: layer.file.geometry,
-            color: layer.color,
-            opacity: layer.opacity,
-            visible: layer.visible
-        })));
+        renderer?.setLayers([
+            ...layers.map((layer) => ({
+                id: layer.id,
+                geometry: layer.file.geometry,
+                color: layer.color,
+                opacity: layer.opacity,
+                visible: layer.visible
+            })),
+            ...overlays
+        ]);
         requestRender();
     });
 

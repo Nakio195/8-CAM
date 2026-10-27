@@ -21,6 +21,9 @@
     import AnalysisPanel from "./analysis/AnalysisPanel.svelte";
     import { toolLibrary } from "./state/tools.svelte";
     import ToolLibraryPanel from "./tools/ToolLibraryPanel.svelte";
+    import MachiningPanel from "./machining/MachiningPanel.svelte";
+    import { toolpathOverlays } from "./machining/overlays";
+    import { machining } from "./state/machining.svelte";
 
     const t = i18n.t;
 
@@ -107,6 +110,7 @@
         }
     });
 
+    let overlays = $derived(toolpathOverlays(machining.operations));
     let showEmpty = $derived(project.layers.length === 0 && project.tasks.length === 0);
 </script>
 
@@ -154,21 +158,24 @@
             <SidebarTabs label={t("tabs.label")} bind:active={sidebarTab} tabs={[
                 { id: "project", label: t("tabs.project"), help: "tabProject" },
                 { id: "tools", label: t("tabs.tools"), help: "tabTools" },
-                { id: "analysis", label: t("tabs.analysis"), help: "tabAnalysis" }
+                { id: "analysis", label: t("tabs.analysis"), help: "tabAnalysis" },
+                { id: "machining", label: t("tabs.machining"), help: "tabMachining" }
             ]} />
             <div class="tab-panel" id={`panel-${sidebarTab}`} role="tabpanel" aria-labelledby={`tab-${sidebarTab}`}>
                 {#if sidebarTab === "project"}
                     <LayerPanel />
                 {:else if sidebarTab === "tools"}
                     <ToolLibraryPanel />
-                {:else}
+                {:else if sidebarTab === "analysis"}
                     <AnalysisPanel />
+                {:else}
+                    <MachiningPanel />
                 {/if}
             </div>
             <p class="version">{t("app.version", { version: APP_VERSION })}</p>
         </aside>
         <section class="viewport">
-            <CanvasView layers={project.layers} fitRequest={project.fitRequest} focus={project.focus} />
+            <CanvasView layers={project.layers} fitRequest={project.fitRequest} focus={project.focus} {overlays} />
             {#if showEmpty}
                 <EmptyState onOpen={openFiles} onExample={() => project.loadExample()} />
             {/if}
