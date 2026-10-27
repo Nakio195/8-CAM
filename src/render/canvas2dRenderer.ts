@@ -4,7 +4,7 @@
 
 import { DEFAULT_ARC_TOLERANCE, forEachPackedRing, simplifyPacked, type PackedPolygons } from "@core/geometry/index";
 import { INTERNAL_UNITS_PER_MM } from "@core/units/index";
-import type { RenderLayer, RenderOverlay, Renderer, RenderQuality, RenderTheme } from "./renderer";
+import type { RenderLayer, RenderOverlay, Renderer, RenderQuality, RenderStyle, RenderTheme } from "./renderer";
 import { DARK_THEME } from "./renderer";
 import { gridStep, viewChangeTransform, visibleRect, worldToScreen, type Viewport } from "./viewport";
 
@@ -18,7 +18,8 @@ function sameView(a: Viewport, b: Viewport): boolean
         && a.width === b.width && a.height === b.height;
 }
 
-function buildPath(geometry: PackedPolygons): Path2D
+/** Path of packed rings in millimetres; rings are closed unless they are open lines (travel moves). */
+function buildPath(geometry: PackedPolygons, closed = true): Path2D
 {
     const path = new Path2D();
     forEachPackedRing(geometry, (start, pointCount) =>
@@ -33,7 +34,10 @@ function buildPath(geometry: PackedPolygons): Path2D
             const index = start + 2 * i;
             path.lineTo((geometry[index] ?? 0) / INTERNAL_UNITS_PER_MM, (geometry[index + 1] ?? 0) / INTERNAL_UNITS_PER_MM);
         }
-        path.closePath();
+        if (closed)
+        {
+            path.closePath();
+        }
     });
     return path;
 }
@@ -44,7 +48,7 @@ export class Canvas2DRenderer implements Renderer
     private mContext: CanvasRenderingContext2D;
     private mTheme: RenderTheme;
     private mLayers: readonly RenderLayer[] = [];
-    private mPaths = new WeakMap<PackedPolygons, Map<number, Path2D>>();
+    private mPaths = new WeakMap<PackedPolygons, Map<string, Path2D>>();
     private mPixelRatio = 1;
     /** Layers are drawn here, then copied to the visible canvas; the last full image doubles as the snapshot. */
     private mLayerCanvas: HTMLCanvasElement;
@@ -158,9 +162,23 @@ export class Canvas2DRenderer implements Renderer
                 continue;
             }
             context.globalAlpha = layer.opacity;
-            context.fillStyle = layer.color;
-            context.fill(this.pathFor(layer.geometry, view.scale), "evenodd");
+            const style = layer.style ?? "fill";
+            if (style === "fill")
+            {
+                context.fillStyle = layer.color;
+                context.fill(this.pathFor(layer.geometry, view.scale, style), "evenodd");
+                continue;
+            }
+            // Widths in board millimetres; 0 means a thin line of 1.5 screen pixels at any zoom
+            const width = layer.strokeWidth ?? 0;
+            context.strokeStyle = layer.color;
+            context.lineWidth = width > 0 ? width : 1.5 / view.scale;
+            context.lineJoin = "round";
+            context.lineCap = "round";
+            context.setLineDash(layer.dashed ? [6 / view.scale, 5 / view.scale] : []);
+            context.stroke(this.pathFor(layer.geometry, view.scale, style));
         }
+        context.setLineDash([]);
         context.globalAlpha = 1;
         this.mSnapshot = { canvas, view: { ...view } };
     }
@@ -170,22 +188,24 @@ export class Canvas2DRenderer implements Renderer
      * points at least half a pixel apart. Drawing 280 000 points when the whole board fits in 900 pixels would
      * cost 100 ms per frame; the simplified copy keeps pan and zoom fluid with an error below one pixel.
      */
-    private pathFor(geometry: PackedPolygons, scale: number): Path2D
+    private pathFor(geometry: PackedPolygons, scale: number, style: RenderStyle): Path2D
     {
         let levels = this.mPaths.get(geometry);
         if (!levels)
         {
-            levels = new Map<number, Path2D>();
+            levels = new Map<string, Path2D>();
             this.mPaths.set(geometry, levels);
         }
         const level = Math.floor(Math.log2(scale));
         const tolerance = (LOD_TOLERANCE_PIXELS / 2 ** level) * INTERNAL_UNITS_PER_MM;
         // Below the arc discretisation tolerance, the full geometry is already as fine as it gets
-        const key = tolerance <= FULL_DETAIL_TOLERANCE ? Infinity : level;
+        // Open lines are never simplified: the simplification is meant for closed rings
+        const full = tolerance <= FULL_DETAIL_TOLERANCE || style === "line";
+        const key = `${style}:${full ? "full" : level}`;
         let path = levels.get(key);
         if (!path)
         {
-            path = buildPath(key === Infinity ? geometry : simplifyPacked(geometry, tolerance));
+            path = buildPath(full ? geometry : simplifyPacked(geometry, tolerance), style !== "line");
             levels.set(key, path);
         }
         return path;

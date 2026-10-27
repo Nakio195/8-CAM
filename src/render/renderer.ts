@@ -4,14 +4,24 @@
 import type { PackedPolygons } from "@core/geometry/index";
 import type { ScreenPoint, Viewport } from "./viewport";
 
+/**
+ * How a layer is drawn: filled areas (copper, holes), closed outlines (isolation loops) or open lines (travel moves).
+ */
+export type RenderStyle = "fill" | "loop" | "line";
+
 export interface RenderLayer
 {
     id: string;
-    /** Filled polygons in internal units (see core/geometry/packing). */
+    /** Polygons in internal units (see core/geometry/packing); for outlines and lines, each ring is one path. */
     geometry: PackedPolygons;
     color: string;
     opacity: number;
     visible: boolean;
+    /** Filled by default. */
+    style?: RenderStyle;
+    /** Outlines and lines: width on the board in millimetres (a tool width), or 0 for a thin line of constant width on screen. */
+    strokeWidth?: number;
+    dashed?: boolean;
 }
 
 export interface RenderTheme
