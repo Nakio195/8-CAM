@@ -1,0 +1,7 @@
+{
+  "app.title": "8-CAM",
+  "app.tagline": "Du Gerber au G-code, directement dans le navigateur",
+  "app.version": "Version {version}",
+  "app.status.skeleton": "Squelette du projet (jalon J0). Les fonctions arrivent jalon par jalon.",
+  "app.language": "Langue"
+}

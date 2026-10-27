@@ -1,0 +1,7 @@
+{
+  "app.title": "8-CAM",
+  "app.tagline": "From Gerber to G-code, right in the browser",
+  "app.version": "Version {version}",
+  "app.status.skeleton": "Project skeleton (milestone J0). Features arrive milestone by milestone.",
+  "app.language": "Language"
+}
