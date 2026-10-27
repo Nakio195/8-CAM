@@ -1,3 +1,4 @@
-// Renderer interface and its Canvas 2D implementation.
-// Implemented in milestone J4 (see docs/architecture.md).
-export {};
+// Renderer interface, view transform and the Canvas 2D implementation.
+export * from "./viewport";
+export * from "./renderer";
+export { Canvas2DRenderer } from "./canvas2dRenderer";

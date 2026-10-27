@@ -79,7 +79,8 @@ export function createLayer(file: ImportedFile, id: string): ProjectLayer
         color: defaultLayerColor(file.layerType),
         // Solder mask and paste layers are rarely useful for milling: hidden at first
         visible: file.layerType.kind !== "soldermask" && file.layerType.kind !== "paste",
-        opacity: 1
+        // Copper is slightly transparent so the back layer stays visible under the front one
+        opacity: file.layerType.kind === "copper" ? 0.85 : 1
     };
 }
 
