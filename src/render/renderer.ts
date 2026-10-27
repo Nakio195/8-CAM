@@ -32,13 +32,19 @@ export interface RenderOverlay
     measure: { from: ScreenPoint; to: ScreenPoint } | null;
 }
 
+/**
+ * "full" draws every layer exactly; "interactive" may reuse the last full image, moved and scaled, while the user pans
+ * or zooms (a full frame must follow when the interaction stops).
+ */
+export type RenderQuality = "full" | "interactive";
+
 export interface Renderer
 {
     /** Sets the layers, bottom first. Geometry is cached per typed array: pass the same array to reuse it. */
     setLayers(layers: readonly RenderLayer[]): void;
     /** Canvas size in CSS pixels and the device pixel ratio. */
     resize(width: number, height: number, pixelRatio: number): void;
-    render(view: Viewport, overlay: RenderOverlay): void;
+    render(view: Viewport, overlay: RenderOverlay, quality?: RenderQuality): void;
     dispose(): void;
 }
 

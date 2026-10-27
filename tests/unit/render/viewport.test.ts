@@ -7,6 +7,7 @@ import {
     MIN_SCALE,
     pan,
     screenToWorld,
+    viewChangeTransform,
     visibleRect,
     worldToScreen,
     zoomAt,
@@ -70,5 +71,22 @@ describe("viewport", () =>
         expect(gridStep(1000)).toBeCloseTo(0.05);
         expect(gridStep(0.1)).toBe(500);
         expect(gridStep(12)).toBe(2);
+    });
+});
+
+describe("reusing a frame for another view", () =>
+{
+    it("maps every board point to where the new view draws it", () =>
+    {
+        const from = VIEW;
+        const to = zoomAt(pan(VIEW, 37, -12), 210, 90, 1.7);
+        const transform = viewChangeTransform(from, to);
+        for (const [x, y] of [[10, 20], [0, 0], [-35.5, 72.25]] as const)
+        {
+            const before = worldToScreen(from, x, y);
+            const after = worldToScreen(to, x, y);
+            expect(transform.scale * before.x + transform.x).toBeCloseTo(after.x, 9);
+            expect(transform.scale * before.y + transform.y).toBeCloseTo(after.y, 9);
+        }
     });
 });

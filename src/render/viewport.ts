@@ -111,3 +111,17 @@ export function gridStep(scale: number, minPixels = 24): number
     }
     return 10 * power;
 }
+
+/**
+ * Transform (uniform scale, then translation, CSS pixels) that maps an image drawn with view from onto view to:
+ * used to reuse the last full frame while the user pans or zooms.
+ */
+export function viewChangeTransform(from: Viewport, to: Viewport): { scale: number; x: number; y: number }
+{
+    const scale = to.scale / from.scale;
+    return {
+        scale,
+        x: (from.centerX - to.centerX) * to.scale + to.width / 2 - scale * from.width / 2,
+        y: to.height / 2 - (from.centerY - to.centerY) * to.scale - scale * from.height / 2
+    };
+}

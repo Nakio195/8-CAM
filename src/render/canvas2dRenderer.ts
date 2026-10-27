@@ -2,11 +2,21 @@
 // Each layer's geometry is converted once into a Path2D in millimetres; panning and zooming only change the
 // canvas transform, so a dense board stays fluid (no re-tessellation per frame).
 
-import { forEachPackedRing, type PackedPolygons } from "@core/geometry/index";
+import { DEFAULT_ARC_TOLERANCE, forEachPackedRing, simplifyPacked, type PackedPolygons } from "@core/geometry/index";
 import { INTERNAL_UNITS_PER_MM } from "@core/units/index";
-import type { RenderLayer, RenderOverlay, Renderer, RenderTheme } from "./renderer";
+import type { RenderLayer, RenderOverlay, Renderer, RenderQuality, RenderTheme } from "./renderer";
 import { DARK_THEME } from "./renderer";
-import { gridStep, visibleRect, worldToScreen, type Viewport } from "./viewport";
+import { gridStep, viewChangeTransform, visibleRect, worldToScreen, type Viewport } from "./viewport";
+
+/** Points closer than this on screen are merged when drawing at low zoom. */
+const LOD_TOLERANCE_PIXELS = 0.5;
+const FULL_DETAIL_TOLERANCE = 2 * DEFAULT_ARC_TOLERANCE;
+
+function sameView(a: Viewport, b: Viewport): boolean
+{
+    return a.centerX === b.centerX && a.centerY === b.centerY && a.scale === b.scale
+        && a.width === b.width && a.height === b.height;
+}
 
 function buildPath(geometry: PackedPolygons): Path2D
 {
@@ -34,24 +44,33 @@ export class Canvas2DRenderer implements Renderer
     private mContext: CanvasRenderingContext2D;
     private mTheme: RenderTheme;
     private mLayers: readonly RenderLayer[] = [];
-    private mPaths = new WeakMap<PackedPolygons, Path2D>();
+    private mPaths = new WeakMap<PackedPolygons, Map<number, Path2D>>();
     private mPixelRatio = 1;
+    /** Layers are drawn here, then copied to the visible canvas; the last full image doubles as the snapshot. */
+    private mLayerCanvas: HTMLCanvasElement;
+    private mLayerContext: CanvasRenderingContext2D;
+    private mSnapshot: { canvas: HTMLCanvasElement; view: Viewport } | null = null;
 
     constructor(canvas: HTMLCanvasElement, theme: RenderTheme = DARK_THEME)
     {
         const context = canvas.getContext("2d", { alpha: false });
-        if (!context)
+        const layerCanvas = document.createElement("canvas");
+        const layerContext = layerCanvas.getContext("2d");
+        if (!context || !layerContext)
         {
             throw new Error("Canvas 2D is not available");
         }
         this.mCanvas = canvas;
         this.mContext = context;
+        this.mLayerCanvas = layerCanvas;
+        this.mLayerContext = layerContext;
         this.mTheme = theme;
     }
 
     public setLayers(layers: readonly RenderLayer[]): void
     {
         this.mLayers = layers;
+        this.mSnapshot = null;
     }
 
     public resize(width: number, height: number, pixelRatio: number): void
@@ -59,9 +78,10 @@ export class Canvas2DRenderer implements Renderer
         this.mPixelRatio = pixelRatio;
         this.mCanvas.width = Math.max(1, Math.round(width * pixelRatio));
         this.mCanvas.height = Math.max(1, Math.round(height * pixelRatio));
+        this.mSnapshot = null;
     }
 
-    public render(view: Viewport, overlay: RenderOverlay): void
+    public render(view: Viewport, overlay: RenderOverlay, quality: RenderQuality = "full"): void
     {
         const context = this.mContext;
         const ratio = this.mPixelRatio;
@@ -74,29 +94,21 @@ export class Canvas2DRenderer implements Renderer
             this.drawGrid(view);
         }
 
-        // Board space: millimetres, Y up
-        context.setTransform(
-            ratio * view.scale, 0, 0, -ratio * view.scale,
-            ratio * (view.width / 2 - view.centerX * view.scale),
-            ratio * (view.height / 2 + view.centerY * view.scale)
-        );
-        for (const layer of this.mLayers)
+        const snapshot = this.mSnapshot;
+        // The last full image is exact when the view has not changed (only overlays moved)
+        if (snapshot && (quality === "interactive" || sameView(snapshot.view, view)))
         {
-            if (!layer.visible)
-            {
-                continue;
-            }
-            let path = this.mPaths.get(layer.geometry);
-            if (!path)
-            {
-                path = buildPath(layer.geometry);
-                this.mPaths.set(layer.geometry, path);
-            }
-            context.globalAlpha = layer.opacity;
-            context.fillStyle = layer.color;
-            context.fill(path, "evenodd");
+            // Moves and scales the last full image instead of filling every layer again
+            const transform = viewChangeTransform(snapshot.view, view);
+            context.setTransform(transform.scale, 0, 0, transform.scale, ratio * transform.x, ratio * transform.y);
+            context.drawImage(snapshot.canvas, 0, 0);
         }
-        context.globalAlpha = 1;
+        else
+        {
+            this.drawLayers(view);
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            context.drawImage(this.mLayerCanvas, 0, 0);
+        }
 
         context.setTransform(ratio, 0, 0, ratio, 0, 0);
         if (overlay.showOrigin)
@@ -113,6 +125,66 @@ export class Canvas2DRenderer implements Renderer
     {
         this.mLayers = [];
         this.mPaths = new WeakMap();
+        this.mSnapshot = null;
+    }
+
+    /** Fills the visible layers into the layer canvas, which then serves as the snapshot for interactive frames. */
+    private drawLayers(view: Viewport): void
+    {
+        const canvas = this.mLayerCanvas;
+        if (canvas.width !== this.mCanvas.width || canvas.height !== this.mCanvas.height)
+        {
+            canvas.width = this.mCanvas.width;
+            canvas.height = this.mCanvas.height;
+        }
+        const context = this.mLayerContext;
+        const ratio = this.mPixelRatio;
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        // Board space: millimetres, Y up
+        context.setTransform(
+            ratio * view.scale, 0, 0, -ratio * view.scale,
+            ratio * (view.width / 2 - view.centerX * view.scale),
+            ratio * (view.height / 2 + view.centerY * view.scale)
+        );
+        for (const layer of this.mLayers)
+        {
+            if (!layer.visible)
+            {
+                continue;
+            }
+            context.globalAlpha = layer.opacity;
+            context.fillStyle = layer.color;
+            context.fill(this.pathFor(layer.geometry, view.scale), "evenodd");
+        }
+        context.globalAlpha = 1;
+        this.mSnapshot = { canvas, view: { ...view } };
+    }
+
+    /**
+     * Path of the geometry at the level of detail matching the zoom: one level per power of two of the scale,
+     * points at least half a pixel apart. Drawing 280 000 points when the whole board fits in 900 pixels would
+     * cost 100 ms per frame; the simplified copy keeps pan and zoom fluid with an error below one pixel.
+     */
+    private pathFor(geometry: PackedPolygons, scale: number): Path2D
+    {
+        let levels = this.mPaths.get(geometry);
+        if (!levels)
+        {
+            levels = new Map<number, Path2D>();
+            this.mPaths.set(geometry, levels);
+        }
+        const level = Math.floor(Math.log2(scale));
+        const tolerance = (LOD_TOLERANCE_PIXELS / 2 ** level) * INTERNAL_UNITS_PER_MM;
+        // Below the arc discretisation tolerance, the full geometry is already as fine as it gets
+        const key = tolerance <= FULL_DETAIL_TOLERANCE ? Infinity : level;
+        let path = levels.get(key);
+        if (!path)
+        {
+            path = buildPath(key === Infinity ? geometry : simplifyPacked(geometry, tolerance));
+            levels.set(key, path);
+        }
+        return path;
     }
 
     /** Grid lines in screen space so they stay one pixel wide; every fifth line is stronger. */

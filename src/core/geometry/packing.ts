@@ -94,3 +94,75 @@ export function packedPointCount(data: PackedPolygons): number
     });
     return count;
 }
+
+/**
+ * Simplified copy for display at low zoom: along each ring, points closer than tolerance to the last kept point
+ * are dropped (radial distance decimation, error below tolerance). Rings smaller than tolerance become a square of
+ * that size so tiny pads stay visible; tiny holes are dropped.
+ */
+export function simplifyPacked(data: PackedPolygons, tolerance: number): PackedPolygons
+{
+    const output: number[] = [];
+    let index = 0;
+    const polygonCount = data[index++] ?? 0;
+    output.push(polygonCount);
+    const toleranceSquared = tolerance * tolerance;
+    for (let p = 0; p < polygonCount; p++)
+    {
+        const ringCount = data[index++] ?? 0;
+        const ringCountIndex = output.length;
+        output.push(0);
+        let keptRings = 0;
+        for (let r = 0; r < ringCount; r++)
+        {
+            const pointCount = data[index++] ?? 0;
+            const start = index;
+            index += 2 * pointCount;
+            const ring: number[] = [];
+            let minX = Infinity;
+            let minY = Infinity;
+            let maxX = -Infinity;
+            let maxY = -Infinity;
+            let lastX = Number.NaN;
+            let lastY = Number.NaN;
+            for (let i = 0; i < pointCount; i++)
+            {
+                const x = data[start + 2 * i] ?? 0;
+                const y = data[start + 2 * i + 1] ?? 0;
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x);
+                maxY = Math.max(maxY, y);
+                const dx = x - lastX;
+                const dy = y - lastY;
+                if (ring.length === 0 || dx * dx + dy * dy >= toleranceSquared)
+                {
+                    ring.push(x, y);
+                    lastX = x;
+                    lastY = y;
+                }
+            }
+            if (ring.length >= 6)
+            {
+                // No spread: a ground pour ring can hold more points than the call stack accepts as arguments
+                output.push(ring.length / 2);
+                for (const value of ring)
+                {
+                    output.push(value);
+                }
+                keptRings++;
+            }
+            else if (r === 0 && pointCount > 0)
+            {
+                // Outer ring smaller than the tolerance: a square of the tolerance size centred on it
+                const cx = Math.round((minX + maxX) / 2);
+                const cy = Math.round((minY + maxY) / 2);
+                const half = Math.max(1, Math.round(tolerance / 2));
+                output.push(4, cx - half, cy - half, cx + half, cy - half, cx + half, cy + half, cx - half, cy + half);
+                keptRings++;
+            }
+        }
+        output[ringCountIndex] = keptRings;
+    }
+    return Int32Array.from(output);
+}

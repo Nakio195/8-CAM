@@ -66,3 +66,25 @@ describe("importer", () =>
         expect(mmToInternal(1.0681 * 25.4)).toBe(2712974);
     });
 });
+
+describe("display simplification", () =>
+{
+    it("drops points closer than the tolerance and keeps tiny shapes visible", async () =>
+    {
+        const { circlePath, simplifyPacked, distanceToRings } = await import("@core/geometry/index");
+        const disc = { outer: circlePath({ x: 0, y: 0 }, 50_000), holes: [circlePath({ x: 0, y: 0 }, 100)] };
+        const tiny = { outer: rectanglePath(1_000_000, 0, 1_000_010, 10), holes: [] };
+        const packed = packPolygons([disc, tiny]);
+        const simplified = simplifyPacked(packed, 5_000);
+        const [simpleDisc, simpleTiny] = unpackPolygons(simplified);
+        // About one point every 0.05 mm along a 3.14 mm circumference
+        expect(simpleDisc?.outer.length).toBeLessThan(disc.outer.length);
+        expect(simpleDisc?.outer.length).toBeLessThanOrEqual(Math.ceil((2 * Math.PI * 50_000) / 5_000) + 1);
+        expect(simpleDisc?.outer.length).toBeGreaterThanOrEqual(8);
+        // The tiny hole disappears, every kept point lies on the original circle
+        expect(simpleDisc?.holes).toEqual([]);
+        expect(Math.max(...(simpleDisc?.outer ?? []).map((point) => distanceToRings(point, [disc.outer])))).toBeLessThan(1);
+        expect(simpleTiny?.outer).toHaveLength(4);
+        expect(unpackPolygons(simplifyPacked(packed, 1))).toEqual(unpackPolygons(packed));
+    });
+});
