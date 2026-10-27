@@ -84,6 +84,8 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     { id: "isolationLayer", group: "machining" },
     { id: "isolationTool", group: "machining" },
     { id: "combinePasses", group: "machining" },
+    { id: "isolationAdvanced", group: "machining" },
+    { id: "extraOffset", group: "machining", geometric: true },
     { id: "isolationRun", group: "machining" },
     { id: "isolationCancel", group: "machining" },
     { id: "isolationVisibility", group: "machining" },

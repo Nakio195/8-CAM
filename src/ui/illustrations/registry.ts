@@ -36,7 +36,8 @@ const vbit = (values: IllustrationValues): Record<string, unknown> => ({
 const passes = (values: IllustrationValues): Record<string, unknown> => ({
     width: values.width ?? 0.25,
     passes: values.passes ?? 2,
-    overlap: values.overlap ?? 0.15
+    overlap: values.overlap ?? 0.15,
+    extraOffset: values.extraOffset ?? 0
 });
 
 const heights = (values: IllustrationValues): Record<string, unknown> => ({
@@ -72,6 +73,7 @@ export const ILLUSTRATIONS: Readonly<Record<string, TopicIllustration>> = {
     boardThickness: { component: as(BoardThickness), props: (values) => ({ thickness: values.thickness ?? 1.6 }) },
     passes: { component: as(IsolationPasses), props: passes },
     overlap: { component: as(IsolationPasses), props: passes },
+    extraOffset: { component: as(IsolationPasses), props: (values) => ({ ...passes(values), extraOffset: values.extraOffset ?? 0.05 }) },
     millingDirection: {
         component: as(MillingDirection),
         // values.direction: 0 climb, 1 conventional

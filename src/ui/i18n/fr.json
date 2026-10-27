@@ -544,5 +544,14 @@
   "help.compareRun.title": "Lancer la comparaison",
   "help.compareRun.body": "Calcule en parallèle l'isolation avec chaque outil choisi.",
   "help.compareUse.title": "Utiliser cet outil",
-  "help.compareUse.body": "Crée une opération d'isolation avec cet outil, en reprenant le calcul déjà fait par le comparateur."
+  "help.compareUse.body": "Crée une opération d'isolation avec cet outil, en reprenant le calcul déjà fait par le comparateur.",
+  "machining.advanced": "Réglages avancés",
+  "machining.extraOffset": "Décalage supplémentaire",
+  "illus.extraOffset": "+{offset} mm",
+  "help.isolationAdvanced.title": "Réglages avancés",
+  "help.isolationAdvanced.body": "Réglages rarement utiles, repliés pour ne pas encombrer la fiche.",
+  "help.extraOffset.title": "Décalage supplémentaire",
+  "help.extraOffset.body": "Éloigne toutes les passes du cuivre de cette distance (« décalage personnalisé » de FlatCAM). Les pistes et pastilles gardent une bordure de cuivre plus large.",
+  "help.extraOffset.advice": "0 en général. 0,02 à 0,05 mm pour compenser un outil qui coupe plus large que prévu.",
+  "help.extraOffset.warning": "Réduit l'espace où l'outil peut passer : vérifiez les zones non isolées après le calcul."
 }

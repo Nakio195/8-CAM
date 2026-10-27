@@ -41,6 +41,7 @@
     // which marks the result as stale
     let passes = $state(untrack(() => operation.params.passes));
     let overlapPercent = $state(untrack(() => Math.round(operation.params.overlap * 100)));
+    let extraOffset = $state(untrack(() => operation.params.extraOffset));
 
     function setParams(changes: Partial<IsolationParams>): void
     {
@@ -51,9 +52,10 @@
     {
         const count = Math.max(1, Math.min(10, Math.round(passes || 1)));
         const overlap = Math.max(0, Math.min(90, overlapPercent || 0)) / 100;
-        if (count !== operation.params.passes || overlap !== operation.params.overlap)
+        const offset = Math.max(0, Math.min(1, extraOffset || 0));
+        if (count !== operation.params.passes || overlap !== operation.params.overlap || offset !== operation.params.extraOffset)
         {
-            setParams({ passes: count, overlap });
+            setParams({ passes: count, overlap, extraOffset: offset });
         }
     });
 
@@ -71,7 +73,7 @@
     }
 
     let passesText = $derived(result?.loopsPerPass.map((count, index) => t("machining.loopsPerPass", { pass: index + 1, count })).join(", ") ?? "");
-    let helpValues = $derived({ width, passes, overlap: overlapPercent / 100 });
+    let helpValues = $derived({ width, passes, overlap: overlapPercent / 100, extraOffset });
 </script>
 
 <article class="card" aria-label={t("machining.isolation")}>
@@ -141,6 +143,11 @@
             onchange={(event) => setParams({ combinePasses: event.currentTarget.checked })} />
         {t("machining.combine")}
     </label>
+    <details class="advanced" open={untrack(() => operation.params.extraOffset > 0)}>
+        <summary use:help={"isolationAdvanced"}>{t("machining.advanced")}</summary>
+        <NumberField id={`${operation.id}-extra-offset`} label={t("machining.extraOffset")} help="extraOffset" unit="mm" step={0.01}
+            min={0} max={1} bind:value={extraOffset} helpLabel={`${t("header.help")} : ${t("help.extraOffset.title")}`} {helpValues} />
+    </details>
 
     {#if job}
         <div class="running" role="status">
@@ -257,6 +264,17 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
+    }
+
+    .advanced summary
+    {
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .advanced[open] summary
+    {
+        margin-bottom: 6px;
     }
 
     .running

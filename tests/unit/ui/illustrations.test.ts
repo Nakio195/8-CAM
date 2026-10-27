@@ -57,6 +57,11 @@ describe("illustration geometry", () =>
         expect((shape.bands[0]?.bottom ?? 0) - (shape.bands[1]?.top ?? 0)).toBeCloseTo(shape.overlapPx, 6);
         expect(isolationPasses(0.8, 1, 0.25).overlapPx).toBe(0);
         expect(isolationPasses(0.8, 20, 0.1).bands).toHaveLength(6);
+        // An extra offset leaves a copper border between the edge and the first band
+        const offset = isolationPasses(0.8, 2, 0.25, 0.1);
+        expect(offset.offsetPx).toBeGreaterThan(0);
+        expect(offset.bands[0]?.top).toBeCloseTo(offset.edgeY + offset.offsetPx, 6);
+        expect(shape.offsetPx).toBe(0);
     });
 
     it("shows a tool blocked by a gap narrower than its width", () =>

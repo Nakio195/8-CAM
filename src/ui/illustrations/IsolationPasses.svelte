@@ -5,11 +5,11 @@
 
     // Isolation passes seen from above (specification 6.12): bands of the tool width next to the copper edge,
     // their overlap visible and following the values typed
-    let { width, passes, overlap }: { width: number; passes: number; overlap: number } = $props();
+    let { width, passes, overlap, extraOffset = 0 }: { width: number; passes: number; overlap: number; extraOffset?: number } = $props();
 
     const t = i18n.t;
     const n = (value: number): string => i18n.number(value, decimalsFor(value));
-    let shape = $derived(isolationPasses(width, passes, overlap));
+    let shape = $derived(isolationPasses(width, passes, overlap, extraOffset));
     const LEFT = 16;
     const RIGHT = 170;
 </script>
@@ -28,6 +28,10 @@
         {#if second}
             <rect class="overlap" x={LEFT} y={round(second.top)} width={RIGHT - LEFT} height={round(shape.overlapPx)} />
         {/if}
+    {/if}
+    {#if shape.offsetPx > 0}
+        <rect class="kept" x={LEFT} y={shape.edgeY} width={RIGHT - LEFT} height={round(shape.offsetPx)} />
+        <text class="label" x={RIGHT + 6} y={round(shape.edgeY + 4)}>{t("illus.extraOffset", { offset: n(extraOffset) })}</text>
     {/if}
     <text class="caption" x={LEFT} y={FRAME_HEIGHT - 6}>
         {t("illus.passesCaption", { width: n(width), overlap: i18n.number(overlap * 100, 0) })}
@@ -54,6 +58,12 @@
         fill-opacity: 0.35;
         stroke: var(--accent-formation);
         stroke-width: 1;
+    }
+
+    .kept
+    {
+        fill: var(--brand-rouge);
+        fill-opacity: 0.45;
     }
 
     .overlap

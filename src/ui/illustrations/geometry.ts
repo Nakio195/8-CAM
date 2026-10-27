@@ -249,13 +249,15 @@ export interface IsolationPassesShape
     bands: { top: number; bottom: number; centre: number }[];
     /** Overlap of consecutive bands, px (0 for a single pass). */
     overlapPx: number;
+    /** Copper left between the copper edge and the first band by the extra offset, px (0 without one). */
+    offsetPx: number;
 }
 
 /** Copper edge at the top, passes below it, to scale: the overlap between bands is what the user sees change. */
-export function isolationPasses(width: number, passes: number, overlap: number): IsolationPassesShape
+export function isolationPasses(width: number, passes: number, overlap: number, extraOffset = 0): IsolationPassesShape
 {
     const count = Math.max(1, Math.min(6, Math.round(passes)));
-    const offsets = passOffsets(width, { passes: count, overlap, extraOffset: 0 });
+    const offsets = passOffsets(width, { passes: count, overlap, extraOffset: Math.max(0, extraOffset) });
     const reach = (offsets[offsets.length - 1] ?? width / 2) + width / 2;
     const edgeY = 28;
     const scale = 96 / Math.max(reach, 0.01);
@@ -264,7 +266,7 @@ export function isolationPasses(width: number, passes: number, overlap: number):
         bottom: edgeY + (offset + width / 2) * scale,
         centre: edgeY + offset * scale
     }));
-    return { edgeY, bands, overlapPx: count > 1 ? overlap * width * scale : 0 };
+    return { edgeY, bands, overlapPx: count > 1 ? overlap * width * scale : 0, offsetPx: Math.max(0, extraOffset) * scale };
 }
 
 // ----- Non isolated area -----

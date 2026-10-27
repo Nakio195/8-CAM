@@ -544,5 +544,14 @@
   "help.compareRun.title": "Run the comparison",
   "help.compareRun.body": "Computes the isolation with every chosen tool in parallel.",
   "help.compareUse.title": "Use this tool",
-  "help.compareUse.body": "Creates an isolation operation with this tool, reusing the computation already made by the comparator."
+  "help.compareUse.body": "Creates an isolation operation with this tool, reusing the computation already made by the comparator.",
+  "machining.advanced": "Advanced settings",
+  "machining.extraOffset": "Extra offset",
+  "illus.extraOffset": "+{offset} mm",
+  "help.isolationAdvanced.title": "Advanced settings",
+  "help.isolationAdvanced.body": "Settings rarely needed, folded away to keep the card simple.",
+  "help.extraOffset.title": "Extra offset",
+  "help.extraOffset.body": "Moves every pass this far away from the copper (FlatCAM \"custom offset\"). Tracks and pads keep a wider copper border.",
+  "help.extraOffset.advice": "0 in general. 0.02 to 0.05 mm to make up for a tool cutting wider than expected.",
+  "help.extraOffset.warning": "Reduces the room the tool has to pass: check the non isolated areas after computing."
 }
