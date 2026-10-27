@@ -4,6 +4,8 @@
 // with Shapely union / difference on 'solid' and 'clear' geometry).
 
 import {
+    bboxIntersects,
+    bboxOfPolygons,
     compose,
     convexHull,
     differencePolygons,
@@ -266,13 +268,22 @@ class GerberBuilder
         {
             return;
         }
+        // Only the part of the image the batch can touch is recomputed: step and repeat copies and separate
+        // areas of the board are not merged again at every polarity change
+        const batchBox = bboxOfPolygons(shapes);
+        const touched: Polygon[] = [];
+        const untouched: Polygon[] = [];
+        for (const polygon of this.mImage)
+        {
+            (bboxIntersects(bboxOfPolygons([polygon]), batchBox) ? touched : untouched).push(polygon);
+        }
         if (batch.polarity === "dark")
         {
-            this.mImage = unionPolygons(this.mImage.length === 0 ? shapes : [...this.mImage, ...shapes]);
+            this.mImage = untouched.concat(unionPolygons(touched.length === 0 ? shapes : [...touched, ...shapes]));
         }
-        else if (this.mImage.length > 0)
+        else if (touched.length > 0)
         {
-            this.mImage = differencePolygons(this.mImage, shapes);
+            this.mImage = untouched.concat(differencePolygons(touched, shapes));
         }
     }
 }
