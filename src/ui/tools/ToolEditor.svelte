@@ -78,7 +78,8 @@
     {
         if (draft && issues.length === 0)
         {
-            onSave({ ...draft, name: draft.name.trim() });
+            // A plain copy: the draft is a reactive proxy, which IndexedDB cannot store
+            onSave({ ...$state.snapshot(draft), name: draft.name.trim() });
             tool = null;
         }
     }
@@ -86,7 +87,8 @@
 
 <dialog bind:this={dialog} aria-labelledby="tool-editor-title" onclose={() => (tool = null)}>
     {#if draft}
-        <form method="dialog" onsubmit={(event) => { event.preventDefault(); save(); }}>
+        <!-- novalidate: steps only drive the arrows; values such as 3.175 mm must not be refused, validateTool() decides -->
+        <form method="dialog" novalidate onsubmit={(event) => { event.preventDefault(); save(); }}>
             <h2 id="tool-editor-title">{t(isNew ? "editor.titleNew" : "editor.titleEdit")}</h2>
             <div class="layout">
                 <div class="fields">

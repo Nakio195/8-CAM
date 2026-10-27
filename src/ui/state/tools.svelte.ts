@@ -106,8 +106,8 @@ class ToolLibraryState
     private set(tools: Tool[]): void
     {
         this.tools = tools;
-        // $state.raw keeps plain objects, which IndexedDB can clone
-        void saveSetting(STORAGE_KEY, tools).then((saved) =>
+        // IndexedDB clones what it stores and refuses reactive proxies: always hand it plain data
+        void saveSetting(STORAGE_KEY, $state.snapshot(tools)).then((saved) =>
         {
             this.persistent = saved;
         });
