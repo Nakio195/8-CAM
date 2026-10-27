@@ -445,3 +445,64 @@ Mesure reproductible : `npm run bench` écrit `test-output/dense-board.gbr`, pui
   blanche officielle du logo horizontal serait préférable.
 - La mesure n'accroche pas encore les centres de trous ni les bords de pastilles.
 - Pas encore de sauvegarde du projet (jalon J10).
+
+---
+
+## 10. Résultats du jalon J4b (charte graphique et aide)
+
+### 10.1 Remarque de To sur J4
+
+Les noms de couche s'affichent désormais en entier (retour à la ligne, jamais tronqués) : des fichiers d'une même
+carte commencent souvent pareil. Les boutons de la couche passent sur la deuxième ligne et le nom complet du fichier
+figure dans les détails. Corrigé au passage : dans un onglet ouvert en arrière-plan (canvas de 0 x 0 px), le cadrage
+automatique attend désormais une taille utilisable.
+
+### 10.2 Charte
+
+| Élément              | Mise en œuvre                                                                                                                                                                                                                                   |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Polices              | Bebas Neue, Karla (famille variable complète avec italiques), JetBrains Mono, **auto-hébergées** (`@fontsource`, licence OFL) pour le hors ligne                                                                                                |
+| Couleurs             | `src/ui/theme/tokens.css`, source unique : palette de la charte + couleurs sémantiques (action, succès, avertissement, erreur, information, aide, infobulle, stickers)                                                                          |
+| Thèmes               | automatique (suit le système), clair ou sombre forcé (`<html data-theme>`), choix mémorisé ; la vue de la carte reste sombre                                                                                                                    |
+| Contrastes           | un test lit `tokens.css` et vérifie **le niveau AA (4,5:1) pour chaque paire texte / fond des deux thèmes** ; la page styleguide affiche aussi les rapports mesurés en direct                                                                   |
+| Rouge et texte blanc | blanc sur le rouge de la charte = 4,49:1, juste sous AA : les boutons à texte blanc utilisent un rouge un peu plus profond, `#d4083f` (5,38:1) ; le rouge de la charte reste pour le cuivre, la sélection et le graphisme. **À valider par To** |
+| Couleur seule        | jamais : stickers, messages et champs invalides portent toujours une icône ou un mot                                                                                                                                                            |
+| Motifs               | les logos d'habillage (facettes, pois, éclats) utilisés en masque CSS bicolore, seulement sur l'accueil et « À propos », à l'écart du texte, sans couper le lettrage du logo                                                                    |
+| Mise en page         | accueil en « jeu de moitiés » : identité à gauche (titre 8-CAM incliné de −10°, autorisé ici seulement), actions à droite                                                                                                                       |
+| Logos                | logo horizontal en haut à gauche (blanc par masque CSS), cartouche « 8FABLAB.FR » dans « À propos »                                                                                                                                             |
+
+### 10.3 Composants de base (`src/ui/components/base/`)
+
+`Button` (principal, secondaire, discret, sur fond prune), `IconButton`, `Sticker` (pastille ou étiquette, Bebas
+Neue en capitales : ADAPTÉ, LIMITE, TROP LARGE, GRBL, type d'outil, durée), `Callout` (succès, avertissement, erreur,
+information, aide), `NumberField` (libellé, unité, bouton « ? », état invalide avec icône).
+
+### 10.4 HelpTip et aide
+
+- Une **action Svelte** `use:help={"sujet"}` s'applique à n'importe quel élément ; une **seule infobulle partagée**
+  (`HelpTipLayer`) l'affiche, ce qui garantit un comportement identique partout.
+- Contenu : titre, explication, valeur conseillée (✓), attention (⚠), lien « En savoir plus » vers le panneau d'aide.
+- Comportement vérifié dans le navigateur : apparition après 400 ms au survol (mesuré : 434 ms), immédiate au focus
+  clavier, F1 pour l'épingler, épinglage d'un clic, fermeture par Échap ou clic ailleurs, **appui long de 500 ms sur
+  écran tactile** (sans déclencher l'action du bouton) ; `role="tooltip"` et `aria-describedby`.
+- Textes : les **21 paramètres du tableau 6.11** (FR repris du cahier des charges, EN traduit) et tous les boutons et
+  indicateurs existants (45 sujets). Un test refuse un texte manquant, trop court ou qui répète le titre ; il a
+  d'ailleurs refusé « Langue : Langue de l'interface… », réécrit.
+- Indicateurs (barre d'état, badges de couche) : ce sont des boutons, donc atteignables au clavier ; un clic épingle
+  leur aide. La barre d'état n'annonce plus chaque mouvement du curseur aux lecteurs d'écran (seule la mesure).
+- Panneau d'aide latéral : tous les sujets par thème, ouvert sur le bon sujet depuis « En savoir plus ».
+
+### 10.5 Page styleguide
+
+`/styleguide.html` (deuxième page du projet, `npm run dev` puis http://localhost:5173/styleguide.html) : palette,
+paires de couleurs avec contraste mesuré, typographies, stickers, boutons, champs, messages, sujets d'aide à essayer,
+toutes les icônes, motifs et logos, avec bascule de langue et de thème.
+
+### 10.6 Reste à faire (jalons suivants)
+
+- Les **illustrations paramétriques** des infobulles (section 6.12) arrivent avec les paramètres eux-mêmes, à partir
+  de J5 ; les sujets géométriques sont déjà marqués (`geometric: true`) pour que l'absence d'illustration soit
+  détectable par un test à ce moment-là.
+- Le glossaire illustré et le guide « Ma première carte » complètent le panneau d'aide en J11.
+- La charte PDF n'a pas pu être relue (aucun outil de rendu PDF sur ce poste) : les choix reposent sur la section
+  6.13 du cahier des charges et les fichiers de logo fournis.

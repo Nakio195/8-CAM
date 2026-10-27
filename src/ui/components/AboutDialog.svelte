@@ -63,14 +63,15 @@
         background: rgba(31, 16, 28, 0.6);
     }
 
-    /* Two-colour pattern: the brand "8" with dots, in pink on the light pink background, kept away from the text */
+    /* Two-colour pattern: the brand "8" with dots, in pink on the light pink background, kept away from the text
+       and shown whole (the lettering of a logo is never cut) */
     .pattern
     {
         position: absolute;
-        top: -30px;
-        right: -40px;
-        width: 220px;
-        height: 400px;
+        top: 16px;
+        right: 16px;
+        width: 120px;
+        height: calc(100% - 32px);
         background-color: var(--brand-rose);
         mask: var(--pattern) no-repeat center / contain;
         opacity: 0.7;
@@ -81,7 +82,7 @@
     {
         position: relative;
         padding: 28px 32px 24px;
-        max-width: 380px;
+        max-width: calc(100% - 150px);
     }
 
     .cartouche
