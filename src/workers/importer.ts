@@ -1,5 +1,6 @@
 // Import of one file, run inside the import worker (pure function, also usable in tests).
 
+import { analyzeCopper, type CopperAnalysis } from "@cam/analysis/index";
 import { bboxOfPolygons, packedPointCount, packPolygons, type Polygon } from "@core/geometry/index";
 import type { LengthUnit } from "@core/units/index";
 import {
@@ -23,10 +24,12 @@ interface ImportParts
     unit: LengthUnit;
     polygons: Polygon[];
     drill: DrillDocument | null;
+    analysis: CopperAnalysis | null;
     warnings: ImportWarning[];
     objects: number;
     parseMs: number;
     buildMs: number;
+    analysisMs: number;
 }
 
 function toImportedDrill(document: DrillDocument): ImportedDrill
@@ -53,13 +56,15 @@ function assemble(fileName: string, parts: ImportParts): ImportedFile
         geometry,
         bbox: bboxOfPolygons(parts.polygons),
         drill: parts.drill ? toImportedDrill(parts.drill) : null,
+        analysis: parts.analysis,
         warnings: parts.warnings,
         stats: {
             objects: parts.objects,
             polygons: parts.polygons.length,
             points: packedPointCount(geometry),
             parseMs: parts.parseMs,
-            buildMs: parts.buildMs
+            buildMs: parts.buildMs,
+            analysisMs: parts.analysisMs
         }
     };
 }
@@ -82,10 +87,12 @@ export function importFile(fileName: string, text: string, onProgress: ProgressC
             unit: document.unit,
             polygons: holes,
             drill: document,
+            analysis: null,
             warnings: document.warnings,
             objects: document.hits.length + document.slots.length,
             parseMs: parsed - start,
-            buildMs: performance.now() - parsed
+            buildMs: performance.now() - parsed,
+            analysisMs: 0
         });
     }
 
@@ -100,15 +107,26 @@ export function importFile(fileName: string, text: string, onProgress: ProgressC
     {
         warnings.push(...drill.warnings);
     }
+    // Clearances only make sense for copper; a layer of unknown type may be copper, so it is analysed too
+    let analysis: CopperAnalysis | null = null;
+    if (layerType.kind === "copper" || layerType.kind === "unknown")
+    {
+        onProgress("analysing", 0);
+        analysis = analyzeCopper(geometry.copper, document);
+        onProgress("analysing", 1);
+    }
+    const analysed = performance.now();
     return assemble(fileName, {
         format: "gerber",
         layerType,
         unit: document.unit,
         polygons: geometry.copper,
         drill,
+        analysis,
         warnings,
         objects: document.objects.length,
         parseMs: parsed - start,
-        buildMs: built - parsed
+        buildMs: built - parsed,
+        analysisMs: analysed - built
     });
 }

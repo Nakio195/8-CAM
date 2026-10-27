@@ -279,5 +279,6 @@
   "sg.example": "Example",
   "sg.disabled": "Disabled",
   "sg.onDark": "On plum",
-  "sg.back": "Back to the application"
+  "sg.back": "Back to the application",
+  "import.analysing": "Analysing {file}"
 }

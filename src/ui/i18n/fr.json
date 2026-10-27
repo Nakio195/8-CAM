@@ -279,5 +279,6 @@
   "sg.example": "Exemple",
   "sg.disabled": "Désactivé",
   "sg.onDark": "Sur fond prune",
-  "sg.back": "Retour à l’application"
+  "sg.back": "Retour à l’application",
+  "import.analysing": "Analyse de {file}"
 }

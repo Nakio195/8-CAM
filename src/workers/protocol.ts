@@ -3,7 +3,7 @@
 
 import type { ImportedFile } from "@project/importedFile";
 
-export type ImportStage = "parsing" | "building";
+export type ImportStage = "parsing" | "building" | "analysing";
 
 export interface ImportRequest
 {

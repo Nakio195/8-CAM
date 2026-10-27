@@ -34,7 +34,7 @@
     {#each project.tasks as task (task.id)}
         <div class="task" role="status">
             <span class="task-label">
-                {t(task.stage === "parsing" ? "import.parsing" : "import.building", { file: task.fileName })}
+                {t(`import.${task.stage}`, { file: task.fileName })}
             </span>
             <progress max="1" value={task.fraction}></progress>
             <IconButton icon="close" size={16} label={t("import.cancel")} help="importCancel" onclick={() => task.cancel()} />

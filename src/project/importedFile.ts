@@ -1,5 +1,6 @@
 // Result of importing one file: what the import worker sends back and what a project layer keeps.
 
+import type { CopperAnalysis } from "@cam/analysis/index";
 import type { BBox, PackedPolygons } from "@core/geometry/index";
 import type { LengthUnit } from "@core/units/index";
 import type { DrillTool, Plating } from "@parsers/excellon/index";
@@ -43,6 +44,8 @@ export interface ImportedFile
     bbox: BBox;
     /** Drilling data when the file is a drill file (Excellon or Gerber X2 drill). */
     drill: ImportedDrill | null;
+    /** Clearances and track width, for copper layers (and layers of unknown type, which may be copper). */
+    analysis: CopperAnalysis | null;
     warnings: ImportWarning[];
-    stats: { objects: number; polygons: number; points: number; parseMs: number; buildMs: number };
+    stats: { objects: number; polygons: number; points: number; parseMs: number; buildMs: number; analysisMs: number };
 }

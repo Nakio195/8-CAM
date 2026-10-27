@@ -44,7 +44,7 @@ describe("importer", () =>
         expect(file.stats.objects).toBe(96);
         expect(file.stats.points).toBe(packedPointCount(file.geometry));
         expect(file.bbox.minX).toBeLessThan(file.bbox.maxX);
-        expect([...stages]).toEqual(["parsing", "building"]);
+        expect([...stages]).toEqual(["parsing", "building", "analysing"]);
     });
 
     it("imports a Gerber drill file with its drilling data", () =>
@@ -86,5 +86,20 @@ describe("display simplification", () =>
         expect(Math.max(...(simpleDisc?.outer ?? []).map((point) => distanceToRings(point, [disc.outer])))).toBeLessThan(1);
         expect(simpleTiny?.outer).toHaveLength(4);
         expect(unpackPolygons(simplifyPacked(packed, 1))).toEqual(unpackPolygons(packed));
+    });
+});
+
+describe("analysis at import", () =>
+{
+    it("analyses copper layers and not drill layers", () =>
+    {
+        const stages = new Set<string>();
+        const copper = importFile("Bottom Copper.GBR", fixture("proteus/ftdi-max-bottom-copper.gbr"), (stage) => stages.add(stage));
+        expect(stages.has("analysing")).toBe(true);
+        expect(copper.analysis?.spots.length).toBeGreaterThan(50);
+        expect(copper.analysis?.minTrack?.width).toBe(mmToInternal(0.254));
+        expect(copper.stats.analysisMs).toBeGreaterThanOrEqual(0);
+        expect(importFile("Drill Plated.GBR", fixture("proteus/ftdi-max-drill-plated.gbr")).analysis).toBeNull();
+        expect(importFile("test.drl", fixture("flatcam/flatcam-test.drl")).analysis).toBeNull();
     });
 });

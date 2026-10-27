@@ -24,8 +24,9 @@ function file(kind: LayerKind, side: LayerSide = "none", name = `${kind}-${side}
         geometry: new Int32Array([0]),
         bbox: { minX, minY: 0, maxX: minX + 10, maxY: 10 },
         drill: null,
+        analysis: null,
         warnings: [],
-        stats: { objects: 0, polygons: 0, points: 0, parseMs: 0, buildMs: 0 }
+        stats: { objects: 0, polygons: 0, points: 0, parseMs: 0, buildMs: 0, analysisMs: 0 }
     };
 }
 
