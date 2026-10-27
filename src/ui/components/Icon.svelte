@@ -33,6 +33,8 @@
     } as const;
 
     export type IconName = keyof typeof ICONS;
+
+    export const ICON_NAMES = Object.keys(ICONS) as IconName[];
 </script>
 
 <script lang="ts">

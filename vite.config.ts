@@ -12,6 +12,15 @@ export const alias = Object.fromEntries(
 
 export default defineConfig({
     plugins: [svelte()],
+    build: {
+        // Two pages: the application and the internal styleguide (specification 6.13)
+        rollupOptions: {
+            input: {
+                main: fileURLToPath(new URL("./index.html", import.meta.url)),
+                styleguide: fileURLToPath(new URL("./styleguide.html", import.meta.url))
+            }
+        }
+    },
     resolve: { alias },
     worker: { format: "es" },
     test: {
