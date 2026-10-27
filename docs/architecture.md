@@ -84,11 +84,11 @@ Pour nous, ces classes deviennent des **profils JSON** déclaratifs interprété
 
 ### 2.1 Géométrie : Clipper2
 
-| Option | Pour | Contre |
-|---|---|---|
-| **`clipper2-ts` 2.x** (port TypeScript pur) | Typé, aucune étape WASM, fonctionne tel quel dans les Workers et dans Vitest/Node, maintenu (2026) | Plus lent que WASM (estimé x2 à x4) ; entiers limités à 2^53 en JS |
-| `clipper2-wasm` 0.4 | Le plus rapide, vrai Int64, suit le C++ officiel | Gestion mémoire manuelle (`delete()`), chargement asynchrone, API moins idiomatique |
-| `clipper2-js` 1.2 | Port TS simple | Plus mis à jour depuis début 2024 |
+| Option                                      | Pour                                                                                               | Contre                                                                              |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| **`clipper2-ts` 2.x** (port TypeScript pur) | Typé, aucune étape WASM, fonctionne tel quel dans les Workers et dans Vitest/Node, maintenu (2026) | Plus lent que WASM (estimé x2 à x4) ; entiers limités à 2^53 en JS                  |
+| `clipper2-wasm` 0.4                         | Le plus rapide, vrai Int64, suit le C++ officiel                                                   | Gestion mémoire manuelle (`delete()`), chargement asynchrone, API moins idiomatique |
+| `clipper2-js` 1.2                           | Port TS simple                                                                                     | Plus mis à jour depuis début 2024                                                   |
 
 **Recommandation : `clipper2-ts`**, encapsulé derrière notre propre `ClipperWrapper` (`src/core/geometry`) pour pouvoir
 basculer sur `clipper2-wasm` si le benchmark de J1 ne tient pas l'objectif « isolation 2 passes < 5 s ».
@@ -99,12 +99,12 @@ marge trop juste). Précision de 0,01 µm, cent fois mieux que l'exigence de 1 �
 
 ### 2.2 Framework UI
 
-| Option | Pour | Contre |
-|---|---|---|
-| **Svelte 5** | Très peu de code d'interface, réactivité fine (« runes ») idéale pour les illustrations paramétriques en direct, bundle léger (bon pour le hors ligne), TypeScript natif | Écosystème plus petit que React |
-| React | Écosystème énorme | Plus verbeux, re-rendus à surveiller pour les schémas en direct |
-| Vue 3 | Bon compromis | Rien de décisif par rapport à Svelte ici |
-| Web Components natifs | Zéro dépendance | Beaucoup de code « plomberie » pour i18n, état, formulaires |
+| Option                | Pour                                                                                                                                                                     | Contre                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| **Svelte 5**          | Très peu de code d'interface, réactivité fine (« runes ») idéale pour les illustrations paramétriques en direct, bundle léger (bon pour le hors ligne), TypeScript natif | Écosystème plus petit que React                                 |
+| React                 | Écosystème énorme                                                                                                                                                        | Plus verbeux, re-rendus à surveiller pour les schémas en direct |
+| Vue 3                 | Bon compromis                                                                                                                                                            | Rien de décisif par rapport à Svelte ici                        |
+| Web Components natifs | Zéro dépendance                                                                                                                                                          | Beaucoup de code « plomberie » pour i18n, état, formulaires     |
 
 **Recommandation : Svelte 5** + `svelte-i18n` (ou petit module maison typé, à trancher en J4). Le cœur (`core`,
 `parsers`, `cam`, `post`, `project`) reste du TypeScript pur sans dépendance au framework.
@@ -122,14 +122,14 @@ derrière la même interface si la mesure de J4 le demande.
 
 ### 2.4 Autres
 
-| Besoin | Choix |
-|---|---|
-| Workers | Protocole de messages typé maison (requête / progression / annulation / résultat), `comlink` évité pour garder l'annulation explicite |
-| Persistance | `idb` 8 (IndexedDB) pour la bibliothèque d'outils et les profils |
-| Tests | Vitest 5 + couverture `v8` ; snapshots SVG pour les illustrations |
-| Build | Vite 8 ; PWA (`vite-plugin-pwa`) prévue mais activée plus tard |
-| Polices | Bebas Neue, Karla, JetBrains Mono auto-hébergées (`@fontsource/*`) |
-| Optimisation de trajet | Plus proche voisin + 2-opt maison (pas d'OR-Tools en JS) |
+| Besoin                 | Choix                                                                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Workers                | Protocole de messages typé maison (requête / progression / annulation / résultat), `comlink` évité pour garder l'annulation explicite |
+| Persistance            | `idb` 8 (IndexedDB) pour la bibliothèque d'outils et les profils                                                                      |
+| Tests                  | Vitest 5 + couverture `v8` ; snapshots SVG pour les illustrations                                                                     |
+| Build                  | Vite 8 ; PWA (`vite-plugin-pwa`) prévue mais activée plus tard                                                                        |
+| Polices                | Bebas Neue, Karla, JetBrains Mono auto-hébergées (`@fontsource/*`)                                                                    |
+| Optimisation de trajet | Plus proche voisin + 2-opt maison (pas d'OR-Tools en JS)                                                                              |
 
 ---
 
@@ -190,27 +190,27 @@ Critère d'acceptation : `docs/architecture.md` validé, `npm test` vert.
 
 ## 5. Décisions validées (27/10/2026)
 
-| Sujet | Décision |
-|---|---|
-| Framework UI | Svelte 5 |
-| Géométrie | `clipper2-ts`, benchmark en J1, repli `clipper2-wasm` possible |
-| Dépôt | git dans `Desktop\8-CAM`, un commit par étape importante ; CI GitHub Actions prête pour un futur dépôt distant |
-| Matière première | `ressources/` (fourni par To) n'est pas versionné ; les fichiers utilisés sont copiés dans `assets/brand/` et `tests/fixtures/` |
-| Fixtures | `tests/fixtures/proteus/` : cuivre face inférieure FTDI_Max (Proteus 8.15, Gerber X2, `%FSLAX45Y45`, mm) et le G-code d'isolation FlatCAM Plus correspondant (préprocesseur `default`, outil 0,2072 mm, Z -0,2 en 2 passes) qui servira au test comparatif. D'autres fichiers (KiCad, Eagle, EasyEDA, Altium, Excellon) seront ajoutés au fil des jalons |
-| Charte | logos SVG dans `assets/brand/` ; le PDF de la charte reste dans `ressources/` (relu en J4b) |
+| Sujet            | Décision                                                                                                                                                                                                                                                                                                                                                 |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework UI     | Svelte 5                                                                                                                                                                                                                                                                                                                                                 |
+| Géométrie        | `clipper2-ts`, benchmark en J1, repli `clipper2-wasm` possible                                                                                                                                                                                                                                                                                           |
+| Dépôt            | git dans `Desktop\8-CAM`, un commit par étape importante ; CI GitHub Actions prête pour un futur dépôt distant                                                                                                                                                                                                                                           |
+| Matière première | `ressources/` (fourni par To) n'est pas versionné ; les fichiers utilisés sont copiés dans `assets/brand/` et `tests/fixtures/`                                                                                                                                                                                                                          |
+| Fixtures         | `tests/fixtures/proteus/` : cuivre face inférieure FTDI_Max (Proteus 8.15, Gerber X2, `%FSLAX45Y45`, mm) et le G-code d'isolation FlatCAM Plus correspondant (préprocesseur `default`, outil 0,2072 mm, Z -0,2 en 2 passes) qui servira au test comparatif. D'autres fichiers (KiCad, Eagle, EasyEDA, Altium, Excellon) seront ajoutés au fil des jalons |
+| Charte           | logos SVG dans `assets/brand/` ; le PDF de la charte reste dans `ressources/` (relu en J4b)                                                                                                                                                                                                                                                              |
 
 ### 5.1 Profil machine réglable
 
 Les dimensions machine ne sont **pas figées dans le code** : un modèle `MachineProfile` (dans `project/`) contient au
 minimum
 
-| Champ | Description | Valeur par défaut (3018) |
-|---|---|---|
-| `name` | nom du profil | « CNC 3018 » |
-| `travelX`, `travelY`, `travelZ` | courses utiles (mm) | 300 / 180 / 45 |
-| `safeZ` | hauteur de sécurité machine (mm) | 5 |
-| `maxSpindleSpeed` | vitesse broche maxi (tr/min) | 10 000 |
-| `maxFeedXY`, `maxFeedZ` | avances maxi (mm/min) | 1 500 / 500 |
+| Champ                           | Description                      | Valeur par défaut (3018) |
+| ------------------------------- | -------------------------------- | ------------------------ |
+| `name`                          | nom du profil                    | « CNC 3018 »             |
+| `travelX`, `travelY`, `travelZ` | courses utiles (mm)              | 300 / 180 / 45           |
+| `safeZ`                         | hauteur de sécurité machine (mm) | 5                        |
+| `maxSpindleSpeed`               | vitesse broche maxi (tr/min)     | 10 000                   |
+| `maxFeedXY`, `maxFeedZ`         | avances maxi (mm/min)            | 1 500 / 500              |
 
 Plusieurs profils peuvent coexister (une machine par profil), persistés dans IndexedDB, exportables en JSON et
 enregistrés dans le projet. La vérification de sécurité de la section 7 (limites de course, avances aberrantes) lit
@@ -218,18 +218,24 @@ le profil actif. L'éditeur de profil arrive avec le post-processeur (J9) ; chaq
 
 ### 5.2 Précisions sur les conventions
 
+- **Accolades** : style Allman pour tous les blocs (classes, fonctions, méthodes, `if`, boucles, `switch`, `try`).
+  Dérogation justifiée : les **littéraux d'objet** (`const x = { ... }`, arguments `fn({ ... })`) ouvrent leur
+  accolade sur la même ligne. Placée seule sous un `=`, l'accolade devrait sinon être indentée (règle d'indentation
+  d'ESLint), ce qui donne un code plus difficile à lire. Ce ne sont pas des blocs de contrôle.
+- Formatage : ESLint (`npm run format`) pour TS / JS / Svelte, Prettier seulement pour JSON, CSS, Markdown et YAML,
+  car Prettier ne sait pas produire le style Allman.
 - Le préfixe `m` s'applique aux **propriétés privées** (et protégées) des classes ; les méthodes privées gardent un
   nom camelCase simple (`computeOffsets`). Règle vérifiée par ESLint (`@typescript-eslint/naming-convention`).
 - Les couches s'importent par alias (`@core`, `@parsers`, `@cam`, `@post`, `@project`, `@workers`, `@render`,
   `@ui`) ; ESLint interdit les imports « montants » et un test d'architecture le revérifie :
 
-| Module | Peut importer |
-|---|---|
-| `core` | rien |
-| `parsers` | `core` |
-| `cam` | `core`, `parsers` |
-| `post` | `core`, `cam` |
-| `project` | `core`, `parsers`, `cam`, `post` |
+| Module    | Peut importer                               |
+| --------- | ------------------------------------------- |
+| `core`    | rien                                        |
+| `parsers` | `core`                                      |
+| `cam`     | `core`, `parsers`                           |
+| `post`    | `core`, `cam`                               |
+| `project` | `core`, `parsers`, `cam`, `post`            |
 | `workers` | `core`, `parsers`, `cam`, `post`, `project` |
-| `render` | `core`, `parsers`, `cam`, `project` |
-| `ui` | tout |
+| `render`  | `core`, `parsers`, `cam`, `project`         |
+| `ui`      | tout                                        |
