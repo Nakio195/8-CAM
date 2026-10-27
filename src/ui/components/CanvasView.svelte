@@ -23,6 +23,7 @@
     const t = i18n.t;
     const WHEEL_SENSITIVITY = 0.0015;
     const KEY_PAN = 60;
+    const MIN_FIT_SIZE = 64;
 
     let container: HTMLDivElement;
     let canvas: HTMLCanvasElement;
@@ -294,7 +295,8 @@
     let handledFitRequest = 0;
     $effect(() =>
     {
-        if (fitRequest > handledFitRequest && view.width > 1)
+        // A tab opened in the background can report a tiny size first: wait for a usable one
+        if (fitRequest > handledFitRequest && view.width > MIN_FIT_SIZE && view.height > MIN_FIT_SIZE)
         {
             handledFitRequest = fitRequest;
             untrack(fitAll);

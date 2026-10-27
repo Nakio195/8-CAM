@@ -226,7 +226,7 @@
         flex: 1;
         min-height: 0;
         display: grid;
-        grid-template-columns: 300px 1fr;
+        grid-template-columns: 340px 1fr;
     }
 
     aside

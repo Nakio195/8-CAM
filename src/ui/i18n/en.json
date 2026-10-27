@@ -3,17 +3,14 @@
   "app.tagline": "From Gerber to G-code, right in the browser",
   "app.version": "Version {version}",
   "app.language": "Language",
-
   "header.open": "Open files",
   "header.openHint": "Import Gerber, Excellon or Gerber drill files from your computer. Nothing is sent over the internet.",
   "header.example": "Example board",
   "header.exampleHint": "Load the FTDI_Max board (bottom copper and drills) to discover the software.",
-
   "empty.title": "No board loaded",
   "empty.body": "Drop your Gerber and drill files here, or open them from your computer. Everything is computed in the browser: your files never leave your machine.",
   "empty.formats": "Supported formats: Gerber RS-274X and X2, Excellon, drill data as Gerber (Proteus).",
   "drop.hint": "Drop the files to import them",
-
   "layers.title": "Project",
   "layers.empty": "Imported layers will appear here.",
   "layers.show": "Show the layer",
@@ -23,6 +20,7 @@
   "layers.down": "Move the layer down: it is drawn under the previous one",
   "layers.remove": "Remove the layer from the project",
   "layers.details": "Details",
+  "layers.file": "File: {name}",
   "layers.stats": "{polygons} polygons, {points} points",
   "layers.timing": "Parsing {parse} ms, building {build} ms",
   "layers.drill": "{tools} tools, {hits} holes, {slots} slots",
@@ -31,11 +29,9 @@
   "layers.noWarnings": "No warning",
   "layers.warningLine": "line {line}",
   "layers.detection": "Type detected from {source}",
-
   "source.x2": "X2 attributes",
   "source.filename": "the file name",
   "source.none": "default (not recognised)",
-
   "layerKind.copper": "Copper",
   "layerKind.outline": "Outline",
   "layerKind.soldermask": "Solder mask",
@@ -48,17 +44,14 @@
   "layerSide.bottom": "bottom",
   "layerSide.inner": "inner",
   "layerSide.none": "",
-
   "plating.plated": "plated",
   "plating.nonPlated": "non plated",
   "plating.unknown": "plating unknown",
-
   "import.parsing": "Reading {file}",
   "import.building": "Building {file}",
   "import.cancel": "Cancel the import",
   "import.failed": "Could not import {file}: {message}",
   "import.dismiss": "Close the message",
-
   "view.fit": "Show everything (F)",
   "view.zoomIn": "Zoom in (+)",
   "view.zoomOut": "Zoom out (−)",
@@ -67,13 +60,11 @@
   "view.measure": "Measure a distance (M)",
   "view.measureHint": "Click two points to measure. Escape to stop.",
   "view.canvasLabel": "Board view. Wheel to zoom, drag to move, arrow keys and +/− on the keyboard.",
-
   "status.cursor": "X {x}  Y {y} mm",
   "status.zoom": "{zoom} px/mm",
   "status.grid": "grid {step} mm",
   "status.measure": "Δx {dx}  Δy {dy}  distance {distance} mm",
   "status.idle": "Ready",
-
   "warning.unterminatedCommand": "Unterminated command at the end of the file",
   "warning.unknownCommand": "Unknown command ignored",
   "warning.unsupportedCommand": "Unsupported command ignored",

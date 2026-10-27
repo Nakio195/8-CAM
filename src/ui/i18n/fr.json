@@ -3,17 +3,14 @@
   "app.tagline": "Du Gerber au G-code, directement dans le navigateur",
   "app.version": "Version {version}",
   "app.language": "Langue",
-
   "header.open": "Ouvrir des fichiers",
   "header.openHint": "Importer des fichiers Gerber, Excellon ou de perçage Gerber depuis votre ordinateur. Rien n'est envoyé sur internet.",
   "header.example": "Carte d'exemple",
   "header.exampleHint": "Charger la carte FTDI_Max (cuivre face dessous et perçages) pour découvrir le logiciel.",
-
   "empty.title": "Aucune carte chargée",
   "empty.body": "Glissez ici vos fichiers Gerber et de perçage, ou ouvrez-les depuis votre ordinateur. Tout est calculé dans le navigateur : vos fichiers ne quittent pas votre machine.",
   "empty.formats": "Formats lus : Gerber RS-274X et X2, Excellon, perçage au format Gerber (Proteus).",
   "drop.hint": "Déposez les fichiers pour les importer",
-
   "layers.title": "Projet",
   "layers.empty": "Les couches importées apparaîtront ici.",
   "layers.show": "Afficher la couche",
@@ -23,6 +20,7 @@
   "layers.down": "Descendre la couche : elle sera dessinée sous la précédente",
   "layers.remove": "Retirer la couche du projet",
   "layers.details": "Détails",
+  "layers.file": "Fichier : {name}",
   "layers.stats": "{polygons} polygones, {points} points",
   "layers.timing": "Lecture {parse} ms, construction {build} ms",
   "layers.drill": "{tools} forets, {hits} trous, {slots} rainures",
@@ -31,11 +29,9 @@
   "layers.noWarnings": "Aucun avertissement",
   "layers.warningLine": "ligne {line}",
   "layers.detection": "Type détecté par {source}",
-
   "source.x2": "les attributs X2",
   "source.filename": "le nom du fichier",
   "source.none": "défaut (non reconnu)",
-
   "layerKind.copper": "Cuivre",
   "layerKind.outline": "Contour",
   "layerKind.soldermask": "Vernis",
@@ -48,17 +44,14 @@
   "layerSide.bottom": "dessous",
   "layerSide.inner": "interne",
   "layerSide.none": "",
-
   "plating.plated": "métallisé",
   "plating.nonPlated": "non métallisé",
   "plating.unknown": "métallisation inconnue",
-
   "import.parsing": "Lecture de {file}",
   "import.building": "Construction de {file}",
   "import.cancel": "Annuler l'import",
   "import.failed": "Échec de l'import de {file} : {message}",
   "import.dismiss": "Fermer le message",
-
   "view.fit": "Tout afficher (F)",
   "view.zoomIn": "Zoom avant (+)",
   "view.zoomOut": "Zoom arrière (−)",
@@ -67,13 +60,11 @@
   "view.measure": "Mesurer une distance (M)",
   "view.measureHint": "Cliquez deux points pour mesurer. Échap pour arrêter.",
   "view.canvasLabel": "Vue de la carte. Molette pour zoomer, glisser pour déplacer, flèches et +/− au clavier.",
-
   "status.cursor": "X {x}  Y {y} mm",
   "status.zoom": "{zoom} px/mm",
   "status.grid": "grille {step} mm",
   "status.measure": "Δx {dx}  Δy {dy}  distance {distance} mm",
   "status.idle": "Prêt",
-
   "warning.unterminatedCommand": "Commande non terminée en fin de fichier",
   "warning.unknownCommand": "Commande inconnue ignorée",
   "warning.unsupportedCommand": "Commande non prise en charge, ignorée",

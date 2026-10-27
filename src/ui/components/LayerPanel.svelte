@@ -69,7 +69,18 @@
                     <input class="swatch" type="color" value={layer.color} title={t("layers.color")}
                         aria-label={t("layers.color")}
                         oninput={(event) => project.setColor(layer.id, event.currentTarget.value)} />
-                    <span class="name" title={layer.file.fileName}>{layer.name}</span>
+                    <!-- Full name, wrapped if needed: files of one board often share a long common start -->
+                    <span class="name">{layer.name}</span>
+                </div>
+                <div class="meta">
+                    <span class="badge">{typeLabel(layer)}</span>
+                    {#if layer.file.warnings.length > 0}
+                        <span class="badge warning">
+                            <Icon name="warning" size={12} />
+                            {layer.file.warnings.length}
+                        </span>
+                    {/if}
+                    <span class="spacer"></span>
                     <button class="icon-button" type="button" disabled={index === 0} title={t("layers.up")}
                         aria-label={t("layers.up")} onclick={() => project.move(layer.id, "up")}>
                         <Icon name="up" size={16} />
@@ -84,17 +95,9 @@
                         <Icon name="remove" size={16} />
                     </button>
                 </div>
-                <div class="meta">
-                    <span class="badge">{typeLabel(layer)}</span>
-                    {#if layer.file.warnings.length > 0}
-                        <span class="badge warning">
-                            <Icon name="warning" size={12} />
-                            {layer.file.warnings.length}
-                        </span>
-                    {/if}
-                </div>
                 <details>
                     <summary>{t("layers.details")}</summary>
+                    <p class="file-name">{t("layers.file", { name: layer.file.fileName })}</p>
                     <p>{t("layers.detection", { source: t(`source.${layer.file.layerType.source}`) })}</p>
                     <p>{t("layers.stats", { polygons: layer.file.stats.polygons, points: layer.file.stats.points })}</p>
                     <p>{t("layers.timing", {
@@ -199,10 +202,19 @@
     {
         flex: 1;
         min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        overflow-wrap: anywhere;
+        line-height: 1.25;
         font-weight: 600;
+    }
+
+    .spacer
+    {
+        flex: 1;
+    }
+
+    .file-name
+    {
+        overflow-wrap: anywhere;
     }
 
     .swatch
@@ -219,8 +231,9 @@
     .meta
     {
         display: flex;
-        gap: 6px;
-        margin: 4px 0 2px 30px;
+        align-items: center;
+        gap: 4px;
+        margin: 2px 0 0 30px;
     }
 
     .badge
