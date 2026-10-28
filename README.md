@@ -19,6 +19,14 @@ npm run build
 Code conventions (specification section 4): Allman braces, private members prefixed with `m`, English identifiers
 and comments, user-facing text in `src/ui/i18n/*.json`. ESLint enforces them (`npm run format` fixes most issues).
 
+## Starting 8-CAM
+
+Opening `index.html` directly shows a blank page: browsers refuse ES modules and Web Workers from `file://`, so the
+application must be served. On Windows, double-click **`Lancer 8-CAM.bat`**: it installs the dependencies the first
+time, builds the application, serves it at http://localhost:4173 and opens the browser. Keep its window open while
+using 8-CAM; closing it stops 8-CAM. Node.js (LTS) must be installed. Elsewhere: `npm run build` then
+`npm run preview`.
+
 ## Using 8-CAM
 
 1. Open or drop the Gerber files of the board (copper, outline) and its drill files, or load the example board.
