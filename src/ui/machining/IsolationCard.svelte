@@ -186,7 +186,7 @@
                         <ul class="zones">
                             {#each result.zones.slice(0, ZONES_SHOWN) as zone, index (index)}
                                 <li>
-                                    <button class="zone" type="button" onclick={() => zoomTo(zone.centre, zone.gap)}>
+                                    <button class="zone" type="button" use:help={"zoomToSpot"} onclick={() => zoomTo(zone.centre, zone.gap)}>
                                         {t("machining.zoneLine", { gap: i18n.number(zone.gap / INTERNAL_UNITS_PER_MM, 3) })}
                                     </button>
                                 </li>

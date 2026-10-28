@@ -238,7 +238,7 @@
   "help.origin.advice": "Lower left corner: the simplest to set on the machine.",
   "help.mirror.title": "Mirror",
   "help.mirror.body": "Flips the drawing left to right to mill the bottom side of a board turned over. The milling direction chosen is kept.",
-  "help.mirror.advice": "Leave unticked if the layer is milled as it appears on screen.",
+  "help.mirror.advice": "Required for the back side of a double-sided board, turned over on the machine. Leave unticked if the layer is milled as it appears on screen.",
   "help.postProcessor.title": "Post-processor",
   "help.postProcessor.body": "Translates the toolpaths into the G-code dialect of the machine: move words, tool change, spindle, comments. Each machine has its own.",
   "help.postProcessor.advice": "GRBL 1.1 for 3018 CNCs; Marlin for a 3D printer board; LinuxCNC for a PC driven machine.",
@@ -945,5 +945,10 @@
   "help.projectSave.body": "Saves to a .8cam.json file the imported files, the layer display, the thickness, the tools, the machine, the operations and the export settings.",
   "help.projectSave.advice": "The file holds everything: it opens on another computer without the original files.",
   "help.projectOpen.title": "Open a project",
-  "help.projectOpen.body": "Replaces the current project with the one of a .8cam.json file: files are imported again and operations computed again. The file can also be dropped on the window."
+  "help.projectOpen.body": "Replaces the current project with the one of a .8cam.json file: files are imported again and operations computed again. The file can also be dropped on the window.",
+  "help.dialogClose.title": "Close the window",
+  "help.dialogClose.body": "Closes this window and goes back to the board. Nothing is lost: computations and settings stay in place.",
+  "help.exportFile.title": "File shown",
+  "help.exportFile.body": "Chooses, among the files written (one per operation), the one whose text is shown and can be edited.",
+  "help.postLineNumbers.advice": "Off in general; when the machine asks for it, start at 10 with a step of 10."
 }

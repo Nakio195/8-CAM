@@ -238,7 +238,7 @@
   "help.origin.advice": "Coin bas-gauche : le plus simple à régler sur la machine.",
   "help.mirror.title": "Miroir",
   "help.mirror.body": "Retourne le dessin de gauche à droite pour fraiser la face inférieure d'une carte retournée. Le sens de coupe choisi est conservé.",
-  "help.mirror.advice": "Laissez décoché si la couche est fraisée telle qu'elle apparaît à l'écran.",
+  "help.mirror.advice": "Obligatoire pour la face arrière d'une carte double face, retournée sur la machine. Laissez décoché si la couche est fraisée telle qu'elle apparaît à l'écran.",
   "help.postProcessor.title": "Post-processeur",
   "help.postProcessor.body": "Traduit les parcours dans le dialecte G-code de la machine : mots des mouvements, changement d'outil, broche, commentaires. Chaque machine a le sien.",
   "help.postProcessor.advice": "GRBL 1.1 pour les CNC 3018 ; Marlin pour une carte d'imprimante 3D ; LinuxCNC pour une machine pilotée par PC.",
@@ -945,5 +945,10 @@
   "help.projectSave.body": "Enregistre dans un fichier .8cam.json les fichiers importés, l'affichage des couches, l'épaisseur, les outils, la machine, les opérations et les réglages d'export.",
   "help.projectSave.advice": "Le fichier contient tout : il s'ouvre sur un autre ordinateur sans les fichiers d'origine.",
   "help.projectOpen.title": "Ouvrir un projet",
-  "help.projectOpen.body": "Remplace le projet en cours par celui d'un fichier .8cam.json : les fichiers sont importés de nouveau et les opérations recalculées. On peut aussi déposer le fichier sur la fenêtre."
+  "help.projectOpen.body": "Remplace le projet en cours par celui d'un fichier .8cam.json : les fichiers sont importés de nouveau et les opérations recalculées. On peut aussi déposer le fichier sur la fenêtre.",
+  "help.dialogClose.title": "Fermer la fenêtre",
+  "help.dialogClose.body": "Ferme cette fenêtre et revient à la carte. Rien n'est perdu : les calculs et réglages restent en place.",
+  "help.exportFile.title": "Fichier affiché",
+  "help.exportFile.body": "Choisit, parmi les fichiers écrits (un par opération), celui dont le texte est affiché et peut être modifié.",
+  "help.postLineNumbers.advice": "Désactivée en général ; si la machine la demande, départ à 10 et pas de 10."
 }

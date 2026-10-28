@@ -236,7 +236,7 @@
 
             <h3 use:help={"exportText"}>{t("export.text")}</h3>
             {#if output.files.length > 1}
-                <select value={file?.name ?? ""} aria-label={t("export.file")} onchange={(event) => { fileName = event.currentTarget.value; editing = false; }}>
+                <select value={file?.name ?? ""} aria-label={t("export.file")} use:help={"exportFile"} onchange={(event) => { fileName = event.currentTarget.value; editing = false; }}>
                     {#each output.files as entry (entry.name)}
                         <option value={entry.name}>{entry.name}</option>
                     {/each}
@@ -247,7 +247,7 @@
                     <Callout tone="error">{t(`post.safety.${reason}`)}</Callout>
                 {/each}
                 {#if editing}
-                    <textarea class="mono editor" bind:value={draft} spellcheck="false" aria-label={t("export.text")}></textarea>
+                    <textarea class="mono editor" bind:value={draft} spellcheck="false" aria-label={t("export.text")} use:help={"exportEdit"}></textarea>
                     <div class="actions">
                         <Button variant="primary" icon="check" help="exportEdit" onclick={saveEdit}>{t("export.saveEdit")}</Button>
                         <Button variant="ghost" icon="close" help="exportEdit" onclick={() => (editing = false)}>{t("export.cancelEdit")}</Button>
