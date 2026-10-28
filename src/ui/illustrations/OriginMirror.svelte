@@ -78,7 +78,7 @@
 
     .board
     {
-        fill: var(--accent-formation-light);
+        fill: var(--illus-board);
         stroke: var(--accent-formation);
         stroke-width: 2;
     }

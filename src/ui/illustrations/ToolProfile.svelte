@@ -62,7 +62,7 @@
 
     .shank
     {
-        fill: var(--brand-prune-light);
+        fill: var(--illus-neutral);
         stroke: var(--brand-prune);
     }
 

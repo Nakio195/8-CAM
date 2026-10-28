@@ -59,6 +59,12 @@
   --tooltip-text: #4b2a46;
   --tooltip-border: #faa0cd;
 
+  /* Illustrations: board, soft fills and alerts behind text, light in the light theme and dark in the dark one */
+  --illus-board: #ddf5ef;
+  --illus-soft: #fdebf5;
+  --illus-neutral: #e4dfe3;
+  --illus-alert: #fbdae3;
+
   /* Stickers (badges): solid brand colours, text chosen for contrast */
   --sticker-success: #1ebe96;
   --sticker-success-text: #4b2a46;
@@ -114,6 +120,10 @@
     --tooltip-text: #f1ecf0;
     --tooltip-border: #faa0cd;
     --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+    --illus-board: #123b31;
+    --illus-soft: #4a1f3c;
+    --illus-neutral: #3a2a37;
+    --illus-alert: #4d1426;
 
     color-scheme: dark;
   }
@@ -142,6 +152,10 @@
   --tooltip-text: #f1ecf0;
   --tooltip-border: #faa0cd;
   --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  --illus-board: #123b31;
+  --illus-soft: #4a1f3c;
+  --illus-neutral: #3a2a37;
+  --illus-alert: #4d1426;
 
   color-scheme: dark;
 }

@@ -194,6 +194,27 @@ export interface DepthPassesShape
     /** y of the bottom of each pass, shallowest first. */
     passes: number[];
     passCount: number;
+    /** Pass numbers that fit without overlapping, deepest included. */
+    labels: { y: number; number: number }[];
+}
+
+/** Smallest distance between two pass numbers (px): closer passes are left unnumbered rather than overlapping. */
+export const PASS_LABEL_SPACING = 11;
+
+/** Pass numbers to write: the deepest pass always, then going up each one far enough from the last number written. */
+function passLabels(passY: readonly number[]): { y: number; number: number }[]
+{
+    const labels: { y: number; number: number }[] = [];
+    for (let index = passY.length - 1; index >= 0; index--)
+    {
+        const y = passY[index] ?? 0;
+        const last = labels[labels.length - 1];
+        if (!last || last.y - y >= PASS_LABEL_SPACING)
+        {
+            labels.push({ y, number: index + 1 });
+        }
+    }
+    return labels.reverse();
 }
 
 export function depthPasses(depth: number, depthPerPass: number, boardThickness = 1.6): DepthPassesShape
@@ -207,7 +228,8 @@ export function depthPasses(depth: number, depthPerPass: number, boardThickness 
         surfaceY,
         bottomY: surfaceY + boardThickness * scale,
         passes: depths.map((value) => surfaceY + value * scale),
-        passCount: depths.length
+        passCount: depths.length,
+        labels: passLabels(depths.map((value) => surfaceY + value * scale))
     };
 }
 

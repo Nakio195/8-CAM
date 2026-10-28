@@ -20,9 +20,9 @@
         {@const top = index === 0 ? shape.surfaceY : (shape.passes[index - 1] ?? shape.surfaceY)}
         <rect class="pass" class:odd={index % 2 === 1} x={LEFT} y={round(top)} width="40" height={round(passY - top)} />
         <line class="level" x1={LEFT} y1={round(passY)} x2={RIGHT + 6} y2={round(passY)} />
-        {#if shape.passCount <= 8}
-            <text class="label" x={RIGHT + 10} y={round(passY + 4)}>{index + 1}</text>
-        {/if}
+    {/each}
+    {#each shape.labels as label (label.number)}
+        <text class="label" x={RIGHT + 10} y={round(label.y + 4)}>{label.number}</text>
     {/each}
     <line class="dimension" x1={LEFT - 12} y1={round(shape.surfaceY)} x2={LEFT - 12} y2={round(shape.passes[shape.passes.length - 1] ?? shape.surfaceY)} />
     <text class="label" x={LEFT} y={FRAME_HEIGHT - 20}>
@@ -51,7 +51,7 @@
 
     .board
     {
-        fill: var(--accent-formation-light);
+        fill: var(--illus-board);
         stroke: var(--accent-formation);
     }
 
@@ -63,7 +63,7 @@
 
     .pass.odd
     {
-        fill: var(--brand-rose-light);
+        fill: var(--illus-soft);
     }
 
     .level

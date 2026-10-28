@@ -111,6 +111,24 @@ describe("illustration geometry", () =>
         expect([...shape.passes].sort((a, b) => a - b)).toEqual(shape.passes);
         // 1.7 mm goes below the 1.6 mm board
         expect(shape.passes[4]).toBeGreaterThan(shape.bottomY);
+        // The last two passes (1.6 and 1.7 mm) are too close: only the deepest is numbered
+        expect(shape.labels.map((label) => label.number)).toEqual([1, 2, 3, 5]);
+    });
+
+    it("numbers only the passes far enough apart, the deepest always", () =>
+    {
+        // Three isolation passes of 0.075 mm drawn against a 1.6 mm board: a few pixels apart
+        const thin = depthPasses(0.225, 0.075);
+        expect(thin.passCount).toBe(3);
+        expect(thin.labels.map((label) => label.number)).toEqual([3]);
+        for (const shape of [thin, depthPasses(1.7, 0.4), depthPasses(1.7, 0.1)])
+        {
+            shape.labels.forEach((label, index) =>
+            {
+                const next = shape.labels[index + 1];
+                expect(next ? next.y - label.y : Infinity).toBeGreaterThanOrEqual(11);
+            });
+        }
     });
 
     it("lays the isolation passes below the copper edge with their overlap", () =>

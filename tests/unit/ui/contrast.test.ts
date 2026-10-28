@@ -44,7 +44,13 @@ const TEXT_PAIRS: [string, string][] = [
     ["--sticker-info-text", "--sticker-info"],
     ["--sticker-neutral-text", "--sticker-neutral"],
     ["--sticker-accent-text", "--sticker-accent"],
-    ["--canvas-text", "--canvas-background"]
+    ["--canvas-text", "--canvas-background"],
+    // Labels of the illustrations are drawn over their board and soft fills
+    ["--text", "--illus-board"],
+    ["--text-muted", "--illus-board"],
+    ["--text", "--illus-soft"],
+    ["--text", "--illus-neutral"],
+    ["--text", "--illus-alert"]
 ];
 
 describe("WCAG contrast of the theme (specification 6.13)", () =>
