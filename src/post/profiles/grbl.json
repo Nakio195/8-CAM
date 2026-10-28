@@ -1,0 +1,23 @@
+{
+  "format": "8cam-post",
+  "version": 1,
+  "id": "grbl-1.1",
+  "name": "GRBL 1.1",
+  "description": "CNC 3018 and most hobby controllers. GRBL refuses M6: the tool change stops the spindle, rises to the safe height and pauses (M0) so the tool can be changed by hand.",
+  "builtIn": true,
+  "units": "mm",
+  "decimals": { "coordinates": 4, "feed": 1 },
+  "lineNumbers": { "enabled": false, "start": 10, "step": 10 },
+  "comments": "parentheses",
+  "arcs": "native",
+  "feeds": "modal",
+  "rapidWithFeed": false,
+  "commands": { "rapid": "G00", "linear": "G01", "arcCW": "G02", "arcCCW": "G03" },
+  "header": ["G21", "G90", "G17", "G94", "G54"],
+  "toolChange": ["M05", "G00 Z{safeZ}", "(MSG, {message})", "M0"],
+  "spindleOn": ["M03 S{spindleSpeed}", "G4 P2"],
+  "spindleOff": ["M05"],
+  "dwell": ["G4 P{seconds}"],
+  "footer": ["M02"],
+  "forbidden": ["M6", "M06"]
+}

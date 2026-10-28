@@ -1,0 +1,23 @@
+{
+  "format": "8cam-post",
+  "version": 1,
+  "id": "marlin",
+  "name": "Marlin",
+  "description": "Marlin firmware driving a spindle (3D printer boards converted to CNC). Comments with ';', feed on every move, M400 waits for the moves to finish before stopping the spindle; M0 pauses with a message for the tool change.",
+  "builtIn": true,
+  "units": "mm",
+  "decimals": { "coordinates": 4, "feed": 1 },
+  "lineNumbers": { "enabled": false, "start": 10, "step": 10 },
+  "comments": "semicolon",
+  "arcs": "native",
+  "feeds": "everyLine",
+  "rapidWithFeed": true,
+  "commands": { "rapid": "G0", "linear": "G1", "arcCW": "G2", "arcCCW": "G3" },
+  "header": ["G21", "G90"],
+  "toolChange": ["M400", "M5", "G0 Z{safeZ} F{rapidFeed}", "M0 {message}"],
+  "spindleOn": ["M3 S{spindleSpeed}", "G4 S2"],
+  "spindleOff": ["M400", "M5"],
+  "dwell": ["G4 P{milliseconds}"],
+  "footer": ["M400"],
+  "forbidden": ["M6"]
+}

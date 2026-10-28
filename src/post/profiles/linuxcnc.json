@@ -1,0 +1,23 @@
+{
+  "format": "8cam-post",
+  "version": 1,
+  "id": "linuxcnc",
+  "name": "LinuxCNC",
+  "description": "LinuxCNC (and Mach3 compatible controllers). T M6 changes the tool: LinuxCNC shows its own tool change dialog and waits.",
+  "builtIn": true,
+  "units": "mm",
+  "decimals": { "coordinates": 4, "feed": 1 },
+  "lineNumbers": { "enabled": false, "start": 10, "step": 10 },
+  "comments": "parentheses",
+  "arcs": "native",
+  "feeds": "modal",
+  "rapidWithFeed": false,
+  "commands": { "rapid": "G00", "linear": "G01", "arcCW": "G02", "arcCCW": "G03" },
+  "header": ["G21", "G90", "G17", "G94", "G54", "G40", "G49"],
+  "toolChange": ["M05", "G00 Z{safeZ}", "T{toolNumber} M06", "(MSG, {message})"],
+  "spindleOn": ["M03 S{spindleSpeed}", "G04 P2"],
+  "spindleOff": ["M05"],
+  "dwell": ["G04 P{seconds}"],
+  "footer": ["M02"],
+  "forbidden": []
+}
