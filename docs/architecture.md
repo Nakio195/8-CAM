@@ -1141,3 +1141,25 @@ l'Artisan, c'est impossible au milieu d'un fichier (constats dans le code source
 - En mode pause (un seul fichier), la reprise après `M600` garde le zéro Z du premier outil : à réserver à des outils
   de même longueur.
 - Les attaches et le perçage descendent sous la carte : planche martyre indispensable.
+
+---
+
+## 20. Parcours étape par étape (onglets Usinage et Machine)
+
+L'onglet Usinage empilait isolation, perçage, détourage et export : trop chargé. Les deux derniers onglets sont
+maintenant des **étapes repliables**, une seule ouverte à la fois par onglet :
+
+| Onglet  | Étapes                                                                           |
+| ------- | -------------------------------------------------------------------------------- |
+| Usinage | 1 Isolation, 2 Perçage, 3 Détourage                                              |
+| Machine | 1 Machine, 2 Post-processeur (avec son aperçu), 3 Export du G-code, 4 Simulation |
+
+- `StepSection` (`src/ui/components/base`) : en-tête cliquable avec un numéro (une coche verte une fois l'étape faite),
+  le titre et un résumé (« 1 opération(s), 1 calculée(s) », nom de la machine, nombre de fichiers, durée simulée), puis
+  un bouton « Étape suivante ». Le détourage mène à l'export, dans l'onglet Machine.
+- L'étape ouverte de chaque onglet est dans `navigation.sections` (`openSection`, `toggleSection`) ; le guide « Ma
+  première carte » ouvre directement la bonne étape.
+- Les étapes repliées restent montées (attribut `hidden`) : une carte en cours de modification ou une simulation en
+  lecture garde son état.
+- L'ancien panneau d'export est coupé en deux : `ExportPanel` (réglages, écriture, vérifications, fichiers) et
+  `SimulationPanel` (lecture du trajet, texte modifiable).

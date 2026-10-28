@@ -46,6 +46,16 @@
         };
     }
 
+    /** Opens the step of the Machining or Machine tab where the guide step is done. */
+    function goToStep(open: () => void, then?: () => void): () => void
+    {
+        return () =>
+        {
+            open();
+            then?.();
+        };
+    }
+
     let hasBoard = $derived(project.layers.length > 0);
     let hasDrills = $derived(machining.drillLayers().length > 0);
     let steps = $derived<Step[]>([
@@ -70,7 +80,7 @@
         {
             id: "isolation",
             done: machining.operations.some((operation) => operation.result !== null),
-            action: goTo("machining", () =>
+            action: goToStep(() => navigation.openSection("machining", "isolation"), () =>
             {
                 if (machining.operations.length === 0)
                 {
@@ -83,7 +93,7 @@
             id: "drilling",
             done: machining.drillings.some((operation) => operation.result !== null) || (hasBoard && !hasDrills),
             skipped: hasBoard && !hasDrills,
-            action: goTo("machining", () =>
+            action: goToStep(() => navigation.openSection("machining", "drilling"), () =>
             {
                 if (machining.drillings.length === 0)
                 {
@@ -95,7 +105,7 @@
         {
             id: "cutout",
             done: machining.cutouts.some((operation) => operation.result !== null),
-            action: goTo("machining", () =>
+            action: goToStep(() => navigation.openSection("machining", "cutout"), () =>
             {
                 if (machining.cutouts.length === 0)
                 {
@@ -107,7 +117,7 @@
         {
             id: "export",
             done: exportState.output !== null,
-            action: goTo("machining", () => void exportState.run()),
+            action: goToStep(() => navigation.openSection("machine", "export"), () => void exportState.run()),
             figure: { component: as(OriginMirror), props: { origin: 0, mirror: false } }
         },
         {

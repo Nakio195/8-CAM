@@ -11,13 +11,20 @@
     import { toolLibrary } from "../state/tools.svelte";
     import Button from "../components/base/Button.svelte";
     import Callout from "../components/base/Callout.svelte";
+    import StepSection from "../components/base/StepSection.svelte";
+    import ExportPanel from "../machining/ExportPanel.svelte";
+    import { formatDuration } from "../machining/format";
+    import SimulationPanel from "../machining/SimulationPanel.svelte";
+    import { exportState } from "../state/export.svelte";
+    import { navigation } from "../state/navigation.svelte";
     import { toolLabel } from "../tools/labels";
     import GcodePreview from "./GcodePreview.svelte";
     import MachineEditor from "./MachineEditor.svelte";
     import PostProfileEditor from "./PostProfileEditor.svelte";
 
-    // Machine tab (docs/architecture.md section 5.1, specification 6.8): the machine profiles, the post-processor of
-    // the active machine with its editor, and a live preview of the G-code it writes for a sample board.
+    // Machine tab (docs/architecture.md section 5.1, specification 6.8 and 6.9), one step open at a time: the machine
+    // profiles; the post-processor of the active machine with its editor and a live preview of the G-code it writes for
+    // a sample board; the G-code of the board; its simulation.
     const t = i18n.t;
 
     let message = $state<{ tone: "success" | "error"; text: string } | null>(null);
@@ -55,6 +62,11 @@
         ? checkGcode(output.text, Math.min(...job.operations.map((operation) => operation.tool.travelZ)),
             Math.max(...job.operations.map((operation) => operation.tool.safeZ)))
         : []);
+
+    let exported = $derived(exportState.output !== null && !exportState.stale);
+    let exportSummary = $derived(exportState.output
+        ? t(exportState.stale ? "steps.stale" : "steps.files", { count: exportState.output.files.length })
+        : t("steps.toDo"));
 
     function addMachine(): void
     {
@@ -123,8 +135,9 @@
     }
 </script>
 
-<section class="panel" aria-labelledby="machine-title">
-    <h2 id="machine-title">{t("machine.title")}</h2>
+<StepSection id="machine" index={1} title={t("machine.title")} help="stepMachine" summary={machine.name}
+    open={navigation.sections.machine === "machine"} ontoggle={() => navigation.toggleSection("machine", "machine")}
+    next={{ label: t("steps.next", { step: t("post.title") }), help: "stepNext", onclick: () => navigation.openSection("machine", "post") }}>
     {#if !machineState.persistent}
         <Callout tone="warning">{t("machine.notPersistent")}</Callout>
     {/if}
@@ -162,10 +175,11 @@
     {#key machine.id}
         <MachineEditor {machine} />
     {/key}
-</section>
+</StepSection>
 
-<section class="panel" aria-labelledby="post-title">
-    <h2 id="post-title">{t("post.title")}</h2>
+<StepSection id="post" index={2} title={t("post.title")} help="stepPost" summary={profile.name}
+    open={navigation.sections.machine === "post"} ontoggle={() => navigation.toggleSection("machine", "post")}
+    next={{ label: t("steps.next", { step: t("export.title") }), help: "stepNext", onclick: () => navigation.openSection("machine", "export") }}>
     <label class="field">
         <span>{t("post.profile")}</span>
         <select value={profile.id} use:help={"postProcessor"}
@@ -195,10 +209,7 @@
             <PostProfileEditor {profile} />
         {/key}
     {/if}
-</section>
-
-<section class="panel" aria-labelledby="preview-title">
-    <h2 id="preview-title" use:help={"postPreview"}>{t("post.preview")}</h2>
+    <h3 use:help={"postPreview"}>{t("post.preview")}</h3>
     {#if output}
         {#each output.forbidden as entry (entry.line)}
             <Callout tone="error">{t("post.forbiddenFound", { word: entry.word, line: entry.line })}</Callout>
@@ -214,22 +225,26 @@
     {:else}
         <Callout tone="warning">{t("post.previewNoTools")}</Callout>
     {/if}
-</section>
+</StepSection>
+
+<StepSection id="export" index={3} title={t("export.title")} help="stepExport" summary={exportSummary} done={exported}
+    open={navigation.sections.machine === "export"} ontoggle={() => navigation.toggleSection("machine", "export")}
+    next={{ label: t("steps.next", { step: t("export.simulation") }), help: "stepNext", onclick: () => navigation.openSection("machine", "simulation") }}>
+    <ExportPanel />
+</StepSection>
+
+<StepSection id="simulation" index={4} title={t("export.simulation")} help="stepSimulation"
+    summary={exportState.output ? formatDuration(exportState.duration, t) : t("steps.afterExport")}
+    open={navigation.sections.machine === "simulation"} ontoggle={() => navigation.toggleSection("machine", "simulation")}>
+    <SimulationPanel />
+</StepSection>
 
 <style>
-    .panel
+    h3
     {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        padding: 12px;
-    }
-
-    h2
-    {
-        margin: 0;
+        margin: 6px 0 0;
         font-family: var(--font-title);
-        font-size: 20px;
+        font-size: 16px;
         font-weight: 400;
         letter-spacing: 0.04em;
         text-transform: uppercase;
