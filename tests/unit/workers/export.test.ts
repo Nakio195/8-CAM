@@ -181,6 +181,32 @@ describe("export of the FTDI_Max board", () =>
         expect(isCounterClockwise(mirroredLoop)).toBe(isCounterClockwise(plainLoop));
     });
 
+    it("writes one file per tool for a machine setting the Z zero again with each tool", async () =>
+    {
+        const { SNAPMAKER_ARTISAN } = await import("@post/index");
+        const snapmaker = BUILT_IN_PROFILES.find((entry) => entry.id === "snapmaker-artisan") as PostProfile;
+        const output = runExport({ ...request({ origin: "lowerLeft", mirror: false }, false, snapmaker), machine: SNAPMAKER_ARTISAN });
+        // V-bit, 0.8 and 1.0 mm drills, then the corn cob mill milling the 3 mm holes and cutting the board out
+        // Names in plain ASCII: "V-bit 30° 0,2 mm" gives "V-bit_30_deg_0-2_mm"
+        expect(output.files.map((file) => file.name)).toEqual([
+            "FTDI_Max-1-Isolation-V-bit_30_deg_0-2_mm.cnc",
+            "FTDI_Max-2-Drilling-drill-0.8.cnc",
+            "FTDI_Max-3-Drilling-drill-1.0.cnc",
+            "FTDI_Max-4-Drilling_Cutout-cornmill-1.5.cnc"
+        ]);
+        for (const [index, file] of output.files.entries())
+        {
+            // One tool per file: never a pause, the zero is set before each file
+            expect(file.text).not.toMatch(/^M600$/m);
+            expect(file.text).toMatch(new RegExp(`^; File ${index + 1} of ${output.files.length}: `, "m"));
+            expect(file.text).toMatch(index === 0 ? /^; Set the work origin X, Y and Z with this tool before starting$/m
+                : /^; Keep the X and Y origin, set the Z zero again on the board surface with this tool$/m);
+        }
+        // The mill files hold both of its operations: milled holes then cutout
+        expect(output.files[3]?.text).toMatch(/^; File 4 of 4: Drilling 3, Cutout$/m);
+        expect(output.textIssues).toEqual([]);
+    });
+
     it("writes with every profile without breaking a safety rule", () =>
     {
         for (const profile of BUILT_IN_PROFILES)

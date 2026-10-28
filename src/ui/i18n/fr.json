@@ -1014,5 +1014,20 @@
   "help.postFileHeader.advice": "Vide pour GRBL, Marlin et LinuxCNC ; le bloc « ;Header Start » pour une Snapmaker.",
   "help.postFileExtension.title": "Extension des fichiers",
   "help.postFileExtension.body": "Terminaison des fichiers G-code écrits, sans le point. Certaines machines ne listent que leur propre extension.",
-  "help.postFileExtension.advice": "nc en général ; cnc pour une Snapmaker."
+  "help.postFileExtension.advice": "nc en général ; cnc pour une Snapmaker.",
+  "machine.toolChange": "Changement d'outil",
+  "machine.toolChangePause": "Pause dans un seul fichier",
+  "machine.toolChangeFiles": "Un fichier par outil, zéro Z refait",
+  "machine.issue.invalidToolChange": "Mode de changement d'outil inconnu.",
+  "post.firstToolChange": "Premier changement d'outil (vide : comme les autres)",
+  "export.separateFiles": "{machine} : un fichier par outil. Avant chaque fichier, montez l'outil indiqué et refaites le zéro Z sur la carte ; le zéro X / Y reste celui du premier fichier.",
+  "export.stepFirst": "Montez le premier outil, réglez l'origine X, Y et Z, puis lancez {file}.",
+  "export.stepNext": "Montez l'outil suivant, refaites le zéro Z seulement, puis lancez {file}.",
+  "help.machineToolChange.title": "Changement d'outil",
+  "help.machineToolChange.body": "Pause : un seul fichier qui s'arrête à chaque changement d'outil. Un fichier par outil : le zéro Z est refait avec chaque outil avant de lancer son fichier, car les outils n'ont pas la même longueur.",
+  "help.machineToolChange.advice": "Un fichier par outil pour la Snapmaker Artisan, qui ne permet pas de refaire le zéro pendant une pause.",
+  "help.machineToolChange.warning": "En pause dans un seul fichier, le zéro Z du premier outil est gardé : seulement si tous les outils ont la même longueur.",
+  "help.postFirstToolChange.title": "Premier changement d'outil",
+  "help.postFirstToolChange.body": "Séquence écrite au premier changement d'outil d'un fichier. L'outil est déjà monté et le zéro fait avant de lancer le fichier : une pause y est inutile.",
+  "help.postFirstToolChange.advice": "Vide pour garder la séquence habituelle ; arrêt broche et montée sans pause pour une Snapmaker."
 }

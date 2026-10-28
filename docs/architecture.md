@@ -1111,11 +1111,33 @@ lit). Corrections :
 
 Le profil Marlin (J9) n'était pas touché : il écrit déjà `F` sur chaque ligne.
 
-### 19.5 À vérifier sur la machine
+### 19.5 Changement d'outil : un fichier par outil
 
-- **Zéro Z après chaque changement d'outil** : les outils n'ont pas la même longueur. Le plus simple est d'exporter
-  **un fichier par opération** et de refaire le zéro Z entre deux fichiers. La reprise après `M600` garde le zéro du
-  premier outil.
-- Au tout début, la tâche se met en pause pour monter le premier outil : c'est voulu, le zéro doit être fait avant de
-  lancer le fichier.
+**Pourquoi.** Les outils n'ont pas la même longueur : le zéro Z doit être refait à chaque changement d'outil. Sur
+l'Artisan, c'est impossible au milieu d'un fichier (constats dans le code source, 28/10/2026) :
+
+- pendant une tâche CNC en pause, l'écran ne propose que la vitesse de travail, l'enceinte et le purificateur
+  (`PrintA400AdjustmentContainerFragment.java`) : pas de jog, pas de réglage d'origine ;
+- à la reprise, le firmware ramène l'outil à la position enregistrée et continue (`job_ctrl.cpp`, `resume_env`) ;
+- pas de palpage : `G38_PROBE_TARGET` n'est pas compilé.
+
+**Ce qui est fait.**
+
+- Le profil machine a un mode de **changement d'outil** : pause dans un seul fichier (par défaut), ou **un fichier
+  par outil, zéro Z refait** (choisi pour le modèle Snapmaker Artisan).
+- En mode fichiers séparés, l'export écrit un fichier par outil. Les opérations consécutives d'un même outil vont
+  dans le même fichier : sur FTDI_Max, la fraise maïs fraise les trous de 3 mm puis détoure, dans
+  `FTDI_Max-4-Drilling_Cutout-…`. Les fichiers sont numérotés dans l'ordre d'usinage et nommés en ASCII avec l'outil.
+- Chaque fichier dit en commentaire son rang, l'outil à monter et le zéro à faire : X, Y et Z pour le premier, Z
+  seulement pour les suivants. L'export affiche la même marche à suivre.
+- **Premier changement d'outil** (`firstToolChange`, facultatif dans un profil) : l'outil est monté et le zéro fait
+  avant de lancer le fichier, donc la Snapmaker n'y fait plus de pause (arrêt broche et montée seulement).
+- **Défaut corrigé** (tous les profils) : deux opérations consécutives du même outil écrivaient un changement d'outil
+  vers l'outil déjà monté, donc une pause inutile. Un changement vers l'outil monté n'écrit plus rien.
+
+### 19.6 À vérifier sur la machine
+
+- Garder le même zéro X / Y d'un fichier à l'autre : ne refaire que Z après le premier fichier.
+- En mode pause (un seul fichier), la reprise après `M600` garde le zéro Z du premier outil : à réserver à des outils
+  de même longueur.
 - Les attaches et le perçage descendent sous la carte : planche martyre indispensable.

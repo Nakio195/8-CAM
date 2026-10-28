@@ -10,6 +10,7 @@ import {
     inversePoint,
     movesExtent,
     readGcode,
+    sanitizeComment,
     setupTransform,
     transformMoves,
     writeGcode,
@@ -92,6 +93,55 @@ function backplotOf(texts: readonly string[], transform: SetupTransform, rapidFe
     return { points: Float64Array.from(points), kinds: Uint8Array.from(kinds), times: Float64Array.from(times), fileStarts };
 }
 
+/** Plain ASCII for file names: "V-bit 30° pointe 0,2 mm" gives "V-bit_30deg_pointe_0-2_mm". */
+export function fileNamePart(text: string): string
+{
+    return sanitizeComment(text).replace(/,/g, "-").replace(/[^\w.-]+/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
+}
+
+/**
+ * Files to write: one; one per operation; or, when the machine sets the Z zero again with each tool (separate files),
+ * one per tool, consecutive operations of a tool together, each file saying which tool to mount and which zero to set.
+ */
+function fileGroups(request: ExportRequestData, operations: PostOperation[]): { name: string; operations: PostOperation[]; notes?: string[] }[]
+{
+    if (request.machine.toolChangeMode === "separateFiles")
+    {
+        const groups: PostOperation[][] = [];
+        for (const operation of operations)
+        {
+            const last = groups[groups.length - 1];
+            if (last && last[0]?.tool.id === operation.tool.id)
+            {
+                last.push(operation);
+            }
+            else
+            {
+                groups.push([operation]);
+            }
+        }
+        return groups.map((group, index) =>
+        {
+            const first = group[0] as PostOperation;
+            return {
+                // Every kind of operation of the file in its name: "Drilling_Cutout" for holes milled then the cutout
+                name: `${request.name}-${index + 1}-${[...new Set(group.map((operation) => operation.label.split(" ")[0] ?? ""))].join("_")}-${first.toolLabel}`,
+                operations: group,
+                notes: [
+                    `File ${index + 1} of ${groups.length}: ${group.map((operation) => operation.label).join(", ")}`,
+                    `Mount ${first.toolLabel}`,
+                    index === 0
+                        ? "Set the work origin X, Y and Z with this tool before starting"
+                        : "Keep the X and Y origin, set the Z zero again on the board surface with this tool"
+                ]
+            };
+        });
+    }
+    return request.split
+        ? operations.map((operation, index) => ({ name: `${request.name}-${index + 1}-${operation.label}`, operations: [operation] }))
+        : [{ name: request.name, operations }];
+}
+
 export function runExport(request: ExportRequestData): ExportOutput
 {
     const start = performance.now();
@@ -103,18 +153,16 @@ export function runExport(request: ExportRequestData): ExportOutput
         moves: transformMoves(operationMoves(operation, request.setup.mirror), transform)
     }));
     const date = new Date(request.date);
-    const groups: { name: string; operations: PostOperation[] }[] = request.split
-        ? operations.map((operation, index) => ({ name: `${request.name}-${index + 1}-${operation.label}`, operations: [operation] }))
-        : [{ name: request.name, operations }];
+    const groups = fileGroups(request, operations);
 
     const files: ExportFile[] = [];
     const forbidden: ExportOutput["forbidden"] = [];
     const textIssues = new Set<ExportOutput["textIssues"][number]>();
     for (const group of groups)
     {
-        const job: PostJob = { name: group.name, operations: group.operations, date, version: request.version };
+        const job: PostJob = { name: group.name, operations: group.operations, date, version: request.version, notes: group.notes };
         const output = writeGcode(job, request.profile, request.machine);
-        const fileName = `${group.name.replace(/[^\w.-]+/g, "_")}.${request.profile.fileExtension ?? DEFAULT_FILE_EXTENSION}`;
+        const fileName = `${fileNamePart(group.name)}.${request.profile.fileExtension ?? DEFAULT_FILE_EXTENSION}`;
         for (const entry of output.forbidden)
         {
             forbidden.push({ file: fileName, ...entry });

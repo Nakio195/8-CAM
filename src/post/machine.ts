@@ -27,7 +27,14 @@ export interface MachineProfile
     rapidFeed: number;
     /** Post-processor profile used by this machine. */
     postProfileId: string;
+    /**
+     * Pause: one file, the program pauses at each tool change. Separate files: one file per tool, the Z zero set again
+     * with each tool before starting its file (machines that cannot set the zero during a pause, such as the Artisan).
+     */
+    toolChangeMode: ToolChangeMode;
 }
+
+export type ToolChangeMode = "pause" | "separateFiles";
 
 /** CNC 3018 with GRBL: the machine of 8 Fablab Drôme, values to be checked on each machine. */
 export const DEFAULT_MACHINE: Readonly<MachineProfile> = {
@@ -45,7 +52,8 @@ export const DEFAULT_MACHINE: Readonly<MachineProfile> = {
     maxFeedXY: 1500,
     maxFeedZ: 500,
     rapidFeed: 1000,
-    postProfileId: "grbl-1.1"
+    postProfileId: "grbl-1.1",
+    toolChangeMode: "pause"
 };
 
 /**
@@ -67,13 +75,15 @@ export const SNAPMAKER_ARTISAN: Readonly<MachineProfile> = {
     maxFeedXY: 3000,
     maxFeedZ: 600,
     rapidFeed: 3000,
-    postProfileId: "snapmaker-artisan"
+    postProfileId: "snapmaker-artisan",
+    // The Artisan screen offers no jog nor origin setting during a paused CNC job (docs/architecture.md 19.6)
+    toolChangeMode: "separateFiles"
 };
 
 /** Machines the user can start from. */
 export const MACHINE_PRESETS: readonly MachineProfile[] = [DEFAULT_MACHINE, SNAPMAKER_ARTISAN];
 
-export type MachineIssueCode = "missingName" | "notPositive" | "safeAboveTravel" | "invalidFormat" | "minAboveMax";
+export type MachineIssueCode = "missingName" | "notPositive" | "safeAboveTravel" | "invalidFormat" | "minAboveMax" | "invalidToolChange";
 
 export interface MachineIssue
 {
@@ -104,6 +114,10 @@ export function validateMachine(machine: MachineProfile): MachineIssue[]
     if (machine.safeZ >= machine.travelZ)
     {
         issues.push({ code: "safeAboveTravel", field: "safeZ" });
+    }
+    if (machine.toolChangeMode !== "pause" && machine.toolChangeMode !== "separateFiles")
+    {
+        issues.push({ code: "invalidToolChange", field: "toolChangeMode" });
     }
     if (!Number.isFinite(machine.minSpindleSpeed) || machine.minSpindleSpeed < 0 || machine.minSpindleSpeed >= machine.maxSpindleSpeed)
     {

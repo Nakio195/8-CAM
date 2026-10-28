@@ -1,6 +1,6 @@
 ;Header Start
 ;header_type: cnc
-;file_total_lines: 172
+;file_total_lines: 171
 ;estimated_time(s): 164
 ;min_x(mm): -1.750
 ;max_x(mm): 13.750
@@ -38,8 +38,7 @@ G90
 ; Isolation
 M5
 G0 Z15.000 F1000
-; Change to tool T1: V-bit 30 deg 0,2 mm
-M600
+; First tool T1: V-bit 30 deg 0,2 mm, mounted and zeroed before starting
 G0 Z15.000 F1000
 M3 S10000
 G4 S3

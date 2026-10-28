@@ -1014,5 +1014,20 @@
   "help.postFileHeader.advice": "Empty for GRBL, Marlin and LinuxCNC; the \";Header Start\" block for a Snapmaker.",
   "help.postFileExtension.title": "File extension",
   "help.postFileExtension.body": "Ending of the G-code files written, without the dot. Some machines only list their own extension.",
-  "help.postFileExtension.advice": "nc in general; cnc for a Snapmaker."
+  "help.postFileExtension.advice": "nc in general; cnc for a Snapmaker.",
+  "machine.toolChange": "Tool change",
+  "machine.toolChangePause": "Pause within one file",
+  "machine.toolChangeFiles": "One file per tool, Z zero set again",
+  "machine.issue.invalidToolChange": "Unknown tool change mode.",
+  "post.firstToolChange": "First tool change (empty: same as the others)",
+  "export.separateFiles": "{machine}: one file per tool. Before each file, mount the tool named and set the Z zero again on the board; the X / Y zero stays the one of the first file.",
+  "export.stepFirst": "Mount the first tool, set the X, Y and Z origin, then run {file}.",
+  "export.stepNext": "Mount the next tool, set the Z zero only, then run {file}.",
+  "help.machineToolChange.title": "Tool change",
+  "help.machineToolChange.body": "Pause: one file stopping at each tool change. One file per tool: the Z zero is set again with each tool before running its file, since tools do not have the same length.",
+  "help.machineToolChange.advice": "One file per tool for the Snapmaker Artisan, which cannot set the zero during a pause.",
+  "help.machineToolChange.warning": "Paused within one file, the Z zero of the first tool is kept: only if every tool has the same length.",
+  "help.postFirstToolChange.title": "First tool change",
+  "help.postFirstToolChange.body": "Sequence written at the first tool change of a file. The tool is already mounted and zeroed before the file runs: a pause there is useless.",
+  "help.postFirstToolChange.advice": "Empty to keep the usual sequence; spindle stop and rise without pause for a Snapmaker."
 }

@@ -175,6 +175,17 @@ describe("profile options", () =>
         expect(moveStatistics(readGcode(segments).moves).cutLength).toBeCloseTo(Math.PI * 10 + 2.1, 1);
     });
 
+    it("changes the tool only when the next operation uses another one", () =>
+    {
+        const mill = tool("cornmill-1.5");
+        const moves: Move[] = [{ kind: "rapid", z: 15 }, { kind: "toolChange", toolId: mill.id }, { kind: "spindle", on: true }, { kind: "rapid", z: 2 },
+            { kind: "linear", z: -0.5, feed: 50 }, { kind: "rapid", z: 15 }, { kind: "spindle", on: false }];
+        const twice: PostJob = { ...job, operations: [1, 2].map((index) => ({ label: `Mill ${index}`, tool: mill, toolLabel: "Fraise", moves })) };
+        const text = writeGcode(twice, profile("grbl-1.1"), DEFAULT_MACHINE).text;
+        expect(text.match(/^M0$/gm)).toHaveLength(1);
+        expect(text.match(/^M03 S12000$/gm)).toHaveLength(2);
+    });
+
     it("reports the forbidden words a profile cannot send", () =>
     {
         const output = writeGcode(job, { ...profile("grbl-1.1"), footer: ["M6", "M02"] }, DEFAULT_MACHINE);
@@ -239,7 +250,9 @@ describe("Snapmaker Artisan", () =>
         expect(lines.indexOf(";Header End")).toBeLessThan(lines.findIndex((line) => line.startsWith("; 8-CAM")));
         // Spindle in rpm, pause for the tool change, no arc, nothing the firmware refuses
         expect(output.text).toMatch(/^M3 S12000$/m);
-        expect(output.text.match(/^M600$/gm)).toHaveLength(3);
+        // No pause for the first tool, mounted and zeroed before the file starts; one for each of the two others
+        expect(output.text.match(/^M600$/gm)).toHaveLength(2);
+        expect(output.text).toMatch(/^; First tool T1: V-bit 30 deg 0,2 mm, mounted and zeroed before starting$/m);
         expect(output.text).not.toMatch(/^G[23] /m);
         expect(output.forbidden).toEqual([]);
         expect(readGcode(output.text).unknown).toEqual([]);

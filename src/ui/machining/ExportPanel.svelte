@@ -21,6 +21,7 @@
     const SPEEDS = [1, 5, 20, 100, 500];
 
     let choices = $derived(exportState.choices());
+    let separateFiles = $derived(machineState.active.toolChangeMode === "separateFiles");
     let output = $derived(exportState.output);
     let fileName = $state("");
     let editing = $state(false);
@@ -148,10 +149,14 @@
         {#if exportState.bottomWithoutMirror()}
             <Callout tone="info">{t("export.bottomHint")}</Callout>
         {/if}
-        <label class="check" use:help={"exportSplit"}>
-            <input type="checkbox" bind:checked={exportState.split} />
-            {t("export.split")}
-        </label>
+        {#if separateFiles}
+            <Callout tone="info">{t("export.separateFiles", { machine: machineState.active.name })}</Callout>
+        {:else}
+            <label class="check" use:help={"exportSplit"}>
+                <input type="checkbox" bind:checked={exportState.split} />
+                {t("export.split")}
+            </label>
+        {/if}
         <label class="field">
             <span>{t("export.name")}</span>
             <input type="text" bind:value={exportState.name} placeholder={exportState.defaultName()} use:help={"exportName"} />
@@ -197,6 +202,13 @@
                 })}</p>
             {/if}
 
+            {#if separateFiles && output.files.length > 1}
+                <ol class="steps" use:help={"machineToolChange"}>
+                    {#each output.files as entry, index (entry.name)}
+                        <li>{t(index === 0 ? "export.stepFirst" : "export.stepNext", { file: entry.name })}</li>
+                    {/each}
+                </ol>
+            {/if}
             <ul class="files" use:help={"exportDownload"}>
                 {#each output.files as entry (entry.name)}
                     <li>
@@ -366,6 +378,19 @@
         flex: 1;
         width: 100%;
         accent-color: var(--accent-formation);
+    }
+
+    .steps
+    {
+        margin: 0;
+        padding-left: 20px;
+        font-size: 13px;
+    }
+
+    .steps li
+    {
+        margin-bottom: 4px;
+        overflow-wrap: anywhere;
     }
 
     .files

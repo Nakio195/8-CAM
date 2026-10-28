@@ -12,7 +12,7 @@
     let { profile }: { profile: PostProfile } = $props();
 
     const t = i18n.t;
-    const TEMPLATES = ["fileHeader", "header", "toolChange", "spindleOn", "spindleOff", "dwell", "footer"] as const;
+    const TEMPLATES = ["fileHeader", "header", "firstToolChange", "toolChange", "spindleOn", "spindleOff", "dwell", "footer"] as const;
     type TemplateField = (typeof TEMPLATES)[number];
 
     let draft = $state(untrack(() => structuredClone($state.snapshot(profile))));
@@ -22,6 +22,8 @@
     let assembled = $derived<PostProfile>({
         ...draft,
         ...Object.fromEntries(TEMPLATES.map((field) => [field, templates[field].split("\n").map((line) => line.trimEnd())])) as Record<TemplateField, string[]>,
+        // Left empty, the first tool change is the same as the others
+        firstToolChange: templates.firstToolChange.trim() === "" ? undefined : templates.firstToolChange.split("\n").map((line) => line.trimEnd()),
         forbidden: forbidden.split(/[,\s]+/).map((word) => word.trim().toUpperCase()).filter((word) => word !== "")
     });
     let issues = $derived(validateProfile(assembled));
@@ -35,8 +37,9 @@
         }
     });
 
-    const LABELS: Record<TemplateField, "post.fileHeader" | "post.header" | "post.toolChange" | "post.spindleOn" | "post.spindleOff" | "post.dwell" | "post.footer"> = {
+    const LABELS: Record<TemplateField, "post.fileHeader" | "post.firstToolChange" | "post.header" | "post.toolChange" | "post.spindleOn" | "post.spindleOff" | "post.dwell" | "post.footer"> = {
         fileHeader: "post.fileHeader",
+        firstToolChange: "post.firstToolChange",
         header: "post.header",
         toolChange: "post.toolChange",
         spindleOn: "post.spindleOn",
@@ -46,6 +49,7 @@
     };
     const TOPICS: Record<TemplateField, string> = {
         fileHeader: "postFileHeader",
+        firstToolChange: "postFirstToolChange",
         header: "postHeader",
         toolChange: "postToolChange",
         spindleOn: "postSpindle",

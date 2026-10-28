@@ -31,6 +31,11 @@
   ],
   "fileExtension": "cnc",
   "header": ["G21", "G90"],
+  "firstToolChange": [
+    "M5",
+    "G0 Z{safeZ} F{rapidFeed}",
+    "(First tool T{toolNumber}: {toolName}, mounted and zeroed before starting)"
+  ],
   "toolChange": ["M5", "G0 Z{safeZ} F{rapidFeed}", "({message})", "M600"],
   "spindleOn": ["M3 S{spindleSpeed}", "G4 S3"],
   "spindleOff": ["M5"],

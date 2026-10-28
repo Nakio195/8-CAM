@@ -55,6 +55,11 @@ export interface PostProfile
     fileHeader?: TemplateLines;
     /** Extension of the files written, without the dot ("nc" when not given). */
     fileExtension?: string;
+    /**
+     * First tool change of a file, when it differs from the others: the first tool is mounted and the work origin set
+     * before the file starts, so a pause there is useless (Snapmaker). The tool change sequence when not given.
+     */
+    firstToolChange?: TemplateLines;
 }
 
 /** Extension used when a profile does not give one. */
@@ -141,6 +146,10 @@ export function validateProfile(value: unknown): ProfileIssue[]
     if (profile.fileHeader !== undefined && !isStringArray(profile.fileHeader))
     {
         issues.push({ code: "invalidTemplate", field: "fileHeader" });
+    }
+    if (profile.firstToolChange !== undefined && !isStringArray(profile.firstToolChange))
+    {
+        issues.push({ code: "invalidTemplate", field: "firstToolChange" });
     }
     if (profile.fileExtension !== undefined && !/^[a-z0-9]{1,5}$/i.test(String(profile.fileExtension)))
     {

@@ -58,6 +58,13 @@
         <NumberField id={id("rapid")} label={t("machine.rapidFeed")} help="rapidFeed" unit="mm/min" step={10} min={1} bind:value={draft.rapidFeed}
             helpLabel={helpLabel("help.rapidFeed.title")} />
     </div>
+    <label class="field">
+        <span>{t("machine.toolChange")}</span>
+        <select bind:value={draft.toolChangeMode} use:help={"machineToolChange"}>
+            <option value="pause">{t("machine.toolChangePause")}</option>
+            <option value="separateFiles">{t("machine.toolChangeFiles")}</option>
+        </select>
+    </label>
     {#each issues as issue (issue.code + issue.field)}
         <Callout tone="error">{t(`machine.issue.${issue.code}`)}</Callout>
     {/each}
@@ -79,7 +86,8 @@
         font-weight: 600;
     }
 
-    input[type="text"]
+    input[type="text"],
+    select
     {
         padding: 6px 8px;
         border: 1px solid var(--border);

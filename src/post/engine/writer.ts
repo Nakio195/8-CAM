@@ -25,6 +25,8 @@ export interface PostJob
     date: Date;
     /** Version of 8-CAM written in the header. */
     version: string;
+    /** Instructions written in the header comments, e.g. which tool to mount and which zero to set. */
+    notes?: string[];
 }
 
 export interface GcodeOutput
@@ -330,6 +332,10 @@ export function writeGcode(job: PostJob, profile: PostProfile, machine: MachineP
 
     writer.comment(`8-CAM ${job.version} - ${profile.name}`);
     writer.comment(`Job: ${job.name}`);
+    for (const note of job.notes ?? [])
+    {
+        writer.comment(note);
+    }
     writer.comment(`Date: ${formatDate(job.date)}`);
     writer.comment(`Machine: ${machine.name}, travel X${machine.travelX} Y${machine.travelY} Z${machine.travelZ} mm`);
     writer.comment(`Units: ${unit}`);
@@ -360,6 +366,8 @@ export function writeGcode(job: PostJob, profile: PostProfile, machine: MachineP
     };
     writer.template(profile.header, common);
 
+    let toolChanges = 0;
+    let mountedTool: string | null = null;
     for (const operation of job.operations)
     {
         const tool = operation.tool;
@@ -394,7 +402,14 @@ export function writeGcode(job: PostJob, profile: PostProfile, machine: MachineP
                     writer.arc(move);
                     break;
                 case "toolChange":
-                    writer.template(profile.toolChange, values);
+                    // Consecutive operations of one tool (holes milled then cutout with the same mill): no change
+                    if (move.toolId === mountedTool)
+                    {
+                        break;
+                    }
+                    writer.template(toolChanges === 0 ? profile.firstToolChange ?? profile.toolChange : profile.toolChange, values);
+                    toolChanges++;
+                    mountedTool = move.toolId;
                     break;
                 case "spindle":
                     writer.template(move.on ? profile.spindleOn : profile.spindleOff,
