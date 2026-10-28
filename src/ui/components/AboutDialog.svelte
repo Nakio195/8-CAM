@@ -39,7 +39,7 @@
         <p class="muted">{t("app.version", { version: APP_VERSION })}</p>
         <div class="actions">
             <a class="link" href="https://8fablab.fr" target="_blank" rel="noopener noreferrer">{t("about.site")}</a>
-            <Button variant="primary" help="dialogClose" onclick={() => (open = false)}>{t("about.close")}</Button>
+            <Button variant="primary" help="" onclick={() => (open = false)}>{t("about.close")}</Button>
         </div>
     </div>
 </dialog>

@@ -1163,3 +1163,17 @@ maintenant des **étapes repliables**, une seule ouverte à la fois par onglet :
   lecture garde son état.
 - L'ancien panneau d'export est coupé en deux : `ExportPanel` (réglages, écriture, vérifications, fichiers) et
   `SimulationPanel` (lecture du trajet, texte modifiable).
+
+---
+
+## 21. Bulles d'aide moins envahissantes
+
+- **Champs numériques** : la bulle ne s'ouvre plus au survol ni au clic dans le champ. Elle s'ouvre, épinglée, par un
+  clic sur le « ? » à côté du libellé, et se ferme par un second clic. F1 dans le champ l'ouvre toujours.
+- **Focus** : la bulle ne s'ouvre au focus qu'au clavier. Un clic dans une liste ou un champ texte ne l'ouvre plus.
+- **Listes déroulantes** : pas de bulle au survol tant que la liste a le focus, sinon elle recouvrirait la liste ouverte.
+- **Délai de survol** porté de 400 à 700 ms : passer la souris sur les boutons n'ouvre plus de bulles au passage.
+- **Contrôles évidents sans bulle** : fermer, annuler, supprimer, monter / descendre, afficher / masquer, zoom, langue,
+  thème, import / export de profils, noms, lecture de la simulation, en-têtes des étapes. Ils portent un sujet vide
+  (`help=""`), et le test de couverture distingue toujours un sujet oublié d'un sujet retiré exprès. Les boutons à icône
+  sans bulle gardent leur nom en infobulle native. Les sujets devenus inutiles sont retirés du glossaire.

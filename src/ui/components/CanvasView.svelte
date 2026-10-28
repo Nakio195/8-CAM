@@ -366,8 +366,8 @@
 <div class="view">
     <div class="toolbar" role="toolbar" aria-label={t("view.toolbar")}>
         <IconButton icon="fit" tone="onDark" label={t("view.fit")} help="viewFit" onclick={fitAll} />
-        <IconButton icon="zoomIn" tone="onDark" label={t("view.zoomIn")} help="viewZoomIn" onclick={() => zoomCenter(1.25)} />
-        <IconButton icon="zoomOut" tone="onDark" label={t("view.zoomOut")} help="viewZoomOut" onclick={() => zoomCenter(0.8)} />
+        <IconButton icon="zoomIn" tone="onDark" label={t("view.zoomIn")} help="" onclick={() => zoomCenter(1.25)} />
+        <IconButton icon="zoomOut" tone="onDark" label={t("view.zoomOut")} help="" onclick={() => zoomCenter(0.8)} />
         <span class="separator"></span>
         <IconButton icon="grid" tone="onDark" label={t("view.grid")} help="viewGrid" pressed={showGrid}
             onclick={() => (showGrid = !showGrid)} />

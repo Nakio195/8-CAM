@@ -79,10 +79,10 @@
 <article class="card" aria-label={t("machining.isolation")}>
     <div class="head">
         <h3>{t("machining.isolation")}</h3>
-        <IconButton icon={operation.visible ? "eye" : "eyeOff"} size={16} help="isolationVisibility"
+        <IconButton icon={operation.visible ? "eye" : "eyeOff"} size={16} help=""
             label={t(operation.visible ? "machining.hide" : "machining.show")}
             onclick={() => machining.update(operation.id, { visible: !operation.visible })} />
-        <IconButton icon="remove" size={16} label={t("machining.remove")} help="isolationRemove" onclick={remove} />
+        <IconButton icon="remove" size={16} label={t("machining.remove")} help="" onclick={remove} />
     </div>
 
     {#if !layer}
@@ -153,7 +153,7 @@
         <div class="running" role="status">
             <span>{t("machining.computing")}</span>
             <progress max="1" value={job.fraction}></progress>
-            <IconButton icon="close" size={16} label={t("machining.cancel")} help="isolationCancel" onclick={() => job?.cancel()} />
+            <IconButton icon="close" size={16} label={t("machining.cancel")} help="" onclick={() => job?.cancel()} />
         </div>
     {:else}
         <div>

@@ -35,10 +35,10 @@
     }
 </script>
 
-<StepSection id="isolation" index={1} title={t("machining.isolation")} help="stepIsolation"
+<StepSection id="isolation" index={1} title={t("machining.isolation")}
     summary={summary(machining.operations)} done={computed(machining.operations)}
     open={navigation.sections.machining === "isolation"} ontoggle={() => navigation.toggleSection("machining", "isolation")}
-    next={{ label: t("steps.next", { step: t("machining.drilling") }), help: "stepNext", onclick: () => navigation.openSection("machining", "drilling") }}>
+    next={{ label: t("steps.next", { step: t("machining.drilling") }), onclick: () => navigation.openSection("machining", "drilling") }}>
     {#if !hasCopper}
         <Callout tone="help">{t("machining.empty")}</Callout>
     {:else if !hasTool}
@@ -54,10 +54,10 @@
     {/if}
 </StepSection>
 
-<StepSection id="drilling" index={2} title={t("machining.drilling")} help="stepDrilling"
+<StepSection id="drilling" index={2} title={t("machining.drilling")}
     summary={noDrilling ? t("steps.noDrilling") : summary(machining.drillings)} done={computed(machining.drillings) || noDrilling}
     open={navigation.sections.machining === "drilling"} ontoggle={() => navigation.toggleSection("machining", "drilling")}
-    next={{ label: t("steps.next", { step: t("machining.cutout") }), help: "stepNext", onclick: () => navigation.openSection("machining", "cutout") }}>
+    next={{ label: t("steps.next", { step: t("machining.cutout") }), onclick: () => navigation.openSection("machining", "cutout") }}>
     {#if !hasDrills}
         <Callout tone="help">{t("machining.drillingEmpty")}</Callout>
     {:else}
@@ -70,10 +70,10 @@
     {/if}
 </StepSection>
 
-<StepSection id="cutout" index={3} title={t("machining.cutout")} help="stepCutout"
+<StepSection id="cutout" index={3} title={t("machining.cutout")}
     summary={summary(machining.cutouts)} done={computed(machining.cutouts)}
     open={navigation.sections.machining === "cutout"} ontoggle={() => navigation.toggleSection("machining", "cutout")}
-    next={{ label: t("steps.toExport"), help: "stepNext", onclick: () => navigation.openSection("machine", "export") }}>
+    next={{ label: t("steps.toExport"), onclick: () => navigation.openSection("machine", "export") }}>
     {#if project.layers.length === 0}
         <Callout tone="help">{t("machining.cutoutEmpty")}</Callout>
     {:else if !hasCutoutTool}

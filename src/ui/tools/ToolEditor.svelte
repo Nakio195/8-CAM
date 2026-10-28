@@ -94,7 +94,7 @@
                 <div class="fields">
                     <label class="text-field">
                         <span>{t("editor.name")}</span>
-                        <input type="text" bind:value={draft.name} use:help={"toolName"}
+                        <input type="text" bind:value={draft.name} use:help={""}
                             placeholder={t("editor.namePlaceholder", { label: automaticLabel(draft, t, i18n.number) })} />
                     </label>
                     <label class="text-field">
@@ -155,7 +155,7 @@
 
                     <label class="text-field">
                         <span>{t("editor.notes")}</span>
-                        <textarea rows="2" bind:value={draft.notes} use:help={"toolNotes"}></textarea>
+                        <textarea rows="2" bind:value={draft.notes} use:help={""}></textarea>
                     </label>
                 </div>
 
@@ -180,8 +180,8 @@
             {/if}
 
             <div class="actions">
-                <Button variant="ghost" help="toolCancel" onclick={() => (tool = null)}>{t("editor.cancel")}</Button>
-                <Button variant="primary" type="submit" help="toolSave" disabled={issues.length > 0}>{t("editor.save")}</Button>
+                <Button variant="ghost" help="" onclick={() => (tool = null)}>{t("editor.cancel")}</Button>
+                <Button variant="primary" type="submit" help="" disabled={issues.length > 0}>{t("editor.save")}</Button>
             </div>
         </form>
     {/if}

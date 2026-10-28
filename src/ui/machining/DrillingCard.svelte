@@ -94,10 +94,10 @@
 <article class="card" aria-label={t("machining.drilling")}>
     <div class="head">
         <h3>{t("machining.drilling")}</h3>
-        <IconButton icon={operation.visible ? "eye" : "eyeOff"} size={16} help="drillingVisibility"
+        <IconButton icon={operation.visible ? "eye" : "eyeOff"} size={16} help=""
             label={t(operation.visible ? "machining.hide" : "machining.show")}
             onclick={() => machining.updateDrilling(operation.id, { visible: !operation.visible })} />
-        <IconButton icon="remove" size={16} label={t("machining.remove")} help="drillingRemove" onclick={remove} />
+        <IconButton icon="remove" size={16} label={t("machining.remove")} help="" onclick={remove} />
     </div>
 
     <fieldset class="layers" use:help={"drillingLayers"}>
@@ -172,7 +172,7 @@
         <div class="running" role="status">
             <span>{t("machining.computing")}</span>
             <progress></progress>
-            <IconButton icon="close" size={16} label={t("machining.cancel")} help="drillingCancel" onclick={() => job?.cancel()} />
+            <IconButton icon="close" size={16} label={t("machining.cancel")} help="" onclick={() => job?.cancel()} />
         </div>
     {:else}
         <div>

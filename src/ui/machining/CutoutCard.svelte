@@ -94,10 +94,10 @@
 <article class="card" aria-label={t("machining.cutout")}>
     <div class="head">
         <h3>{t("machining.cutout")}</h3>
-        <IconButton icon={operation.visible ? "eye" : "eyeOff"} size={16} help="cutoutVisibility"
+        <IconButton icon={operation.visible ? "eye" : "eyeOff"} size={16} help=""
             label={t(operation.visible ? "machining.hide" : "machining.show")}
             onclick={() => machining.updateCutout(operation.id, { visible: !operation.visible })} />
-        <IconButton icon="remove" size={16} label={t("machining.remove")} help="cutoutRemove" onclick={remove} />
+        <IconButton icon="remove" size={16} label={t("machining.remove")} help="" onclick={remove} />
     </div>
 
     <label class="field">

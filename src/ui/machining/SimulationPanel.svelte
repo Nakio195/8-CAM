@@ -109,11 +109,11 @@
         {t("export.showBackplot")}
     </label>
     <div class="player">
-        <IconButton icon={exportState.playing ? "pause" : "play"} size={18} help="backplotPlay"
+        <IconButton icon={exportState.playing ? "pause" : "play"} size={18} help=""
             label={t(exportState.playing ? "export.pause" : "export.play")} onclick={togglePlay} />
         <input class="slider" type="range" min="0" max={exportState.duration} step="any" bind:value={exportState.time}
-            aria-label={t("export.position")} use:help={"backplotTime"} />
-        <select bind:value={exportState.speed} aria-label={t("export.speed")} use:help={"backplotSpeed"}>
+            aria-label={t("export.position")} use:help={""} />
+        <select bind:value={exportState.speed} aria-label={t("export.speed")} use:help={""}>
             {#each SPEEDS as speed (speed)}
                 <option value={speed}>×{speed}</option>
             {/each}
@@ -127,7 +127,7 @@
 
     <h3 use:help={"exportText"}>{t("export.text")}</h3>
     {#if output.files.length > 1}
-        <select value={file?.name ?? ""} aria-label={t("export.file")} use:help={"exportFile"} onchange={(event) => { fileName = event.currentTarget.value; editing = false; }}>
+        <select value={file?.name ?? ""} aria-label={t("export.file")} use:help={""} onchange={(event) => { fileName = event.currentTarget.value; editing = false; }}>
             {#each output.files as entry (entry.name)}
                 <option value={entry.name}>{entry.name}</option>
             {/each}

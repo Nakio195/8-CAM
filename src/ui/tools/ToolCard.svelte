@@ -78,9 +78,9 @@
             <p class="limit">{limit}</p>
         {/if}
         <div class="actions">
-            <IconButton icon="edit" size={16} label={t("tools.edit")} help="toolEdit" onclick={onEdit} />
-            <IconButton icon="copy" size={16} label={t("tools.duplicate")} help="toolDuplicate" onclick={onDuplicate} />
-            <IconButton icon="remove" size={16} label={t("tools.delete")} help="toolDelete" onclick={onDelete} />
+            <IconButton icon="edit" size={16} label={t("tools.edit")} help="" onclick={onEdit} />
+            <IconButton icon="copy" size={16} label={t("tools.duplicate")} help="" onclick={onDuplicate} />
+            <IconButton icon="remove" size={16} label={t("tools.delete")} help="" onclick={onDelete} />
         </div>
     </div>
 </article>

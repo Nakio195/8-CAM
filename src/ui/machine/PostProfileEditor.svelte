@@ -62,7 +62,7 @@
 <div class="editor">
     <label class="field">
         <span>{t("post.name")}</span>
-        <input type="text" bind:value={draft.name} use:help={"postName"} />
+        <input type="text" bind:value={draft.name} use:help={""} />
     </label>
     <div class="grid">
         <label class="field">

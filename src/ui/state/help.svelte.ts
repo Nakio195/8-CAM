@@ -9,8 +9,8 @@ export interface ShownTip
     values?: Readonly<Record<string, number>>;
 }
 
-/** Hover delay before a tooltip appears (specification 6.11). */
-export const SHOW_DELAY = 400;
+/** Hover delay before a tooltip appears: long enough for the pointer to pass over the controls without opening it. */
+export const SHOW_DELAY = 700;
 /** Grace period letting the pointer travel from the element to the tooltip. */
 export const HIDE_DELAY = 200;
 /** Touch screens: press duration that opens the tooltip. */

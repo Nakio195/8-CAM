@@ -34,7 +34,7 @@
 <div class="editor">
     <label class="field">
         <span>{t("machine.name")}</span>
-        <input type="text" bind:value={draft.name} use:help={"machineName"} />
+        <input type="text" bind:value={draft.name} use:help={""} />
     </label>
     <div class="grid three">
         <NumberField id={id("travel-x")} label={t("machine.travelX")} help="machineTravel" unit="mm" step={1} min={1} bind:value={draft.travelX}

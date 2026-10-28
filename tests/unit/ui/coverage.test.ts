@@ -5,7 +5,9 @@ import fr from "@ui/i18n/fr.json";
 import { HELP_TOPICS } from "@ui/help/topics";
 
 // Specification 6.11: "every parameter, button and indicator has a tooltip". Every control written in the components
-// must name a help topic (use:help or the help prop of the base components), except the few listed below.
+// must name a help topic (use:help or the help prop of the base components), except the few listed below. A control
+// clear enough on its own (close, remove, language...) says so with an empty topic: help="" or use:help={""}, so a
+// forgotten topic is still caught.
 
 const ROOT = join(import.meta.dirname, "..", "..", "..", "src", "ui");
 

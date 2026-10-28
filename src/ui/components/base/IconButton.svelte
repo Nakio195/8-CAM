@@ -3,7 +3,8 @@
     import { help as helpAction } from "../../help";
     import Icon, { type IconName } from "../Icon.svelte";
 
-    // Square icon button with an accessible name and its help topic (shown by HelpTip on hover, focus or long press)
+    // Square icon button with an accessible name and its help topic (shown by HelpTip on hover, focus or long press).
+    // Without a topic, the native tooltip gives its name.
     let {
         icon,
         label,
@@ -22,7 +23,7 @@
     } & Omit<HTMLButtonAttributes, "aria-label" | "aria-pressed"> = $props();
 </script>
 
-<button class="icon-button {tone}" type="button" aria-label={label} aria-pressed={pressed} use:helpAction={help} {...rest}>
+<button class="icon-button {tone}" type="button" aria-label={label} aria-pressed={pressed} title={help ? undefined : label} use:helpAction={help} {...rest}>
     <Icon name={icon} {size} />
 </button>
 

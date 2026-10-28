@@ -135,9 +135,9 @@
     }
 </script>
 
-<StepSection id="machine" index={1} title={t("machine.title")} help="stepMachine" summary={machine.name}
+<StepSection id="machine" index={1} title={t("machine.title")} summary={machine.name}
     open={navigation.sections.machine === "machine"} ontoggle={() => navigation.toggleSection("machine", "machine")}
-    next={{ label: t("steps.next", { step: t("post.title") }), help: "stepNext", onclick: () => navigation.openSection("machine", "post") }}>
+    next={{ label: t("steps.next", { step: t("post.title") }), onclick: () => navigation.openSection("machine", "post") }}>
     {#if !machineState.persistent}
         <Callout tone="warning">{t("machine.notPersistent")}</Callout>
     {/if}
@@ -146,14 +146,14 @@
     {/if}
     <label class="field">
         <span>{t("machine.active")}</span>
-        <select value={machine.id} use:help={"machineSelect"} onchange={(event) => machineState.select(event.currentTarget.value)}>
+        <select value={machine.id} use:help={""} onchange={(event) => machineState.select(event.currentTarget.value)}>
             {#each machineState.machines as entry (entry.id)}
                 <option value={entry.id}>{entry.name}</option>
             {/each}
         </select>
     </label>
     <div class="actions">
-        <Button variant="secondary" icon="plus" help="machineAdd" onclick={addMachine}>{t("machine.add")}</Button>
+        <Button variant="secondary" icon="plus" help="" onclick={addMachine}>{t("machine.add")}</Button>
         <select class="preset" aria-label={t("machine.preset")} use:help={"machinePreset"} value=""
             onchange={(event) => { addPreset(event.currentTarget.value); event.currentTarget.value = ""; }}>
             <option value="" disabled>{t("machine.preset")}</option>
@@ -161,13 +161,13 @@
                 <option value={preset.id}>{preset.name}</option>
             {/each}
         </select>
-        <Button variant="ghost" icon="upload" help="machineImport" onclick={() => machineInput.click()}>{t("machine.import")}</Button>
-        <Button variant="ghost" icon="download" help="machineExport"
+        <Button variant="ghost" icon="upload" help="" onclick={() => machineInput.click()}>{t("machine.import")}</Button>
+        <Button variant="ghost" icon="download" help=""
             onclick={() => downloadText(`${machine.name.replace(/[^\w.-]+/g, "_")}.8cam-machine.json`, machineState.exportMachine())}>
             {t("machine.export")}
         </Button>
         {#if machineState.machines.length > 1}
-            <Button variant="ghost" icon="remove" help="machineRemove" onclick={removeMachine}>{t("machine.remove")}</Button>
+            <Button variant="ghost" icon="remove" help="" onclick={removeMachine}>{t("machine.remove")}</Button>
         {/if}
         <input bind:this={machineInput} class="visually-hidden" type="file" accept=".json,application/json" tabindex="-1"
             aria-hidden="true" onchange={importMachine} />
@@ -177,9 +177,9 @@
     {/key}
 </StepSection>
 
-<StepSection id="post" index={2} title={t("post.title")} help="stepPost" summary={profile.name}
+<StepSection id="post" index={2} title={t("post.title")} summary={profile.name}
     open={navigation.sections.machine === "post"} ontoggle={() => navigation.toggleSection("machine", "post")}
-    next={{ label: t("steps.next", { step: t("export.title") }), help: "stepNext", onclick: () => navigation.openSection("machine", "export") }}>
+    next={{ label: t("steps.next", { step: t("export.title") }), onclick: () => navigation.openSection("machine", "export") }}>
     <label class="field">
         <span>{t("post.profile")}</span>
         <select value={profile.id} use:help={"postProcessor"}
@@ -194,10 +194,10 @@
     <div class="actions">
         <Button variant="secondary" icon="copy" help="postCopy"
             onclick={() => machineState.copyProfile(profile.id, t("post.copyName", { name: profile.name }))}>{t("post.copy")}</Button>
-        <Button variant="ghost" icon="upload" help="postImport" onclick={() => profileInput.click()}>{t("post.import")}</Button>
-        <Button variant="ghost" icon="download" help="postExport" onclick={exportProfile}>{t("post.export")}</Button>
+        <Button variant="ghost" icon="upload" help="" onclick={() => profileInput.click()}>{t("post.import")}</Button>
+        <Button variant="ghost" icon="download" help="" onclick={exportProfile}>{t("post.export")}</Button>
         {#if !profile.builtIn}
-            <Button variant="ghost" icon="remove" help="postRemove" onclick={removeProfile}>{t("post.remove")}</Button>
+            <Button variant="ghost" icon="remove" help="" onclick={removeProfile}>{t("post.remove")}</Button>
         {/if}
         <input bind:this={profileInput} class="visually-hidden" type="file" accept=".json,application/json" tabindex="-1"
             aria-hidden="true" onchange={importProfile} />
@@ -227,13 +227,13 @@
     {/if}
 </StepSection>
 
-<StepSection id="export" index={3} title={t("export.title")} help="stepExport" summary={exportSummary} done={exported}
+<StepSection id="export" index={3} title={t("export.title")} summary={exportSummary} done={exported}
     open={navigation.sections.machine === "export"} ontoggle={() => navigation.toggleSection("machine", "export")}
-    next={{ label: t("steps.next", { step: t("export.simulation") }), help: "stepNext", onclick: () => navigation.openSection("machine", "simulation") }}>
+    next={{ label: t("steps.next", { step: t("export.simulation") }), onclick: () => navigation.openSection("machine", "simulation") }}>
     <ExportPanel />
 </StepSection>
 
-<StepSection id="simulation" index={4} title={t("export.simulation")} help="stepSimulation"
+<StepSection id="simulation" index={4} title={t("export.simulation")}
     summary={exportState.output ? formatDuration(exportState.duration, t) : t("steps.afterExport")}
     open={navigation.sections.machine === "simulation"} ontoggle={() => navigation.toggleSection("machine", "simulation")}>
     <SimulationPanel />

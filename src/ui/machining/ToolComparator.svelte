@@ -96,7 +96,7 @@
     <dialog bind:this={dialog} class="results" aria-labelledby="comparison-title" onclose={() => (open = false)}>
         <div class="dialog-head">
             <h2 id="comparison-title">{t("machining.compare")}</h2>
-            <Button variant="ghost" icon="close" help="dialogClose" onclick={() => (open = false)}>{t("about.close")}</Button>
+            <Button variant="ghost" icon="close" help="" onclick={() => (open = false)}>{t("about.close")}</Button>
         </div>
         {#if comparison?.error}
             <Callout tone="error">{t("machining.failed", { message: comparison.error })}</Callout>

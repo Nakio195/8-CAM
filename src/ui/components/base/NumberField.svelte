@@ -3,7 +3,7 @@
     import Icon from "../Icon.svelte";
 
     // Numeric parameter with its unit and its help topic (specification 6.11: every parameter has a complete tooltip).
-    // The help opens from the field itself and from the small "?" next to the label, for touch screens.
+    // The help opens with the small "?" next to the label, on click only: typing in the field is not covered by it.
     let {
         label,
         help,
@@ -30,7 +30,8 @@
         helpValues?: Readonly<Record<string, number>>;
     } = $props();
 
-    let target = $derived({ topic: help, values: helpValues });
+    let button = $derived({ topic: help, values: helpValues, trigger: "click" as const });
+    let field = $derived({ topic: help, values: helpValues, trigger: "none" as const });
 
     let invalid = $derived(!Number.isFinite(value) || (min !== undefined && value < min) || (max !== undefined && value > max));
 </script>
@@ -38,12 +39,12 @@
 <div class="field" class:invalid>
     <div class="label-row">
         <label for={id}>{label}</label>
-        <button class="help" type="button" aria-label={helpLabel} use:helpAction={target}>
+        <button class="help" type="button" aria-label={helpLabel} use:helpAction={button}>
             <Icon name="help" size={14} />
         </button>
     </div>
     <div class="input-row">
-        <input {id} type="number" bind:value {min} {max} {step} aria-invalid={invalid} use:helpAction={target} />
+        <input {id} type="number" bind:value {min} {max} {step} aria-invalid={invalid} use:helpAction={field} />
         {#if invalid}
             <!-- Never by colour alone: an icon marks the invalid value besides the red border -->
             <span class="invalid-icon"><Icon name="warning" size={14} /></span>

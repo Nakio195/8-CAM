@@ -163,7 +163,7 @@
         </Button>
         <label class="select">
             <span class="visually-hidden">{t("app.language")}</span>
-            <select value={i18n.locale} use:help={"language"}
+            <select value={i18n.locale} use:help={""}
                 onchange={(event) => i18n.setLocale(event.currentTarget.value as Locale)}>
                 {#each LOCALES as option (option)}
                     <option value={option}>{option.toUpperCase()}</option>
@@ -172,16 +172,16 @@
         </label>
         <label class="select">
             <span class="visually-hidden">{t("help.theme.title")}</span>
-            <select value={theme.mode} use:help={"theme"}
+            <select value={theme.mode} use:help={""}
                 onchange={(event) => theme.setMode(event.currentTarget.value as ThemeMode)}>
                 <option value="auto">{t("theme.auto")}</option>
                 <option value="light">{t("theme.light")}</option>
                 <option value="dark">{t("theme.dark")}</option>
             </select>
         </label>
-        <IconButton icon="help" label={t("header.help")} help="helpPanel" tone="onDark" pressed={helpState.panelOpen}
+        <IconButton icon="help" label={t("header.help")} help="" tone="onDark" pressed={helpState.panelOpen}
             onclick={() => (helpState.panelOpen ? helpState.closePanel() : helpState.openPanel())} />
-        <IconButton icon="about" label={t("header.about")} help="about" tone="onDark" onclick={() => (aboutOpen = true)} />
+        <IconButton icon="about" label={t("header.about")} help="" tone="onDark" onclick={() => (aboutOpen = true)} />
         <input bind:this={fileInput} class="visually-hidden" type="file" multiple tabindex="-1" aria-hidden="true"
             onchange={onFilesChosen} />
     </header>

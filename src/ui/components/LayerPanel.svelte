@@ -39,7 +39,7 @@
                 {t(`import.${task.stage}`, { file: task.fileName })}
             </span>
             <progress max="1" value={task.fraction}></progress>
-            <IconButton icon="close" size={16} label={t("import.cancel")} help="importCancel" onclick={() => task.cancel()} />
+            <IconButton icon="close" size={16} label={t("import.cancel")} help="" onclick={() => task.cancel()} />
         </div>
     {/each}
 
@@ -47,7 +47,7 @@
         <div class="failure" role="alert">
             <Icon name="warning" size={16} />
             <span>{t("import.failed", { file: failure.fileName, message: failure.message })}</span>
-            <IconButton icon="close" size={16} label={t("import.dismiss")} help="messageDismiss"
+            <IconButton icon="close" size={16} label={t("import.dismiss")} help=""
                 onclick={() => project.dismissFailure(failure.id)} />
         </div>
     {/each}
@@ -61,11 +61,11 @@
             <li class="layer" class:hidden={!layer.visible}>
                 <div class="row">
                     <!-- The eye shows the current state; the button is not a toggle "pressed" state for screen readers -->
-                    <IconButton icon={layer.visible ? "eye" : "eyeOff"} size={16} help="layerVisibility"
+                    <IconButton icon={layer.visible ? "eye" : "eyeOff"} size={16} help=""
                         label={t(layer.visible ? "layers.hide" : "layers.show")}
                         onclick={() => project.setVisible(layer.id, !layer.visible)} />
                     <input class="swatch" type="color" value={layer.color} aria-label={t("layers.color")}
-                        use:help={"layerColor"}
+                        use:help={""}
                         oninput={(event) => project.setColor(layer.id, event.currentTarget.value)} />
                     <!-- Full name, wrapped if needed: files of one board often share a long common start -->
                     <span class="name">{layer.name}</span>
@@ -81,11 +81,11 @@
                         </button>
                     {/if}
                     <span class="spacer"></span>
-                    <IconButton icon="up" size={16} label={t("layers.up")} help="layerUp" disabled={index === 0}
+                    <IconButton icon="up" size={16} label={t("layers.up")} help="" disabled={index === 0}
                         onclick={() => project.move(layer.id, "up")} />
-                    <IconButton icon="down" size={16} label={t("layers.down")} help="layerDown"
+                    <IconButton icon="down" size={16} label={t("layers.down")} help=""
                         disabled={index === ordered.length - 1} onclick={() => project.move(layer.id, "down")} />
-                    <IconButton icon="remove" size={16} label={t("layers.remove")} help="layerRemove"
+                    <IconButton icon="remove" size={16} label={t("layers.remove")} help=""
                         onclick={() => project.remove(layer.id)} />
                 </div>
                 <details>

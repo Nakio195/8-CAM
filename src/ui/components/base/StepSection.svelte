@@ -6,23 +6,22 @@
 
     // One step of a tab, folded to its header: number (a check once done), title and a short summary. The tab keeps one
     // step open at a time; the "next" button folds this one and opens the following step.
-    let { id, index, title, summary = "", done = false, open, help, ontoggle, next, children }: {
+    let { id, index, title, summary = "", done = false, open, ontoggle, next, children }: {
         id: string;
         index: number;
         title: string;
         summary?: string;
         done?: boolean;
         open: boolean;
-        help: string;
         ontoggle: () => void;
-        next?: { label: string; help: string; onclick: () => void };
+        next?: { label: string; onclick: () => void };
         children: Snippet;
     } = $props();
 </script>
 
 <section class="step" class:open aria-labelledby={`step-${id}-title`}>
     <h2 id={`step-${id}-title`}>
-        <button class="header" type="button" aria-expanded={open} aria-controls={`step-${id}`} use:helpAction={help} onclick={ontoggle}>
+        <button class="header" type="button" aria-expanded={open} aria-controls={`step-${id}`} use:helpAction={""} onclick={ontoggle}>
             <span class="badge" class:done>
                 {#if done}<Icon name="check" size={14} />{:else}{index}{/if}
             </span>
@@ -36,7 +35,7 @@
         {@render children()}
         {#if next}
             <div class="next">
-                <Button variant="secondary" icon="chevron" help={next.help} onclick={next.onclick}>{next.label}</Button>
+                <Button variant="secondary" icon="chevron" help="" onclick={next.onclick}>{next.label}</Button>
             </div>
         {/if}
     </div>

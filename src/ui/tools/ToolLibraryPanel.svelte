@@ -81,8 +81,8 @@
     <h2 id="tools-title">{t("tools.title")}</h2>
     <div class="actions">
         <Button variant="primary" icon="plus" help="toolAdd" onclick={() => edit(blankTool("vbit"), true)}>{t("tools.add")}</Button>
-        <Button variant="ghost" icon="upload" help="toolImport" onclick={() => fileInput.click()}>{t("tools.import")}</Button>
-        <Button variant="ghost" icon="download" help="toolExport" onclick={exportFile}>{t("tools.export")}</Button>
+        <Button variant="ghost" icon="upload" help="" onclick={() => fileInput.click()}>{t("tools.import")}</Button>
+        <Button variant="ghost" icon="download" help="" onclick={exportFile}>{t("tools.export")}</Button>
         <Button variant="ghost" icon="reset" help="toolReset" onclick={reset}>{t("tools.reset")}</Button>
         <input bind:this={fileInput} class="visually-hidden" type="file" accept=".json,application/json" tabindex="-1"
             aria-hidden="true" onchange={importFile} />

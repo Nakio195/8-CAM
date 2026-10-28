@@ -69,14 +69,14 @@
     {/if}
     <label class="field">
         <span>{t("export.name")}</span>
-        <input type="text" bind:value={exportState.name} placeholder={exportState.defaultName()} use:help={"exportName"} />
+        <input type="text" bind:value={exportState.name} placeholder={exportState.defaultName()} use:help={""} />
     </label>
 
     {#if exportState.running}
         <div class="running" role="status">
             <span>{t("export.writing")}</span>
             <progress></progress>
-            <IconButton icon="close" size={16} label={t("machining.cancel")} help="exportCancel" onclick={() => exportState.cancel()} />
+            <IconButton icon="close" size={16} label={t("machining.cancel")} help="" onclick={() => exportState.cancel()} />
         </div>
     {:else}
         <div>
@@ -119,19 +119,19 @@
                 {/each}
             </ol>
         {/if}
-        <ul class="files" use:help={"exportDownload"}>
+        <ul class="files" use:help={""}>
             {#each output.files as entry (entry.name)}
                 <li>
                     <span class="mono name">{entry.name}</span>
                     <span class="note">{t("export.fileInfo", { lines: entry.lineCount, duration: formatDuration(entry.duration, t) })}</span>
                     {#if exportState.edited[entry.name] !== undefined}<Sticker tone="warning" icon="edit">{t("export.editedTag")}</Sticker>{/if}
-                    <IconButton icon="download" size={16} help="exportDownload" label={t("export.download", { file: entry.name })}
+                    <IconButton icon="download" size={16} help="" label={t("export.download", { file: entry.name })}
                         onclick={() => downloadText(entry.name, exportState.text(entry.name), "text/plain")} />
                 </li>
             {/each}
         </ul>
         {#if output.files.length > 1}
-            <div><Button variant="secondary" icon="download" help="exportDownload" onclick={downloadAll}>{t("export.downloadAll")}</Button></div>
+            <div><Button variant="secondary" icon="download" help="" onclick={downloadAll}>{t("export.downloadAll")}</Button></div>
         {/if}
 
     {/if}
