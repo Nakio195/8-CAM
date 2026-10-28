@@ -2,6 +2,7 @@
     import { DEFAULT_ISOLATION } from "@cam/isolation/index";
     import { toolWidth } from "@cam/tools/index";
     import { help } from "../help";
+    import { defaults } from "../state/defaults.svelte";
     import { i18n } from "../state/i18n.svelte";
     import { machineState } from "../state/machine.svelte";
     import { COMPARISON_LIMIT, machining } from "../state/machining.svelte";
@@ -51,7 +52,7 @@
         if (layer)
         {
             // Parameters of the last isolation, so the comparison matches what will be machined
-            const params = machining.operations[machining.operations.length - 1]?.params ?? DEFAULT_ISOLATION;
+            const params = machining.operations[machining.operations.length - 1]?.params ?? { ...DEFAULT_ISOLATION, ...defaults.values.isolation };
             machining.startComparison(layer.id, selected, params);
             open = true;
         }

@@ -1195,3 +1195,21 @@ Les fichiers de fabrication arrivent souvent dans un zip. On peut glisser ou ouv
   comme un échec d'import.
 - Tests : un petit écrivain de zip (`tests/helpers/zip.ts`) fabrique les archives, dont une archive de fabrication avec
   un zip imbriqué.
+
+---
+
+## 23. Réglages par défaut du site
+
+Les réglages des nouvelles opérations sont les mêmes pour tous les utilisateurs et se règlent côté site, pas dans le
+navigateur de chacun (un premier essai de réglages par utilisateur a été retiré).
+
+- **Fichier `public/defaults.json`**, copié tel quel à côté de l'application par la construction (`dist/defaults.json`).
+  On le modifie **sur le serveur, sans reconstruire** : la valeur s'applique au prochain chargement de la page (le
+  fichier est redemandé au serveur à chaque chargement).
+- Réglages : isolation (passes, recouvrement, sens, passes groupées, décalage), perçage (cycle, profondeur de
+  débourrage, temporisation), détourage (mode, sens, nombre, largeur et hauteur des attaches). Les profondeurs, les
+  couches et les outils restent choisis selon la carte. Les clés qui commencent par `$` sont des commentaires.
+- Un réglage absent ou invalide garde la valeur du code (`BUILT_IN_DEFAULTS`, `src/project/defaults.ts`), et la
+  console du navigateur dit lequel. Fichier absent ou illisible : toutes les valeurs du code.
+- Valeurs actuelles : isolation **en avalant (climb)**, comme FlatCAM ; le reste inchangé.
+- Le test `tests/unit/project/defaults.test.ts` vérifie que le fichier livré est lu sans erreur.

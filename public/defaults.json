@@ -1,0 +1,25 @@
+{
+  "$comment": "Default settings of new operations, for every user of the site. Edit this file on the server, no new build needed; reload the page to see the change. A setting missing or invalid keeps the value built into 8-CAM (the browser console says which). Depths, layers and tools are always chosen from the board. See docs/architecture.md section 23.",
+  "isolation": {
+    "$comment": "passes: 1 to 20; overlap: 0 to 0.9 (share of the cutting width); direction: climb or conventional; combinePasses: true or false; extraOffset: mm, 0 to 5",
+    "passes": 2,
+    "overlap": 0.15,
+    "direction": "climb",
+    "combinePasses": true,
+    "extraOffset": 0
+  },
+  "drilling": {
+    "$comment": "cycle: simple or peck; peckDepth: mm per peck; dwell: s at the bottom of each hole",
+    "cycle": "simple",
+    "peckDepth": 0.5,
+    "dwell": 0
+  },
+  "cutout": {
+    "$comment": "mode: shape or rectangle; direction: climb or conventional; tabCount: number of tabs; tabWidth, tabHeight: mm",
+    "mode": "shape",
+    "direction": "conventional",
+    "tabCount": 4,
+    "tabWidth": 2,
+    "tabHeight": 0.5
+  }
+}

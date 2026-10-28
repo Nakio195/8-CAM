@@ -20,6 +20,7 @@
     import SidebarTabs from "./components/SidebarTabs.svelte";
     import MachinePanel from "./machine/MachinePanel.svelte";
     import { machineState } from "./state/machine.svelte";
+    import { defaults } from "./state/defaults.svelte";
     import AnalysisPanel from "./analysis/AnalysisPanel.svelte";
     import { toolLibrary } from "./state/tools.svelte";
     import ToolLibraryPanel from "./tools/ToolLibraryPanel.svelte";
@@ -111,6 +112,7 @@
         // The analysis needs the tool library even before the Tools tab is opened
         void toolLibrary.load();
         void machineState.load();
+        void defaults.load();
         // Development helper: ?load=url1,url2 imports files served by the dev server (performance checks)
         if (import.meta.env.DEV)
         {
