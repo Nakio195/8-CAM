@@ -52,6 +52,27 @@
         </div>
     {/each}
 
+    {#each project.archives as note (note.id)}
+        <div class="failure archive" class:none={note.imported === 0} role="status">
+            <Icon name={note.imported === 0 ? "warning" : "info"} size={16} />
+            <span>
+                {t(note.imported === 0 ? "import.archiveEmpty" : "import.archive", { file: note.fileName, count: note.imported })}
+                {#if note.skipped.length > 0}
+                    <details>
+                        <summary>{t("import.archiveSkipped", { count: note.skipped.length })}</summary>
+                        <ul>
+                            {#each note.skipped as path (path)}
+                                <li class="mono">{path}</li>
+                            {/each}
+                        </ul>
+                    </details>
+                {/if}
+            </span>
+            <IconButton icon="close" size={16} label={t("import.dismiss")} help=""
+                onclick={() => project.dismissArchive(note.id)} />
+        </div>
+    {/each}
+
     {#if project.layers.length === 0 && project.tasks.length === 0}
         <p class="empty">{t("layers.empty")}</p>
     {/if}
@@ -318,5 +339,33 @@
     .failure span
     {
         flex: 1;
+    }
+
+    .archive
+    {
+        align-items: flex-start;
+        background: var(--info-background);
+    }
+
+    .archive.none
+    {
+        background: var(--warning-background);
+    }
+
+    .archive summary
+    {
+        cursor: pointer;
+    }
+
+    .archive ul
+    {
+        margin: 4px 0 0;
+        padding-left: 16px;
+    }
+
+    .mono
+    {
+        font-family: var(--font-mono);
+        overflow-wrap: anywhere;
     }
 </style>

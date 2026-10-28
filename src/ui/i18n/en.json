@@ -9,7 +9,7 @@
   "header.exampleHint": "Load the FTDI_Max board (bottom copper and drills) to discover the software.",
   "empty.title": "No board loaded",
   "empty.body": "Drop your Gerber and drill files here, or open them from your computer. Everything is computed in the browser: your files never leave your machine.",
-  "empty.formats": "Supported formats: Gerber RS-274X and X2, Excellon, drill data as Gerber (Proteus).",
+  "empty.formats": "Supported formats: Gerber RS-274X and X2, Excellon, drill data as Gerber (Proteus), and a zip archive holding them.",
   "drop.hint": "Drop the files to import them",
   "layers.title": "Project",
   "layers.empty": "Imported layers will appear here.",
@@ -137,7 +137,7 @@
   "help.viewGridStep.title": "Grid spacing",
   "help.viewGridStep.body": "Distance in millimetres between two thin grid lines, chosen automatically from the zoom.",
   "help.fileOpen.title": "Open files",
-  "help.fileOpen.body": "Imports the Gerber (copper, outline…) and drill files (Excellon or Gerber) exported by your CAD software. You can pick several at once, or drop them on the window.",
+  "help.fileOpen.body": "Imports the Gerber (copper, outline…) and drill files (Excellon or Gerber) exported by your CAD software, or the production zip archive holding them. You can pick several at once, or drop them on the window.",
   "help.fileOpen.advice": "Everything is computed in the browser: your files never leave your computer.",
   "help.fileExample.title": "Example board",
   "help.fileExample.body": "Loads the fablab FTDI_Max board (bottom copper and drills) to try the software without your own files.",
@@ -948,5 +948,8 @@
   "steps.toDo": "to do",
   "steps.afterExport": "once the G-code is written",
   "export.simulation": "Simulation",
-  "export.simulationEmpty": "Write the G-code at the previous step first: the simulation reads it back as the machine will."
+  "export.simulationEmpty": "Write the G-code at the previous step first: the simulation reads it back as the machine will.",
+  "import.archive": "{file}: {count} Gerber or drill file(s) imported.",
+  "import.archiveEmpty": "{file}: no Gerber or drill file in the archive.",
+  "import.archiveSkipped": "{count} other file(s) left aside"
 }

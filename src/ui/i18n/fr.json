@@ -9,7 +9,7 @@
   "header.exampleHint": "Charger la carte FTDI_Max (cuivre face dessous et perçages) pour découvrir le logiciel.",
   "empty.title": "Aucune carte chargée",
   "empty.body": "Glissez ici vos fichiers Gerber et de perçage, ou ouvrez-les depuis votre ordinateur. Tout est calculé dans le navigateur : vos fichiers ne quittent pas votre machine.",
-  "empty.formats": "Formats lus : Gerber RS-274X et X2, Excellon, perçage au format Gerber (Proteus).",
+  "empty.formats": "Formats lus : Gerber RS-274X et X2, Excellon, perçage au format Gerber (Proteus), et archive zip qui les contient.",
   "drop.hint": "Déposez les fichiers pour les importer",
   "layers.title": "Projet",
   "layers.empty": "Les couches importées apparaîtront ici.",
@@ -137,7 +137,7 @@
   "help.viewGridStep.title": "Écart de la grille",
   "help.viewGridStep.body": "Distance en millimètres entre deux lignes fines de la grille, choisie automatiquement selon le zoom.",
   "help.fileOpen.title": "Ouvrir des fichiers",
-  "help.fileOpen.body": "Importe les fichiers Gerber (cuivre, contour…) et de perçage (Excellon ou Gerber) exportés par votre logiciel de CAO. Vous pouvez en choisir plusieurs à la fois, ou les glisser dans la fenêtre.",
+  "help.fileOpen.body": "Importe les fichiers Gerber (cuivre, contour…) et de perçage (Excellon ou Gerber) exportés par votre logiciel de CAO, ou l'archive zip de fabrication qui les contient. Vous pouvez en choisir plusieurs à la fois, ou les glisser dans la fenêtre.",
   "help.fileOpen.advice": "Tout est calculé dans le navigateur : vos fichiers ne quittent pas votre ordinateur.",
   "help.fileExample.title": "Carte d'exemple",
   "help.fileExample.body": "Charge la carte FTDI_Max du fablab (cuivre face dessous et perçages) pour essayer le logiciel sans vos propres fichiers.",
@@ -948,5 +948,8 @@
   "steps.toDo": "à faire",
   "steps.afterExport": "après l'écriture du G-code",
   "export.simulation": "Simulation",
-  "export.simulationEmpty": "Écrivez d'abord le G-code à l'étape précédente : la simulation le relit tel que la machine le lira."
+  "export.simulationEmpty": "Écrivez d'abord le G-code à l'étape précédente : la simulation le relit tel que la machine le lira.",
+  "import.archive": "{file} : {count} fichier(s) Gerber ou de perçage importé(s).",
+  "import.archiveEmpty": "{file} : aucun fichier Gerber ou de perçage dans l'archive.",
+  "import.archiveSkipped": "{count} autre(s) fichier(s) laissé(s) de côté"
 }

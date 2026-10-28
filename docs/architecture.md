@@ -1177,3 +1177,21 @@ maintenant des **étapes repliables**, une seule ouverte à la fois par onglet :
   thème, import / export de profils, noms, lecture de la simulation, en-têtes des étapes. Ils portent un sujet vide
   (`help=""`), et le test de couverture distingue toujours un sujet oublié d'un sujet retiré exprès. Les boutons à icône
   sans bulle gardent leur nom en infobulle native. Les sujets devenus inutiles sont retirés du glossaire.
+
+---
+
+## 22. Archive zip de fabrication
+
+Les fichiers de fabrication arrivent souvent dans un zip. On peut glisser ou ouvrir le zip entier :
+
+- `src/core/zip.ts` lit l'archive sans dépendance : répertoire central, entrées stockées ou compressées (deflate, par
+  le `DecompressionStream` du navigateur). Non lus et signalés : ZIP64, entrées chiffrées, autres méthodes de
+  compression.
+- `src/project/archive.ts` garde les fichiers reconnus comme Gerber (`looksLikeGerber` : commande `%FS` ou `%MO` au
+  début) ou Excellon (`looksLikeExcellon`), quel que soit leur dossier ou leur extension. Les zips contenus dans le zip
+  sont ouverts aussi (un niveau). Les fichiers binaires, les `__MACOSX` et les fichiers cachés sont écartés.
+- L'onglet Projet affiche une note par archive : nombre de fichiers importés et liste repliable des fichiers laissés
+  de côté (plan, `.gbrjob`, readme…). Une archive sans fichier utilisable est signalée en jaune, une archive illisible
+  comme un échec d'import.
+- Tests : un petit écrivain de zip (`tests/helpers/zip.ts`) fabrique les archives, dont une archive de fabrication avec
+  un zip imbriqué.

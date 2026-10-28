@@ -905,3 +905,12 @@ export function parseGerber(source: string, options: GerberParseOptions = {}): G
 {
     return new GerberParser(options).parse(source, options.onProgress);
 }
+
+/**
+ * True when the text looks like a Gerber file: a format or unit command near the start. Used to pick the CAM files of a
+ * zip archive among the others (drawings, job files, readme).
+ */
+export function looksLikeGerber(source: string): boolean
+{
+    return /%(FS[LT][AI]|MO(MM|IN))/.test(source.slice(0, 16384));
+}

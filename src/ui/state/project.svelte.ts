@@ -3,11 +3,13 @@
 import { DEFAULT_BOARD_THICKNESS, summarizeBoard, type BoardSummary } from "@cam/analysis/index";
 import type { Point } from "@core/geometry/index";
 import { INTERNAL_UNITS_PER_MM } from "@core/units/index";
+import { isZip, ZipError } from "@core/index";
 import {
     addLayer,
     createLayer,
     moveLayer,
     removeLayer,
+    unpackArchive,
     updateLayer,
     type ProjectLayer
 } from "@project/index";
@@ -20,6 +22,15 @@ export interface ImportTask
     stage: ImportStage;
     fraction: number;
     cancel: () => void;
+}
+
+/** What was done with a zip archive: how many CAM files were imported, which other files were left aside. */
+export interface ArchiveNote
+{
+    id: number;
+    fileName: string;
+    imported: number;
+    skipped: string[];
 }
 
 /** Board area the view is asked to show, in millimetres, with an optional spot to highlight. */
@@ -49,6 +60,7 @@ class ProjectState
     public layers: ProjectLayer[] = $state.raw([]);
     public tasks: ImportTask[] = $state([]);
     public failures: ImportFailure[] = $state([]);
+    public archives: ArchiveNote[] = $state([]);
     /** Incremented to ask the view to show the whole board. */
     public fitRequest = $state(0);
     public focus: FocusRequest | null = $state.raw(null);
@@ -67,9 +79,32 @@ class ProjectState
 
     public async importFiles(files: Iterable<File>): Promise<void>
     {
-        // All files are read before any import starts, so they form one batch (one fit of the view at the end)
-        const entries = await Promise.all([...files].map(async (file) => ({ name: file.name, text: await file.text() })));
+        // All files are read before any import starts, so they form one batch (one fit of the view at the end).
+        // A zip archive gives its Gerber and drill files.
+        const read = await Promise.all([...files].map((file) => this.readFile(file)));
+        const entries = read.flat();
         await Promise.all(entries.map((entry) => this.importText(entry.name, entry.text)));
+    }
+
+    private async readFile(file: File): Promise<{ name: string; text: string }[]>
+    {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (!isZip(bytes) && !/\.zip$/i.test(file.name))
+        {
+            return [{ name: file.name, text: new TextDecoder().decode(bytes) }];
+        }
+        try
+        {
+            const content = await unpackArchive(bytes);
+            this.archives.push({ id: this.mNextId++, fileName: file.name, imported: content.files.length, skipped: content.skipped });
+            return content.files;
+        }
+        catch (error)
+        {
+            const message = error instanceof ZipError ? error.message : String(error);
+            this.failures.push({ id: this.mNextId++, fileName: file.name, message });
+            return [];
+        }
     }
 
     /** Imports one file; returns the id of its layer (null when it failed or was cancelled). */
@@ -198,6 +233,11 @@ class ProjectState
     public dismissFailure(id: number): void
     {
         this.failures = this.failures.filter((failure) => failure.id !== id);
+    }
+
+    public dismissArchive(id: number): void
+    {
+        this.archives = this.archives.filter((note) => note.id !== id);
     }
 }
 

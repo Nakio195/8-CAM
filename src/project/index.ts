@@ -5,3 +5,4 @@ export * from "./layers";
 export * from "./operations";
 export type * from "./export";
 export * from "./projectFile";
+export * from "./archive";
