@@ -22,7 +22,7 @@
     import { toolLibrary } from "./state/tools.svelte";
     import ToolLibraryPanel from "./tools/ToolLibraryPanel.svelte";
     import MachiningPanel from "./machining/MachiningPanel.svelte";
-    import { toolpathOverlays } from "./machining/overlays";
+    import { drillingOverlays, toolpathOverlays } from "./machining/overlays";
     import { machining } from "./state/machining.svelte";
 
     const t = i18n.t;
@@ -110,7 +110,7 @@
         }
     });
 
-    let overlays = $derived(toolpathOverlays(machining.operations));
+    let overlays = $derived([...toolpathOverlays(machining.operations), ...drillingOverlays(machining.drillings)]);
     let showEmpty = $derived(project.layers.length === 0 && project.tasks.length === 0);
 </script>
 

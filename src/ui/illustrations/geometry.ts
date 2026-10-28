@@ -302,3 +302,75 @@ export function nonIsolated(gap: number, width: number): NonIsolatedShape
         blocked: width > gap
     };
 }
+
+// ----- Drilling cycle -----
+
+export interface DrillCycleShape
+{
+    surfaceY: number;
+    /** Bottom of the board; the spoil board is below. */
+    bottomY: number;
+    /** Bottom of the hole. */
+    depthY: number;
+    travelY: number;
+    /** Height of the drill tip over time (right part of the drawing): down, up, down... */
+    profile: Point2[];
+    plungeCount: number;
+}
+
+/** Height (y) of the drill tip over time for a simple or peck cycle: plunges at feed, lifts out of the hole between pecks. */
+export function drillCycle(cycle: "simple" | "peck", depth: number, peckDepth: number, thickness = 1.6): DrillCycleShape
+{
+    const surfaceY = 40;
+    const scale = 84 / Math.max(depth, thickness, 0.1);
+    const travelY = surfaceY - 24;
+    const restartY = surfaceY - 6;
+    const levels = cycle === "peck" ? passDepths(depth, Math.max(depth / 12, peckDepth)) : [Math.max(0, depth)];
+    // Time runs from x = 132 to x = 228, shared out between the plunges
+    const step = 96 / (levels.length * 2 + 1);
+    const profile: Point2[] = [{ x: 132, y: travelY }];
+    let x = 132 + step / 2;
+    levels.forEach((level, index) =>
+    {
+        profile.push({ x, y: index === 0 ? travelY : restartY });
+        x += step;
+        profile.push({ x, y: surfaceY + level * scale });
+        x += step;
+        profile.push({ x, y: index === levels.length - 1 ? travelY : restartY });
+    });
+    return {
+        surfaceY,
+        bottomY: surfaceY + thickness * scale,
+        depthY: surfaceY + Math.max(0, depth) * scale,
+        travelY,
+        profile: profile.map((point) => ({ x: round(point.x), y: round(point.y) })),
+        plungeCount: levels.length
+    };
+}
+
+// ----- Hole milling (top view) -----
+
+export interface HoleMillingShape
+{
+    centreX: number;
+    centreY: number;
+    holeRadius: number;
+    toolRadius: number;
+    /** Circle followed by the tool centre; 0 when the tool is as wide as the hole. */
+    pathRadius: number;
+    /** The tool is wider than the hole: it cannot mill it. */
+    blocked: boolean;
+}
+
+export function holeMilling(hole: number, tool: number): HoleMillingShape
+{
+    const scale = 100 / Math.max(hole, tool, 0.1);
+    return {
+        centreX: 84,
+        centreY: 72,
+        holeRadius: (hole / 2) * scale,
+        toolRadius: (tool / 2) * scale,
+        pathRadius: Math.max(0, (hole - tool) / 2) * scale,
+        blocked: tool > hole + 1e-9
+    };
+}

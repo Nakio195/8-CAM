@@ -682,3 +682,65 @@ Le banc avec plan de masse sert de garde-fou contre les régressions (limite 10 
 - Modules périmés après rechargement à chaud de Vite (« does not provide an export named ») : redémarrage du serveur
   de développement, sans effet sur la version construite.
 - Zones non isolées : 8,7 s sur la carte dense, ramenées à 3,4 s par le découpage autour de chaque paire.
+
+---
+
+## 13. Résultats du jalon J7 (perçage et optimisation)
+
+### 13.1 Ordre des trous (`src/cam/drilling/order.ts`)
+
+- **Plus proche voisin** accéléré par une grille (recherche par anneaux de cases autour de la position), identique à
+  une recherche exhaustive (testé sur 400 points).
+- **2-opt** sur le trajet ouvert (départ fixe, fin libre) : un segment du trajet est inversé dès que reconnecter deux
+  arêtes le raccourcit. Les candidats sont les 12 voisins les plus proches de chaque trou, ce qui reste rapide sur des
+  milliers de trous. Tests : plus aucun croisement sur 300 points aléatoires, au plus 10 % au-dessus de l'optimum
+  calculé par force brute sur de petits ensembles.
+- FlatCAM s'arrête au plus proche voisin (ou passe par OR-Tools, absent ici).
+
+| 5 000 trous au hasard sur 10 x 10 cm | Distance | Calcul |
+| ------------------------------------ | -------- | ------ |
+| Ordre du fichier                     | 262,95 m | —      |
+| Plus proche voisin                   | 6,30 m   | 8 ms   |
+| Plus proche voisin + 2-opt           | 5,53 m   | 146 ms |
+
+### 13.2 Plan de perçage (`src/cam/drilling/drilling.ts`)
+
+- Trous regroupés **par outil**, du plus petit au plus grand (les petits forets sont les plus fragiles). Des tailles
+  proches confiées au même foret sont percées ensemble.
+- **Foret** : rapide au-dessus du trou à la hauteur de déplacement, plongée à l'avance Z, temporisation éventuelle,
+  remontée. **Débourrage** : plongées successives, comme FlatCAM. Entre deux plongées, le foret remonte à la hauteur de
+  déplacement puis redescend en rapide jusqu'à 0,5 mm au-dessus de la carte (jamais de rapide dans la matière),
+  et repart en avance lente.
+- **Fraise** (trou plus grand que les forets) : descente en **hélice** sur le cercle de rayon (trou − outil) / 2, un
+  tour par passe de profondeur de l'outil, un dernier tour au fond, retour au centre. Plongée simple si la fraise a
+  exactement la taille du trou.
+- **Rainures** : fraisées en aller-retour le long du chemin, une passe de profondeur dans chaque sens.
+- **Profondeur** : épaisseur de carte + 0,2 mm, suit l'épaisseur réglée dans l'analyse.
+- **Problèmes signalés** : taille sans outil, fraise plus large que le trou, rainure faite au foret, foret nettement
+  plus petit que le trou. Les mouvements de chaque outil passent le contrôle de sécurité de la section 7.
+
+### 13.3 Interface
+
+- Section **Perçage** dans l'onglet Usinage : « Nouveau perçage » reprend tous les fichiers de perçage et l'outil
+  conseillé en J5 pour chaque taille de trou, puis calcule tout de suite.
+- Par taille : foret ou fraise au choix, écart en mm et en %, badge « Hors tolérance », badge « Fraisé » avec son
+  illustration. Cycle simple ou débourrage, profondeur, profondeur par débourrage, temporisation.
+- Résultat : trous par outil, **distance économisée** par rapport à l'ordre du fichier (et au plus proche voisin
+  seul), nombre d'outils à monter, durée estimée.
+- Carte : trajet entre les trous en rose (comme les déplacements de l'isolation), cercles des trous fraisés et
+  rainures en vert, ordre du fichier en pointillés gris sur demande. Le violet prévu au départ se confondait avec le
+  cuivre de la face inférieure.
+- Illustrations : cycle simple et cycle avec débourrage (point animé sur la courbe de hauteur du foret, arrêté si
+  l'utilisateur réduit les animations), trou fraisé vu de dessus. Le sujet « débourrage » n'est plus en attente.
+
+### 13.4 FTDI_Max
+
+41 trous métallisés : foret 0,8 mm (12 trous de 0,762), foret 1,0 mm (27 trous de 1,016), fraise maïs 1,5 mm
+(2 trous de 3 mm fraisés). Déplacements : **0,19 m au lieu de 0,21 m** (−10 %). Proteus range déjà bien ses trous ;
+le gain est bien plus fort sur un fichier désordonné. Durée estimée 3 min 21 s en cycle simple, 6 min 49 s avec
+débourrage tous les 0,5 mm.
+
+### 13.5 Reste ouvert
+
+- Pas encore de G-code : les mouvements sont prêts pour les post-processeurs (J9).
+- Les trous métallisés et non métallisés peuvent être séparés en deux opérations ; rien ne l'impose.

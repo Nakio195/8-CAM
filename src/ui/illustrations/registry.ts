@@ -4,6 +4,8 @@
 import type { Component } from "svelte";
 import BoardThickness from "./BoardThickness.svelte";
 import DepthPasses from "./DepthPasses.svelte";
+import DrillCycle from "./DrillCycle.svelte";
+import HoleMilling from "./HoleMilling.svelte";
 import IsolationPasses from "./IsolationPasses.svelte";
 import MillingDirection from "./MillingDirection.svelte";
 import NonIsolated from "./NonIsolated.svelte";
@@ -38,6 +40,14 @@ const passes = (values: IllustrationValues): Record<string, unknown> => ({
     passes: values.passes ?? 2,
     overlap: values.overlap ?? 0.15,
     extraOffset: values.extraOffset ?? 0
+});
+
+// values.cycle: 0 simple, 1 peck; the peck topic always shows pecking
+const cycle = (values: IllustrationValues, peck: boolean): Record<string, unknown> => ({
+    cycle: peck || values.cycle === 1 ? "peck" : "simple",
+    depth: values.drillDepth ?? 1.8,
+    peckDepth: values.peckDepth ?? 0.5,
+    thickness: values.thickness ?? 1.6
 });
 
 const heights = (values: IllustrationValues): Record<string, unknown> => ({
@@ -79,6 +89,13 @@ export const ILLUSTRATIONS: Readonly<Record<string, TopicIllustration>> = {
         // values.direction: 0 climb, 1 conventional
         props: (values) => ({ direction: values.direction === 0 ? "climb" : "conventional" })
     },
+    drillCycle: { component: as(DrillCycle), props: (values) => cycle(values, false) },
+    peck: { component: as(DrillCycle), props: (values) => cycle(values, true) },
+    drillDepth: { component: as(DrillCycle), props: (values) => cycle(values, false) },
+    holeMilling: {
+        component: as(HoleMilling),
+        props: (values) => ({ hole: values.hole ?? 3, tool: values.toolDiameter ?? 1.5 })
+    },
     nonIsolated: {
         component: as(NonIsolated),
         props: (values) => ({ gap: values.gap ?? 0.4, width: values.width ?? 0.8 })
@@ -90,7 +107,6 @@ export const ILLUSTRATIONS: Readonly<Record<string, TopicIllustration>> = {
  * The help test fails if a geometric topic is neither illustrated nor listed here.
  */
 export const PENDING_ILLUSTRATIONS: Readonly<Record<string, string>> = {
-    peck: "J7",
     tabs: "J8",
     tabHeight: "J8",
     cutoutMargin: "J8",

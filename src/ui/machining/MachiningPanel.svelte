@@ -3,14 +3,16 @@
     import { machining } from "../state/machining.svelte";
     import Button from "../components/base/Button.svelte";
     import Callout from "../components/base/Callout.svelte";
+    import DrillingCard from "./DrillingCard.svelte";
     import IsolationCard from "./IsolationCard.svelte";
     import ToolComparator from "./ToolComparator.svelte";
 
-    // Machining operations (specification 6.4 and 6.9); drilling and cutout join them in J7 and J8
+    // Machining operations (specification 6.4, 6.5 and 6.9); cutout joins them in J8
     const t = i18n.t;
 
     let hasCopper = $derived(machining.copperLayers().length > 0);
     let hasTool = $derived(machining.isolationTools().length > 0);
+    let hasDrills = $derived(machining.drillLayers().length > 0);
 </script>
 
 <section class="panel" aria-labelledby="machining-title">
@@ -27,6 +29,20 @@
             <IsolationCard {operation} />
         {/each}
         <ToolComparator />
+    {/if}
+</section>
+
+<section class="panel" aria-labelledby="drilling-title">
+    <h2 id="drilling-title">{t("machining.drilling")}</h2>
+    {#if !hasDrills}
+        <Callout tone="help">{t("machining.drillingEmpty")}</Callout>
+    {:else}
+        <div>
+            <Button variant="primary" icon="plus" help="drillingNew" onclick={() => machining.addDrilling()}>{t("machining.drillingAdd")}</Button>
+        </div>
+        {#each machining.drillings as operation (operation.id)}
+            <DrillingCard {operation} />
+        {/each}
     {/if}
 </section>
 

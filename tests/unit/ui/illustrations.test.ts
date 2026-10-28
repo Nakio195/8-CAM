@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { render } from "svelte/server";
 import { effectiveWidth } from "@cam/tools/index";
 import { HELP_TOPICS } from "@ui/help/topics";
-import { depthPasses, isolationPasses, nonIsolated, toolProfile, vbitSection, zHeights } from "@ui/illustrations/geometry";
+import { depthPasses, drillCycle, holeMilling, isolationPasses, nonIsolated, toolProfile, vbitSection, zHeights } from "@ui/illustrations/geometry";
 import { ILLUSTRATIONS, PENDING_ILLUSTRATIONS } from "@ui/illustrations/registry";
 import BoardThickness from "@ui/illustrations/BoardThickness.svelte";
 import DepthPasses from "@ui/illustrations/DepthPasses.svelte";
+import DrillCycle from "@ui/illustrations/DrillCycle.svelte";
+import HoleMilling from "@ui/illustrations/HoleMilling.svelte";
 import IsolationPasses from "@ui/illustrations/IsolationPasses.svelte";
 import MillingDirection from "@ui/illustrations/MillingDirection.svelte";
 import NonIsolated from "@ui/illustrations/NonIsolated.svelte";
@@ -15,6 +17,28 @@ import ZHeights from "@ui/illustrations/ZHeights.svelte";
 
 describe("illustration geometry", () =>
 {
+    it("draws one plunge for a simple cycle and one per peck down to the hole depth", () =>
+    {
+        const simple = drillCycle("simple", 1.8, 0.5);
+        expect(simple.plungeCount).toBe(1);
+        const peck = drillCycle("peck", 1.8, 0.5);
+        expect(peck.plungeCount).toBe(4);
+        // The deepest point of the profile is the bottom of the hole, below the board
+        expect(Math.max(...peck.profile.map((point) => point.y))).toBeCloseTo(peck.depthY, 0);
+        expect(peck.depthY).toBeGreaterThan(peck.bottomY);
+        // Between pecks the drill comes out above the surface
+        expect(peck.profile.filter((point) => point.y < peck.surfaceY).length).toBeGreaterThan(4);
+    });
+
+    it("draws the circle followed by the tool centre inside a milled hole", () =>
+    {
+        const shape = holeMilling(3, 1.5);
+        expect(shape.pathRadius + shape.toolRadius).toBeCloseTo(shape.holeRadius, 6);
+        expect(shape.blocked).toBe(false);
+        expect(holeMilling(1, 1.5).blocked).toBe(true);
+        expect(holeMilling(1.5, 1.5).pathRadius).toBe(0);
+    });
+
     it("shows the V-bit width of the cutting depth, the same as the tool model", () =>
     {
         const shape = vbitSection({ tipDiameter: 0.2, tipAngle: 30, depth: 0.1 });
@@ -101,6 +125,13 @@ describe("illustration components", () =>
         expect(render(IsolationPasses, { props: { width: 0.254, passes: 2, overlap: 0.15 } }).body).toMatchSnapshot();
         expect(render(MillingDirection, { props: { direction: "conventional" } }).body).toMatchSnapshot();
         expect(render(NonIsolated, { props: { gap: 0.4, width: 0.8 } }).body).toMatchSnapshot();
+    });
+
+    it("renders the drilling drawings", () =>
+    {
+        expect(render(DrillCycle, { props: { cycle: "simple", depth: 1.8, peckDepth: 0.5 } }).body).toMatchSnapshot();
+        expect(render(DrillCycle, { props: { cycle: "peck", depth: 1.8, peckDepth: 0.5 } }).body).toMatchSnapshot();
+        expect(render(HoleMilling, { props: { hole: 3, tool: 1.5 } }).body).toMatchSnapshot();
     });
 
     it("describes each drawing for screen readers", () =>
