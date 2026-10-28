@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import type { Tool, ToolType } from "@cam/tools/index";
+    import { MAX_SETTINGS_BYTES } from "../files";
     import { i18n } from "../state/i18n.svelte";
     import { project } from "../state/project.svelte";
     import { blankTool, toolLibrary } from "../state/tools.svelte";
@@ -68,6 +69,11 @@
         event.currentTarget.value = "";
         if (!file)
         {
+            return;
+        }
+        if (file.size > MAX_SETTINGS_BYTES)
+        {
+            message = { tone: "error", text: t("import.tooLarge", { size: Math.round(file.size / 1048576) }) };
             return;
         }
         const result = toolLibrary.importJson(await file.text());

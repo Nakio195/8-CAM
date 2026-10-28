@@ -103,7 +103,8 @@ export type LibraryImportError = "notJson" | "wrongFormat" | "newerVersion" | "i
 
 export type LibraryImport = { tools: Tool[]; skipped: number } | { error: LibraryImportError };
 
-function readTool(value: unknown): Tool | null
+/** Tool read from a file, or null when a field is missing or not a number. Always the user's own (not built-in). */
+export function readTool(value: unknown): Tool | null
 {
     if (typeof value !== "object" || value === null)
     {
@@ -184,6 +185,39 @@ export function mergeLibraries(current: readonly Tool[], incoming: readonly Tool
 {
     const ids = new Set(incoming.map((tool) => tool.id));
     return [...current.filter((tool) => !ids.has(tool.id)), ...incoming];
+}
+
+/** Same cutting values and description (the id and the built-in mark aside). */
+function sameTool(a: Tool, b: Tool): boolean
+{
+    const values = (tool: Tool): string => JSON.stringify({ ...tool, id: "", builtIn: false, usages: [...tool.usages].sort() });
+    return values(a) === values(b);
+}
+
+/**
+ * Tools of an opened project added to the library without changing any tool already there: a tool identical to the
+ * library one with the same id is that tool, any other is added under a new id. Returns the id each project tool has
+ * in the library.
+ */
+export function addProjectTools(current: readonly Tool[], incoming: readonly Tool[], newId: () => string): { tools: Tool[]; ids: Record<string, string>; added: number }
+{
+    const tools = [...current];
+    const ids: Record<string, string> = {};
+    let added = 0;
+    for (const tool of incoming)
+    {
+        const existing = current.find((entry) => entry.id === tool.id);
+        if (existing && sameTool(existing, tool))
+        {
+            ids[tool.id] = existing.id;
+            continue;
+        }
+        const id = existing ? newId() : tool.id;
+        tools.push({ ...tool, id, builtIn: false });
+        ids[tool.id] = id;
+        added++;
+    }
+    return { tools, ids, added };
 }
 
 /** Copy of a tool with a new id, editable by the user. */

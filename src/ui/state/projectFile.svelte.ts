@@ -1,15 +1,21 @@
 // Saving and opening a whole project (specification 6.9): source files, layer display, board thickness, tools, machine,
 // operations and export settings in one JSON file. Opening it imports the files again and computes every operation.
 
-import { mergeLibraries } from "@cam/tools/index";
+import { addProjectTools } from "@cam/tools/index";
 import { APP_VERSION } from "@core/index";
-import { looksLikeProject, parseProject, serializeProject, type ProjectFile, type ProjectFileError } from "@project/index";
+import { looksLikeProject, MAX_PROJECT_BYTES, parseProject, serializeProject, type ProjectFile, type ProjectFileError } from "@project/index";
 import { isoNow } from "../files";
 import { exportState } from "./export.svelte";
+import { i18n } from "./i18n.svelte";
 import { machineState } from "./machine.svelte";
 import { machining } from "./machining.svelte";
 import { project } from "./project.svelte";
 import { toolLibrary } from "./tools.svelte";
+
+function newToolId(): string
+{
+    return `tool-${typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now() + Math.random())}`;
+}
 
 /** Operation without its result: results are computed again when the project is opened. */
 function withoutResult<Operation extends { result: unknown }>(operation: Operation): Omit<Operation, "result">
@@ -67,8 +73,10 @@ export async function openProject(text: string): Promise<ProjectFileError | null
     exportState.edited = {};
     project.clear();
     project.thickness = file.thickness;
-    // Tools of the project replace those with the same id, so every operation finds the tool it was made with
-    toolLibrary.replaceAll(mergeLibraries(toolLibrary.tools, file.tools));
+    // Tools of the project are added to the library, never replacing the user's: a project may come from anyone
+    const { tools, ids } = addProjectTools(toolLibrary.tools, file.tools, () => newToolId());
+    toolLibrary.replaceAll(tools);
+    const toolId = (id: string): string => ids[id] ?? id;
     machineState.restore(file.machine, file.postProfile);
     exportState.setup = { ...file.setup };
     exportState.split = file.exportOptions.split;
@@ -86,7 +94,14 @@ export async function openProject(text: string): Promise<ProjectFileError | null
         }
     }
     project.fit();
-    machining.restore(file.isolations, file.drillings, file.cutouts, layerIds);
+    machining.restore(
+        file.isolations.map((operation) => ({ ...operation, toolId: toolId(operation.toolId) })),
+        file.drillings.map((operation) => ({
+            ...operation,
+            assignments: Object.fromEntries(Object.entries(operation.assignments).map(([size, id]) => [size, id === null ? null : toolId(id)]))
+        })),
+        file.cutouts.map((operation) => ({ ...operation, toolId: toolId(operation.toolId) })),
+        layerIds);
     return null;
 }
 
@@ -95,12 +110,17 @@ export async function openFiles(files: Iterable<File>): Promise<ProjectFileError
 {
     const list = [...files];
     const first = list[0];
-    if (list.length === 1 && first && /\.json$/i.test(first.name))
+    if (list.length === 1 && first && /\.json$/i.test(first.name) && first.size <= MAX_PROJECT_BYTES)
     {
         const text = await first.text();
         if (looksLikeProject(text))
         {
-            return openProject(text);
+            const error = await openProject(text);
+            if (error)
+            {
+                project.reportFailure(first.name, i18n.t(`projectFile.error.${error}`));
+            }
+            return error;
         }
     }
     await project.importFiles(list);

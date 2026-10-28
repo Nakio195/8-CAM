@@ -93,11 +93,17 @@
 
     async function importMachine(event: Event & { currentTarget: HTMLInputElement }): Promise<void>
     {
-        const text = await readChosenFile(event);
-        if (text === null)
+        const chosen = await readChosenFile(event);
+        if (chosen === null)
         {
             return;
         }
+        if ("tooLarge" in chosen)
+        {
+            message = { tone: "error", text: t("import.tooLarge", { size: chosen.tooLarge }) };
+            return;
+        }
+        const text = chosen.text;
         const result = machineState.importMachine(text);
         message = "machine" in result
             ? { tone: "success", text: t("machine.imported", { name: result.machine.name }) }
@@ -106,11 +112,17 @@
 
     async function importProfile(event: Event & { currentTarget: HTMLInputElement }): Promise<void>
     {
-        const text = await readChosenFile(event);
-        if (text === null)
+        const chosen = await readChosenFile(event);
+        if (chosen === null)
         {
             return;
         }
+        if ("tooLarge" in chosen)
+        {
+            message = { tone: "error", text: t("import.tooLarge", { size: chosen.tooLarge }) };
+            return;
+        }
+        const text = chosen.text;
         const result = machineState.importProfile(text);
         message = "profile" in result
             ? { tone: "success", text: t("post.imported", { name: result.profile.name }) }

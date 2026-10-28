@@ -1,9 +1,13 @@
 // Production files sent as a zip archive: the Gerber and drill files are taken out, the rest (drawings, job files,
 // readme, assembly files) is left aside and listed, so the user knows what was not imported.
 
-import { readZip } from "@core/index";
+import { DEFAULT_ZIP_LIMITS, readZip, type ZipLimits } from "@core/index";
 import { looksLikeExcellon } from "@parsers/excellon/index";
 import { looksLikeGerber } from "@parsers/gerber/index";
+
+/** Largest Gerber or drill file read (a dense board is a few megabytes), and largest project file, bytes. */
+export const MAX_FILE_BYTES = 50 * 1024 * 1024;
+export const MAX_PROJECT_BYTES = 200 * 1024 * 1024;
 
 export interface ArchiveContent
 {
@@ -32,9 +36,17 @@ function camText(data: Uint8Array): string | null
     return looksLikeGerber(text) || looksLikeExcellon(text) ? text : null;
 }
 
-async function collect(bytes: Uint8Array, prefix: string, depth: number, content: ArchiveContent): Promise<void>
+/** Bytes decompressed so far, archives inside the archive included: they all share the limits of the outer one. */
+interface Budget
 {
-    const { entries, skipped } = await readZip(bytes);
+    limits: ZipLimits;
+    used: number;
+}
+
+async function collect(bytes: Uint8Array, prefix: string, depth: number, content: ArchiveContent, budget: Budget): Promise<void>
+{
+    const { entries, skipped } = await readZip(bytes, { ...budget.limits, maxTotalBytes: budget.limits.maxTotalBytes - budget.used });
+    budget.used += entries.reduce((sum, entry) => sum + entry.data.length, 0);
     content.skipped.push(...skipped.map((entry) => prefix + entry.path));
     for (const entry of entries)
     {
@@ -46,7 +58,7 @@ async function collect(bytes: Uint8Array, prefix: string, depth: number, content
         }
         if (isZipName(name) && depth < MAX_DEPTH)
         {
-            await collect(entry.data, `${prefix}${entry.path}/`, depth + 1, content);
+            await collect(entry.data, `${prefix}${entry.path}/`, depth + 1, content, budget);
             continue;
         }
         const text = camText(entry.data);
@@ -61,10 +73,10 @@ async function collect(bytes: Uint8Array, prefix: string, depth: number, content
     }
 }
 
-/** CAM files of a zip archive. Throws a ZipError when the archive cannot be read. */
-export async function unpackArchive(bytes: Uint8Array): Promise<ArchiveContent>
+/** CAM files of a zip archive. Throws a ZipError when the archive cannot be read or is too large. */
+export async function unpackArchive(bytes: Uint8Array, limits: ZipLimits = DEFAULT_ZIP_LIMITS): Promise<ArchiveContent>
 {
     const content: ArchiveContent = { files: [], skipped: [] };
-    await collect(bytes, "", 1, content);
+    await collect(bytes, "", 1, content, { limits, used: 0 });
     return content;
 }

@@ -3,6 +3,7 @@
     import { i18n } from "../state/i18n.svelte";
     import { exportState } from "../state/export.svelte";
     import { project } from "../state/project.svelte";
+    import { MAX_PROJECT_BYTES } from "@project/index";
     import { openProject, projectText } from "../state/projectFile.svelte";
     import Button from "./base/Button.svelte";
     import Callout from "./base/Callout.svelte";
@@ -23,11 +24,17 @@
 
     async function open(event: Event & { currentTarget: HTMLInputElement }): Promise<void>
     {
-        const text = await readChosenFile(event);
-        if (text === null)
+        const chosen = await readChosenFile(event, MAX_PROJECT_BYTES);
+        if (chosen === null)
         {
             return;
         }
+        if ("tooLarge" in chosen)
+        {
+            message = { tone: "error", text: t("import.tooLarge", { size: chosen.tooLarge }) };
+            return;
+        }
+        const text = chosen.text;
         if (project.layers.length > 0 && !window.confirm(t("projectFile.replaceConfirm")))
         {
             return;

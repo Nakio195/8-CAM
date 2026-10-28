@@ -3,17 +3,19 @@
 import { DEFAULT_BOARD_THICKNESS, summarizeBoard, type BoardSummary } from "@cam/analysis/index";
 import type { Point } from "@core/geometry/index";
 import { INTERNAL_UNITS_PER_MM } from "@core/units/index";
-import { isZip, ZipError } from "@core/index";
+import { DEFAULT_ZIP_LIMITS, isZip, ZipError } from "@core/index";
 import {
     addLayer,
     createLayer,
     moveLayer,
+    MAX_FILE_BYTES,
     removeLayer,
     unpackArchive,
     updateLayer,
     type ProjectLayer
 } from "@project/index";
 import { ImportCancelledError, startImport, type ImportStage } from "@workers/index";
+import { i18n } from "./i18n.svelte";
 
 export interface ImportTask
 {
@@ -88,6 +90,13 @@ class ProjectState
 
     private async readFile(file: File): Promise<{ name: string; text: string }[]>
     {
+        // Checked before reading: a huge file would freeze the page
+        const zip = /\.zip$/i.test(file.name);
+        if (file.size > (zip ? DEFAULT_ZIP_LIMITS.maxTotalBytes : MAX_FILE_BYTES))
+        {
+            this.failures.push({ id: this.mNextId++, fileName: file.name, message: i18n.t("import.tooLarge", { size: Math.round(file.size / 1048576) }) });
+            return [];
+        }
         const bytes = new Uint8Array(await file.arrayBuffer());
         if (!isZip(bytes) && !/\.zip$/i.test(file.name))
         {
@@ -101,7 +110,8 @@ class ProjectState
         }
         catch (error)
         {
-            const message = error instanceof ZipError ? error.message : String(error);
+            const message = error instanceof ZipError && error.code === "tooLarge" ? i18n.t("import.archiveTooLarge")
+                : error instanceof ZipError ? error.message : String(error);
             this.failures.push({ id: this.mNextId++, fileName: file.name, message });
             return [];
         }
@@ -228,6 +238,12 @@ class ProjectState
             },
             highlight: { from, to }
         };
+    }
+
+    /** A file that could not be opened, shown with the import failures. */
+    public reportFailure(fileName: string, message: string): void
+    {
+        this.failures.push({ id: this.mNextId++, fileName, message });
     }
 
     public dismissFailure(id: number): void

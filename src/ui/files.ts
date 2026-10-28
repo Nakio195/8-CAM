@@ -13,11 +13,22 @@ export function downloadText(fileName: string, text: string, type = "application
 }
 
 /** Text of the file chosen in a file input, which is cleared so the same file can be chosen again. */
-export async function readChosenFile(event: Event & { currentTarget: HTMLInputElement }): Promise<string | null>
+/** Largest settings file read (machine, post-processor, tool library), bytes: they weigh a few kilobytes. */
+export const MAX_SETTINGS_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Text of the file chosen in a file input, which is cleared so the same file can be chosen again. A file larger than
+ * maxBytes is not read (it would freeze the page): its size in megabytes is returned instead.
+ */
+export async function readChosenFile(event: Event & { currentTarget: HTMLInputElement }, maxBytes = MAX_SETTINGS_BYTES): Promise<{ text: string } | { tooLarge: number } | null>
 {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = "";
-    return file ? file.text() : null;
+    if (!file)
+    {
+        return null;
+    }
+    return file.size > maxBytes ? { tooLarge: Math.round(file.size / 1048576) } : { text: await file.text() };
 }
 
 /** Current date and time as written in saved files. */

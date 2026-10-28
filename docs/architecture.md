@@ -1218,3 +1218,68 @@ navigateur de chacun (un premier essai de réglages par utilisateur a été reti
   les garde. Bloc absent ou invalide : la CNC 3018 du code. Valeur actuelle : « SnapMaker » (400 x 400 mm,
   post-processeur Snapmaker Artisan).
 - Le test `tests/unit/project/defaults.test.ts` vérifie que le fichier livré est lu sans erreur.
+
+---
+
+## 24. Sécurité avant la mise en ligne
+
+L'application tourne entièrement dans le navigateur : pas de serveur applicatif, pas de compte, aucun fichier envoyé.
+Les risques viennent des **fichiers ouverts** (qui peuvent venir de n'importe qui) et de l'**hébergement**.
+
+### 24.1 Projets partagés (`.8cam.json`)
+
+- Tout le contenu est vérifié avant usage (`parseProject`) : épaisseur, couches, réglages d'export, chaque outil
+  (lu comme un outil importé puis `validateTool`), la machine (`importMachine`), le post-processeur
+  (`validateProfile`) et chaque opération (type et limites de chaque réglage, `src/project/checks.ts`). Une valeur
+  impossible refuse le projet entier, avec un message qui dit quelle partie est en cause.
+- **Rien de l'utilisateur n'est remplacé** : un outil, une machine ou un post-processeur identique à celui de
+  l'utilisateur (même id) est réutilisé ; s'il diffère, il est ajouté sous un nouvel id (`addProjectTools`,
+  `machineState.restore`). Les outils et profils fournis ne sont jamais modifiés.
+
+### 24.2 Tailles
+
+- Gerber ou perçage : 50 Mo par fichier. Projet : 200 Mo. Machine, post-processeur, bibliothèque : 10 Mo. La taille
+  est vérifiée avant la lecture.
+- Zip : 50 Mo par fichier décompressé, 200 Mo en tout, 1000 fichiers, zips imbriqués compris dans le même budget. La
+  décompression s'arrête dès que la limite est dépassée, quoi que l'archive annonce (« bombe zip »).
+
+### 24.3 Politique de sécurité du contenu
+
+La construction ajoute une balise `Content-Security-Policy` aux pages (`vite.config.ts`, `CONTENT_SECURITY_POLICY`) :
+tout vient du site, aucun script extérieur ni écrit dans la page ; styles en ligne permis (attributs `style` de
+Svelte). Pas en développement (le serveur de Vite injecte ses propres scripts). Vérifié : parcours complet sans
+violation.
+
+### 24.4 À régler sur l'hébergement
+
+Une balise ne peut pas porter ces protections, elles se règlent sur le serveur web :
+
+- **HTTPS** obligatoire (redirection de HTTP) ;
+- `Content-Security-Policy: frame-ancestors 'none'` (le site ne s'affiche pas dans le cadre d'un autre site) ;
+- `X-Content-Type-Options: nosniff` ;
+- `Referrer-Policy: no-referrer` ;
+- **accès en écriture au serveur protégé** : `defaults.json` choisit les réglages de tout le monde.
+
+Exemple Apache (`.htaccess` à côté de `index.html`) :
+
+```apache
+Header always set Content-Security-Policy "frame-ancestors 'none'"
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "no-referrer"
+```
+
+Exemple nginx :
+
+```nginx
+add_header Content-Security-Policy "frame-ancestors 'none'" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "no-referrer" always;
+```
+
+### 24.5 Restant
+
+- Un post-processeur importé peut écrire n'importe quel G-code : c'est son rôle. Garde-fous : liste des codes
+  interdits et vérification du G-code à l'export. N'importer que des profils de confiance.
+- `styleguide.html` est publiée avec l'application (page interne, sans danger).
+- Dépendances : `npm audit` sans vulnérabilité pour ce qui est publié ; 2 alertes faibles dans les outils de
+  développement (`deepmerge`), non publiés.

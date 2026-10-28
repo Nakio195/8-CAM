@@ -110,20 +110,39 @@ class MachineState
     }
 
     /**
-     * Machine and post-processor of a project file: the machine replaces the one with the same id or is added, and
-     * becomes the machine used; a user profile is added when it is not there yet.
+     * Machine and post-processor of a project file, which becomes the machine used. Nothing of the user is replaced (a
+     * project may come from anyone): a machine or profile equal to the user's one with the same id is that one, a
+     * different one is added under a new id.
      */
     public restore(machine: MachineProfile, profile: PostProfile | null): void
     {
-        if (profile && !this.profile(profile.id))
+        const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+        let profileId = machine.postProfileId;
+        if (profile)
         {
-            this.setProfiles([...this.userProfiles, { ...profile, builtIn: false }]);
+            const existing = this.profile(profile.id);
+            if (!existing || (!existing.builtIn && !same($state.snapshot(existing), { ...profile, builtIn: false })))
+            {
+                profileId = existing ? newId("post") : profile.id;
+                this.setProfiles([...this.userProfiles, { ...profile, id: profileId, builtIn: false }]);
+            }
+            else if (existing.builtIn)
+            {
+                // A project cannot change a built-in profile: its own copy is added
+                profileId = newId("post");
+                this.setProfiles([...this.userProfiles, { ...profile, id: profileId, builtIn: false }]);
+            }
         }
-        const restored = { ...DEFAULT_MACHINE, ...machine };
-        this.setMachines(this.machines.some((entry) => entry.id === restored.id)
-            ? this.machines.map((entry) => (entry.id === restored.id ? restored : entry))
-            : [...this.machines, restored]);
-        this.select(restored.id);
+        const restored = { ...DEFAULT_MACHINE, ...machine, postProfileId: profileId };
+        const existing = this.machines.find((entry) => entry.id === restored.id);
+        if (existing && same($state.snapshot(existing), restored))
+        {
+            this.select(existing.id);
+            return;
+        }
+        const added = existing ? { ...restored, id: newId("machine") } : restored;
+        this.setMachines([...this.machines, added]);
+        this.select(added.id);
     }
 
     public saveMachine(machine: MachineProfile): void

@@ -44,6 +44,31 @@ describe("zip reader", () =>
     });
 });
 
+describe("archive size limits", () =>
+{
+    const limits = { maxEntryBytes: 10_000, maxTotalBytes: 25_000, maxEntries: 5 };
+
+    it("stops a file that grows past the limit once decompressed, whatever the archive says", async () =>
+    {
+        // 1 MB of zeros compresses to about a kilobyte: a small "zip bomb"
+        const bomb = makeZip([{ path: "bomb.gbr", data: new Uint8Array(1_000_000) }]);
+        expect(bomb.length).toBeLessThan(5000);
+        await expect(readZip(bomb, limits)).rejects.toMatchObject({ code: "tooLarge" });
+        await expect(readZip(makeZip([{ path: "big.gbr", data: new Uint8Array(20_000), method: "store" }]), limits)).rejects.toMatchObject({ code: "tooLarge" });
+    });
+
+    it("limits the files together and their number, archives inside the archive included", async () =>
+    {
+        const file = (index: number): { path: string; data: Uint8Array } => ({ path: `f${index}.gbr`, data: new Uint8Array(9000).fill(65) });
+        await expect(readZip(makeZip([file(1), file(2), file(3)]), limits)).rejects.toMatchObject({ code: "tooLarge" });
+        await expect(readZip(makeZip([1, 2, 3, 4, 5, 6].map((index) => ({ path: `${index}.txt`, data: "x" }))), limits)).rejects.toMatchObject({ code: "tooLarge" });
+        const inner = makeZip([file(1), file(2)]);
+        const nested = makeZip([{ path: "a.zip", data: inner }, { path: "b.zip", data: inner }]);
+        await expect(unpackArchive(nested, limits)).rejects.toMatchObject({ code: "tooLarge" });
+        expect((await unpackArchive(makeZip([{ path: "a.zip", data: inner }]), limits)).skipped).toEqual(["a.zip/f1.gbr", "a.zip/f2.gbr"]);
+    });
+});
+
 describe("production archive", () =>
 {
     it("keeps the Gerber and drill files, lists the others", async () =>

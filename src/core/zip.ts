@@ -1,6 +1,7 @@
 // Reading of zip archives (production files are often sent zipped), without any dependency: the central directory
 // lists the entries, stored entries are copied, deflated ones go through the platform DecompressionStream.
 // Not supported, and reported as such: ZIP64 archives, encryption, compression methods other than stored and deflate.
+// Sizes are limited while decompressing, whatever the archive declares: a small "zip bomb" must not fill the memory.
 
 export interface ZipEntry
 {
@@ -9,7 +10,19 @@ export interface ZipEntry
     data: Uint8Array;
 }
 
-export type ZipErrorCode = "notZip" | "zip64" | "corrupt";
+export type ZipErrorCode = "notZip" | "zip64" | "corrupt" | "tooLarge";
+
+export interface ZipLimits
+{
+    /** Largest file once decompressed, bytes. */
+    maxEntryBytes: number;
+    /** All files together once decompressed, bytes. */
+    maxTotalBytes: number;
+    /** Files and folders listed. */
+    maxEntries: number;
+}
+
+export const DEFAULT_ZIP_LIMITS: Readonly<ZipLimits> = { maxEntryBytes: 50 * 1024 * 1024, maxTotalBytes: 200 * 1024 * 1024, maxEntries: 1000 };
 
 export class ZipError extends Error
 {
@@ -57,14 +70,39 @@ function findEnd(view: DataView): number
     throw new ZipError("notZip", "No zip end of central directory record");
 }
 
-async function inflate(data: Uint8Array): Promise<Uint8Array>
+/** Decompresses, stopping as soon as the output passes maxBytes. */
+async function inflate(data: Uint8Array, maxBytes: number, path: string): Promise<Uint8Array>
 {
-    const stream = new Blob([data as Uint8Array<ArrayBuffer>]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
-    return new Uint8Array(await new Response(stream).arrayBuffer());
+    const reader = new Blob([data as Uint8Array<ArrayBuffer>]).stream().pipeThrough(new DecompressionStream("deflate-raw")).getReader();
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    for (;;)
+    {
+        const { done, value } = await reader.read();
+        if (done)
+        {
+            break;
+        }
+        size += value.length;
+        if (size > maxBytes)
+        {
+            await reader.cancel();
+            throw new ZipError("tooLarge", `${path} is too large once decompressed`);
+        }
+        chunks.push(value);
+    }
+    const result = new Uint8Array(size);
+    let offset = 0;
+    for (const chunk of chunks)
+    {
+        result.set(chunk, offset);
+        offset += chunk.length;
+    }
+    return result;
 }
 
 /** Files of a zip archive, folders left out. */
-export async function readZip(bytes: Uint8Array): Promise<{ entries: ZipEntry[]; skipped: ZipSkipped[] }>
+export async function readZip(bytes: Uint8Array, limits: ZipLimits = DEFAULT_ZIP_LIMITS): Promise<{ entries: ZipEntry[]; skipped: ZipSkipped[] }>
 {
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     if (bytes.length < END_SIZE)
@@ -78,6 +116,11 @@ export async function readZip(bytes: Uint8Array): Promise<{ entries: ZipEntry[];
     {
         throw new ZipError("zip64", "ZIP64 archives are not supported");
     }
+    if (count > limits.maxEntries)
+    {
+        throw new ZipError("tooLarge", `More than ${limits.maxEntries} files in the archive`);
+    }
+    let total = 0;
     const entries: ZipEntry[] = [];
     const skipped: ZipSkipped[] = [];
     const decoder = new TextDecoder();
@@ -122,7 +165,14 @@ export async function readZip(bytes: Uint8Array): Promise<{ entries: ZipEntry[];
             throw new ZipError("corrupt", `${path} goes past the end of the archive`);
         }
         const raw = bytes.subarray(start, start + compressedSize);
-        entries.push({ path, data: method === 0 ? raw.slice() : await inflate(raw) });
+        const room = Math.min(limits.maxEntryBytes, limits.maxTotalBytes - total);
+        if (method === 0 && raw.length > room)
+        {
+            throw new ZipError("tooLarge", `${path} is too large`);
+        }
+        const data = method === 0 ? raw.slice() : await inflate(raw, room, path);
+        total += data.length;
+        entries.push({ path, data });
     }
     return { entries, skipped };
 }

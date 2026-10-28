@@ -951,5 +951,12 @@
   "export.simulationEmpty": "Write the G-code at the previous step first: the simulation reads it back as the machine will.",
   "import.archive": "{file}: {count} Gerber or drill file(s) imported.",
   "import.archiveEmpty": "{file}: no Gerber or drill file in the archive.",
-  "import.archiveSkipped": "{count} other file(s) left aside"
+  "import.archiveSkipped": "{count} other file(s) left aside",
+  "projectFile.error.invalidSettings": "This project holds invalid settings (thickness, layers or export): it was not opened.",
+  "projectFile.error.invalidTools": "This project holds an invalid tool (impossible size, depth or speed): it was not opened.",
+  "projectFile.error.invalidMachine": "The machine of this project is invalid (impossible travel or speeds): it was not opened.",
+  "projectFile.error.invalidPostProfile": "The post-processor of this project is invalid: it was not opened.",
+  "projectFile.error.invalidOperations": "This project holds an operation with invalid settings: it was not opened.",
+  "import.tooLarge": "File too large ({size} MB): it was not opened.",
+  "import.archiveTooLarge": "Archive too large once decompressed (over 200 MB, 50 MB per file or 1000 files): it was not opened."
 }

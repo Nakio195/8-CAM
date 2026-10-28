@@ -951,5 +951,12 @@
   "export.simulationEmpty": "Écrivez d'abord le G-code à l'étape précédente : la simulation le relit tel que la machine le lira.",
   "import.archive": "{file} : {count} fichier(s) Gerber ou de perçage importé(s).",
   "import.archiveEmpty": "{file} : aucun fichier Gerber ou de perçage dans l'archive.",
-  "import.archiveSkipped": "{count} autre(s) fichier(s) laissé(s) de côté"
+  "import.archiveSkipped": "{count} autre(s) fichier(s) laissé(s) de côté",
+  "projectFile.error.invalidSettings": "Ce projet contient des réglages invalides (épaisseur, couches ou export) : il n'a pas été ouvert.",
+  "projectFile.error.invalidTools": "Ce projet contient un outil invalide (dimension, profondeur ou vitesse impossible) : il n'a pas été ouvert.",
+  "projectFile.error.invalidMachine": "La machine de ce projet est invalide (courses ou vitesses impossibles) : il n'a pas été ouvert.",
+  "projectFile.error.invalidPostProfile": "Le post-processeur de ce projet est invalide : il n'a pas été ouvert.",
+  "projectFile.error.invalidOperations": "Ce projet contient une opération aux réglages invalides : il n'a pas été ouvert.",
+  "import.tooLarge": "Fichier trop gros ({size} Mo) : il n'a pas été ouvert.",
+  "import.archiveTooLarge": "Archive trop grosse une fois décompressée (plus de 200 Mo, 50 Mo par fichier ou 1000 fichiers) : elle n'a pas été ouverte."
 }

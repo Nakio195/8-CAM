@@ -6,6 +6,7 @@ import { DEFAULT_CUTOUT, type CutoutParams } from "@cam/cutout/index";
 import { DEFAULT_DRILLING, type DrillingParams } from "@cam/drilling/index";
 import { DEFAULT_ISOLATION, type IsolationParams } from "@cam/isolation/index";
 import { importMachine, type MachineProfile } from "@post/index";
+import { boolean, direction, integer, number, oneOf, type Check } from "./checks";
 
 /** Settings that do not depend on the board: depths follow its thickness, layers and tools the project. */
 export interface AppDefaults
@@ -38,14 +39,6 @@ export const BUILT_IN_DEFAULTS: Readonly<AppDefaults> = {
     },
     machine: null
 };
-
-type Check = (value: unknown) => boolean;
-
-const number = (min: number, max: number): Check => (value) => typeof value === "number" && Number.isFinite(value) && value >= min && value <= max;
-const integer = (min: number, max: number): Check => (value) => number(min, max)(value) && Number.isInteger(value);
-const oneOf = (...choices: readonly string[]): Check => (value) => typeof value === "string" && choices.includes(value);
-const boolean: Check = (value) => typeof value === "boolean";
-const direction = oneOf("climb", "conventional");
 
 /** Values accepted for each setting of the file. */
 const CHECKS: { [Kind in "isolation" | "drilling" | "cutout"]: Record<keyof AppDefaults[Kind], Check> } = {
