@@ -20,6 +20,8 @@ class HelpState
 {
     public tip: ShownTip | null = $state(null);
     public panelOpen = $state(false);
+    /** Part of the panel shown: the step by step guide or the illustrated glossary. */
+    public panelView: "guide" | "glossary" = $state("glossary");
     /** Topic the panel scrolls to when it opens. */
     public panelTopic: string | null = $state(null);
 
@@ -76,9 +78,20 @@ class HelpState
         }
     }
 
+    /** Glossary opened at a topic (or at the top), from a tooltip "learn more" link or the header button. */
     public openPanel(topic: string | null = null): void
     {
         this.panelTopic = topic;
+        this.panelView = "glossary";
+        this.panelOpen = true;
+        this.hide(true);
+    }
+
+    /** The "Ma première carte" guide. */
+    public openGuide(): void
+    {
+        this.panelTopic = null;
+        this.panelView = "guide";
         this.panelOpen = true;
         this.hide(true);
     }

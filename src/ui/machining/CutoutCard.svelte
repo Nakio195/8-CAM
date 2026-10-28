@@ -2,11 +2,11 @@
     import { untrack } from "svelte";
     import { recommendCutout } from "@cam/analysis/index";
     import type { CutoutParams } from "@cam/cutout/index";
-    import { DEFAULT_RAPID_FEED } from "@cam/toolpath/index";
     import type { CutoutOperation } from "@project/index";
     import { help } from "../help";
     import { help as helpState } from "../state/help.svelte";
     import { i18n } from "../state/i18n.svelte";
+    import { machineState } from "../state/machine.svelte";
     import { machining } from "../state/machining.svelte";
     import { project } from "../state/project.svelte";
     import { toolLibrary } from "../state/tools.svelte";
@@ -195,7 +195,7 @@
                 onclick={(event) => helpState.show("estimatedTime", event.currentTarget, true)}>
                 <Sticker tone="info" icon="clock">{formatDuration(result.duration, t)}</Sticker>
             </button>
-            <p class="note">{t("machining.timeNote", { rapid: DEFAULT_RAPID_FEED })}</p>
+            <p class="note">{t("machining.timeNote", { rapid: machineState.active.rapidFeed })}</p>
         </div>
     {/if}
 </article>

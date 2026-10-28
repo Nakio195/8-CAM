@@ -2,12 +2,12 @@
     import { untrack } from "svelte";
     import { DRILL_TOLERANCE_MM, DRILL_TOLERANCE_RATIO } from "@cam/analysis/index";
     import type { DrillingParams } from "@cam/drilling/index";
-    import { DEFAULT_RAPID_FEED } from "@cam/toolpath/index";
     import { INTERNAL_UNITS_PER_MM } from "@core/units/index";
     import type { DrillingOperation } from "@project/index";
     import { help } from "../help";
     import { help as helpState } from "../state/help.svelte";
     import { i18n } from "../state/i18n.svelte";
+    import { machineState } from "../state/machine.svelte";
     import { diameterKey, machining } from "../state/machining.svelte";
     import { project } from "../state/project.svelte";
     import { toolLibrary } from "../state/tools.svelte";
@@ -224,7 +224,7 @@
                 onclick={(event) => helpState.show("estimatedTime", event.currentTarget, true)}>
                 <Sticker tone="info" icon="clock">{formatDuration(result.duration, t)}</Sticker>
             </button>
-            <p class="note">{t("machining.timeNote", { rapid: DEFAULT_RAPID_FEED })}</p>
+            <p class="note">{t("machining.timeNote", { rapid: machineState.active.rapidFeed })}</p>
             <label class="check" use:help={"showFileOrder"}>
                 <input type="checkbox" checked={operation.showFileOrder}
                     onchange={(event) => machining.updateDrilling(operation.id, { showFileOrder: event.currentTarget.checked })} />

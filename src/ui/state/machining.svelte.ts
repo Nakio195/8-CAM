@@ -21,6 +21,7 @@ import {
     type ProjectLayer
 } from "@project/index";
 import { automaticTabs, ImportCancelledError, runCutout, startDrilling, startIsolation, type WorkerJob } from "@workers/index";
+import { machineState } from "./machine.svelte";
 import { project } from "./project.svelte";
 import { toolLibrary } from "./tools.svelte";
 
@@ -191,7 +192,7 @@ class MachiningState
         }
         this.jobs[id]?.cancel();
         this.errors = without(this.errors, id);
-        const job = startDrilling({ sets: Object.values(sets), params: $state.snapshot(operation.params) });
+        const job = startDrilling({ sets: Object.values(sets), params: $state.snapshot(operation.params), rapidFeed: machineState.active.rapidFeed });
         this.jobs[id] = { fraction: 0, cancel: job.cancel };
         try
         {
@@ -340,7 +341,10 @@ class MachiningState
         {
             return null;
         }
-        return { outline: outline?.file.geometry ?? null, box, tool: $state.snapshot(tool), params: { ...operation.params }, tabs: operation.tabs };
+        return {
+            outline: outline?.file.geometry ?? null, box, tool: $state.snapshot(tool), params: { ...operation.params }, tabs: operation.tabs,
+            rapidFeed: machineState.active.rapidFeed
+        };
     }
 
     private computeCutout(operation: CutoutOperation): CutoutOperation
@@ -458,7 +462,7 @@ class MachiningState
         this.errors = without(this.errors, id);
         const job = startIsolation(
             // Plain data for the worker: the tool and parameters may be reactive objects
-            { copper: layer.file.geometry, spots: layer.file.analysis.spots, tool: $state.snapshot(tool), params: $state.snapshot(operation.params) },
+            { copper: layer.file.geometry, spots: layer.file.analysis.spots, tool: $state.snapshot(tool), params: $state.snapshot(operation.params), rapidFeed: machineState.active.rapidFeed },
             (fraction) =>
             {
                 const running = this.jobs[id];
@@ -500,7 +504,7 @@ class MachiningState
         const analysis = layer.file.analysis;
         // One worker per tool: the comparisons run in parallel
         this.mComparisonJobs = tools.map((tool) => startIsolation({
-            copper: layer.file.geometry, spots: analysis.spots, tool: $state.snapshot(tool), params: { ...params }
+            copper: layer.file.geometry, spots: analysis.spots, tool: $state.snapshot(tool), params: { ...params }, rapidFeed: machineState.active.rapidFeed
         }));
         void Promise.all(this.mComparisonJobs.map((job, index) => job.promise.then((result) =>
         {

@@ -30,7 +30,7 @@ export function runCutout(request: CutoutRequestData): CutoutOutput
     const contour = cutoutContour(edge, request.box, request.params, request.tool.diameter);
     const plan = planCutout(contour, request.tabs, request.params, request.tool);
     const moves = cutoutMoves(plan, request.tool);
-    const statistics = moveStatistics(moves, DEFAULT_RAPID_FEED, { x: 0, y: 0, z: request.tool.safeZ });
+    const statistics = moveStatistics(moves, request.rapidFeed ?? DEFAULT_RAPID_FEED, { x: 0, y: 0, z: request.tool.safeZ });
     return {
         tool: request.tool,
         fromOutline: edge !== null,

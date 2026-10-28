@@ -1,9 +1,9 @@
 <script lang="ts">
     import { DEFAULT_ISOLATION } from "@cam/isolation/index";
-    import { DEFAULT_RAPID_FEED } from "@cam/toolpath/index";
     import { toolWidth } from "@cam/tools/index";
     import { help } from "../help";
     import { i18n } from "../state/i18n.svelte";
+    import { machineState } from "../state/machine.svelte";
     import { COMPARISON_LIMIT, machining } from "../state/machining.svelte";
     import { project } from "../state/project.svelte";
     import { toolLibrary } from "../state/tools.svelte";
@@ -102,7 +102,7 @@
             <Callout tone="error">{t("machining.failed", { message: comparison.error })}</Callout>
         {/if}
         {#if comparison && comparedLayer}
-            <p class="note">{t("machining.timeNote", { rapid: DEFAULT_RAPID_FEED })}</p>
+            <p class="note">{t("machining.timeNote", { rapid: machineState.active.rapidFeed })}</p>
             <div class="columns" style:--columns={comparison.toolIds.length}>
                 {#each comparison.toolIds as toolId (toolId)}
                     {@const tool = toolLibrary.find(toolId)}

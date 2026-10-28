@@ -6,7 +6,7 @@
 
     // Home screen when no board is loaded. Brand layout "jeu de moitiés" (specification 6.13): an axis splits the
     // space into two equal halves, identity on one side, actions on the other. The -10° slant is allowed here only.
-    let { onOpen, onExample }: { onOpen: () => void; onExample: () => void } = $props();
+    let { onOpen, onExample, onGuide }: { onOpen: () => void; onExample: () => void; onGuide: () => void } = $props();
 
     const t = i18n.t;
 </script>
@@ -25,6 +25,7 @@
             <div class="actions">
                 <Button variant="primary" icon="open" help="fileOpen" onclick={onOpen}>{t("header.open")}</Button>
                 <Button variant="secondary" icon="board" help="fileExample" onclick={onExample}>{t("header.example")}</Button>
+                <Button variant="ghost" icon="book" help="guideOpen" onclick={onGuide}>{t("guide.open")}</Button>
             </div>
             <p class="formats">{t("empty.formats")}</p>
             <p class="drop">

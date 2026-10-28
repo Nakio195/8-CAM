@@ -61,3 +61,16 @@ describe("help texts", () =>
         expect(orphans).toEqual([]);
     });
 });
+
+describe("English catalogue", () =>
+{
+    it("holds no French left untranslated", () =>
+    {
+        // Accents and the most common French words; brand and tool names are allowed
+        const french = /[éèêàùçôîïœ]|\b(le|la|les|des|une|est|pour|avec|dans|sur|outil|carte|fichier|trou)\b/i;
+        const leftovers = Object.entries(en)
+            .filter(([, value]) => french.test(value.replace("Drôme", "").replace("maïs", "")))
+            .map(([key]) => key);
+        expect(leftovers).toEqual([]);
+    });
+});

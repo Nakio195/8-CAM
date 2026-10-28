@@ -2,13 +2,13 @@
     import { untrack } from "svelte";
     import { recommendIsolation, type IsolationStatus } from "@cam/analysis/index";
     import type { IsolationParams } from "@cam/isolation/index";
-    import { DEFAULT_RAPID_FEED } from "@cam/toolpath/index";
     import { toolWidth } from "@cam/tools/index";
     import { INTERNAL_UNITS_PER_MM } from "@core/units/index";
     import type { IsolationOperation } from "@project/index";
     import { help } from "../help";
     import { help as helpState } from "../state/help.svelte";
     import { i18n } from "../state/i18n.svelte";
+    import { machineState } from "../state/machine.svelte";
     import { machining } from "../state/machining.svelte";
     import { project } from "../state/project.svelte";
     import { toolLibrary } from "../state/tools.svelte";
@@ -177,7 +177,7 @@
                 onclick={(event) => helpState.show("estimatedTime", event.currentTarget, true)}>
                 <Sticker tone="info" icon="clock">{formatDuration(result.duration, t)}</Sticker>
             </button>
-            <p class="note">{t("machining.timeNote", { rapid: DEFAULT_RAPID_FEED })}</p>
+            <p class="note">{t("machining.timeNote", { rapid: machineState.active.rapidFeed })}</p>
             {#if result.zones.length === 0}
                 <Callout tone="success">{t("machining.zonesNone")}</Callout>
             {:else}

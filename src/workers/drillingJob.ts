@@ -44,7 +44,7 @@ export function runDrilling(request: DrillingRequestData): DrillingOutput
     const start = performance.now();
     const plan = planDrilling(request.sets, ORIGIN);
     const moves = drillingMoves(plan, request.params);
-    const statistics = moveStatistics(moves, DEFAULT_RAPID_FEED, { ...ORIGIN, z: plan.runs[0]?.tool.safeZ ?? 0 });
+    const statistics = moveStatistics(moves, request.rapidFeed ?? DEFAULT_RAPID_FEED, { ...ORIGIN, z: plan.runs[0]?.tool.safeZ ?? 0 });
     // Each tool has its own moves (exported as its own operation) and heights: its moves are checked against them
     const runMoves = plan.runs.map((run) => drillingMoves({ ...plan, runs: [run] }, request.params));
     const safety = plan.runs.reduce((count, run, index) => count + checkMoves(runMoves[index] ?? [], run.tool.travelZ, run.tool.safeZ).length, 0);

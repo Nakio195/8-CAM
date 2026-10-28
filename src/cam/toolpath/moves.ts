@@ -1,5 +1,5 @@
 // Machine-independent toolpath (specification 6.7): every operation produces a list of moves, translated into G-code
-// by a post-processor (J9). Coordinates in millimetres, Z = 0 at the copper surface, positive upwards.
+// by a post-processor (src/post). Coordinates in millimetres, Z = 0 at the copper surface, positive upwards.
 
 export type Move =
     | { kind: "rapid"; x?: number; y?: number; z?: number }
@@ -18,8 +18,8 @@ export interface MachinePosition
 }
 
 /**
- * Rapid speed assumed for time estimates until machine profiles exist (J9): a cautious value for a 3018 CNC,
- * mm/min, the same in XY and Z.
+ * Rapid speed assumed for time estimates when no machine profile is given (the user interface passes the rapid speed
+ * of the active machine): a cautious value for a 3018 CNC, mm/min, the same in XY and Z.
  */
 export const DEFAULT_RAPID_FEED = 1000;
 

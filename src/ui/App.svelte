@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, untrack } from "svelte";
     import { APP_VERSION } from "@core/index";
     import logoUrl from "../../assets/brand/logo-generique-horizontal.svg";
     import { LOCALES, type Locale } from "./i18n";
@@ -28,6 +28,7 @@
     import { cutoutOverlays, drillingOverlays, toolpathOverlays } from "./machining/overlays";
     import { exportState } from "./state/export.svelte";
     import { openFiles as openDroppedFiles } from "./state/projectFile.svelte";
+    import { navigation } from "./state/navigation.svelte";
     import { machining } from "./state/machining.svelte";
 
     const t = i18n.t;
@@ -35,7 +36,6 @@
     let fileInput: HTMLInputElement;
     let dragDepth = $state(0);
     let aboutOpen = $state(false);
-    let sidebarTab = $state("project");
 
     function openFiles(): void
     {
@@ -97,6 +97,13 @@
             void openDroppedFiles(files);
         }
     }
+
+    // Tabs opened by the user count as visited for the first board guide
+    $effect(() =>
+    {
+        const tab = navigation.tab;
+        untrack(() => (navigation.visited[tab] = true));
+    });
 
     onMount(() =>
     {
@@ -181,21 +188,21 @@
 
     <main>
         <aside>
-            <SidebarTabs label={t("tabs.label")} bind:active={sidebarTab} tabs={[
+            <SidebarTabs label={t("tabs.label")} bind:active={navigation.tab} tabs={[
                 { id: "project", label: t("tabs.project"), help: "tabProject" },
                 { id: "tools", label: t("tabs.tools"), help: "tabTools" },
                 { id: "analysis", label: t("tabs.analysis"), help: "tabAnalysis" },
                 { id: "machining", label: t("tabs.machining"), help: "tabMachining" },
                 { id: "machine", label: t("tabs.machine"), help: "tabMachine" }
             ]} />
-            <div class="tab-panel" id={`panel-${sidebarTab}`} role="tabpanel" aria-labelledby={`tab-${sidebarTab}`}>
-                {#if sidebarTab === "project"}
+            <div class="tab-panel" id={`panel-${navigation.tab}`} role="tabpanel" aria-labelledby={`tab-${navigation.tab}`}>
+                {#if navigation.tab === "project"}
                     <LayerPanel />
-                {:else if sidebarTab === "tools"}
+                {:else if navigation.tab === "tools"}
                     <ToolLibraryPanel />
-                {:else if sidebarTab === "analysis"}
+                {:else if navigation.tab === "analysis"}
                     <AnalysisPanel />
-                {:else if sidebarTab === "machining"}
+                {:else if navigation.tab === "machining"}
                     <MachiningPanel />
                 {:else}
                     <MachinePanel />
@@ -206,7 +213,7 @@
         <section class="viewport">
             <CanvasView layers={project.layers} fitRequest={project.fitRequest} focus={project.focus} {overlays} {pick} />
             {#if showEmpty}
-                <EmptyState onOpen={openFiles} onExample={() => project.loadExample()} />
+                <EmptyState onOpen={openFiles} onExample={() => project.loadExample()} onGuide={() => helpState.openGuide()} />
             {/if}
             <HelpPanel />
         </section>

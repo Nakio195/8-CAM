@@ -153,6 +153,8 @@ export interface CutoutRequestData
     tool: Tool;
     params: CutoutParams;
     tabs: Point[];
+    /** Rapid speed of the machine for the time estimate, mm/min (DEFAULT_RAPID_FEED when not given). */
+    rapidFeed?: number;
 }
 
 export function createIsolation(id: string, layerId: string, toolId: string): IsolationOperation
@@ -180,6 +182,8 @@ export interface DrillingRequestData
 {
     sets: DrillingSetData[];
     params: DrillingParams;
+    /** Rapid speed of the machine for the time estimate, mm/min (DEFAULT_RAPID_FEED when not given). */
+    rapidFeed?: number;
 }
 
 /** What the CAM worker needs to compute an isolation. */
@@ -189,4 +193,6 @@ export interface IsolationRequestData
     spots: ClearanceSpot[];
     tool: Tool;
     params: IsolationParams;
+    /** Rapid speed of the machine for the time estimate, mm/min (DEFAULT_RAPID_FEED when not given). */
+    rapidFeed?: number;
 }

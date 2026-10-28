@@ -1,5 +1,5 @@
 // Project layers: one per imported file, with display settings. Pure functions returning new arrays,
-// so the user interface can keep them in reactive state and undo / redo can come later (J10).
+// so the user interface can keep them in reactive state.
 // The array order is the drawing order: the first layer is drawn first, i.e. below the others.
 
 import { emptyBBox, isEmptyBBox, mergeBBoxes, type BBox } from "@core/geometry/index";

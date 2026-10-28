@@ -5,13 +5,29 @@
     import { i18n } from "../state/i18n.svelte";
     import Icon from "../components/Icon.svelte";
     import { ILLUSTRATIONS } from "../illustrations/registry";
+    import FirstBoardGuide from "./FirstBoardGuide.svelte";
+    import { helpAction } from "./helpAction";
     import { HELP_GROUPS, HELP_TOPICS } from "./topics";
 
-    // Side help panel (specification 6.11): every topic grouped by theme, opened at the requested one.
-    // The illustrated glossary and the "Ma première carte" guide are completed in milestone J11.
+    // Side help panel (specification 6.11): the "Ma première carte" guide, and the illustrated glossary of every topic
+    // grouped by theme, opened at the requested one, with a search.
 
     const t = i18n.t;
     let panel: HTMLElement | undefined = $state();
+    let search = $state("");
+
+    /** Accents and case do not matter when searching: "decalage" finds "Décalage". */
+    function plain(value: string): string
+    {
+        return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    }
+
+    let query = $derived(plain(search.trim()));
+    let matches = $derived(query === ""
+        ? null
+        : new Set(HELP_TOPICS.filter((topic) =>
+            ["title", "body", "advice", "warning"].some((part) => plain(text(`help.${topic.id}.${part}`) ?? "").includes(query)))
+            .map((topic) => topic.id)));
 
     function text(key: string): string | null
     {
@@ -43,12 +59,28 @@
                 <Icon name="close" />
             </button>
         </header>
-        <div class="scroll">
+        <div class="views" role="tablist" aria-label={t("help.panelTitle")}>
+            <button type="button" role="tab" aria-selected={help.panelView === "guide"} use:helpAction={"guideOpen"}
+                onclick={() => (help.panelView = "guide")}>{t("guide.title")}</button>
+            <button type="button" role="tab" aria-selected={help.panelView === "glossary"} use:helpAction={"glossary"}
+                onclick={() => (help.panelView = "glossary")}>{t("help.glossary")}</button>
+        </div>
+        <div class="scroll" role="tabpanel">
+            {#if help.panelView === "guide"}
+                <FirstBoardGuide />
+            {:else}
             <p class="intro">{t("help.panelIntro")}</p>
+            <input class="search" type="search" bind:value={search} placeholder={t("help.searchPlaceholder")}
+                aria-label={t("help.search")} use:helpAction={"helpSearch"} />
+            {#if matches && matches.size === 0}
+                <p class="intro">{t("help.noResult")}</p>
+            {/if}
             {#each HELP_GROUPS as group (group)}
+                {@const topics = HELP_TOPICS.filter((topic) => topic.group === group && (!matches || matches.has(topic.id)))}
+                {#if topics.length > 0}
                 <section aria-labelledby={`help-group-${group}`}>
                     <h3 id={`help-group-${group}`}>{t(`help.group.${group}`)}</h3>
-                    {#each HELP_TOPICS.filter((topic) => topic.group === group) as topic (topic.id)}
+                    {#each topics as topic (topic.id)}
                         <article id={`help-topic-${topic.id}`} tabindex="-1" class:current={help.panelTopic === topic.id}>
                             <h4>{text(`help.${topic.id}.title`)}</h4>
                             <p>{text(`help.${topic.id}.body`)}</p>
@@ -74,7 +106,9 @@
                         </article>
                     {/each}
                 </section>
+                {/if}
             {/each}
+            {/if}
         </div>
     </div>
 {/if}
@@ -130,6 +164,43 @@
         border-radius: 4px;
         background: transparent;
         cursor: pointer;
+    }
+
+    .views
+    {
+        display: flex;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .views button
+    {
+        flex: 1;
+        padding: 8px 6px 6px;
+        border: none;
+        border-bottom: 3px solid transparent;
+        background: none;
+        color: var(--text);
+        font-family: var(--font-title);
+        font-size: 17px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+
+    .views button[aria-selected="true"]
+    {
+        border-bottom-color: var(--brand-rouge);
+    }
+
+    .search
+    {
+        width: 100%;
+        margin-bottom: 8px;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        color: var(--text);
     }
 
     .scroll

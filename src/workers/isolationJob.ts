@@ -93,7 +93,7 @@ function toOutput(request: IsolationRequestData, result: IsolationResult, start:
         offsets: result.offsets,
         cutLength: result.cutLength,
         travelLength: result.travelLength,
-        duration: estimateDuration(result.segments, { ...request.tool, toolId: request.tool.id }, DEFAULT_RAPID_FEED),
+        duration: estimateDuration(result.segments, { ...request.tool, toolId: request.tool.id }, request.rapidFeed ?? DEFAULT_RAPID_FEED),
         computeMs: performance.now() - start
     };
 }
