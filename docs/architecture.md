@@ -1195,18 +1195,3 @@ Les fichiers de fabrication arrivent souvent dans un zip. On peut glisser ou ouv
   comme un échec d'import.
 - Tests : un petit écrivain de zip (`tests/helpers/zip.ts`) fabrique les archives, dont une archive de fabrication avec
   un zip imbriqué.
-
----
-
-## 23. Réglages par défaut des opérations
-
-- **Isolation en avalant (climb) par défaut**, comme FlatCAM (`DEFAULT_ISOLATION.direction`). Le détourage et le
-  perçage gardent leurs réglages d'origine.
-- **« Utiliser par défaut »** en bas de chaque carte d'opération : les réglages de cette opération deviennent ceux des
-  prochaines opérations du même type. Gardés : isolation (passes, recouvrement, sens, passes groupées, décalage),
-  perçage (cycle, profondeur de débourrage, temporisation), détourage (mode, sens, nombre, largeur et hauteur des
-  attaches). Les profondeurs, couches et outils restent choisis selon la carte.
-- Une carte qui a déjà ces réglages l'indique (« Réglages par défaut ») ; « Revenir aux réglages d'origine » efface
-  les réglages gardés pour ce type, sans toucher aux opérations existantes.
-- Stockage dans ce navigateur (`localStorage`, clé `8cam.defaults`), relu par `parseDefaults` qui écarte toute valeur
-  inconnue ou hors limites (`src/project/defaults.ts`, testé).

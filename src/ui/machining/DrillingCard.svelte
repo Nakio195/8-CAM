@@ -17,7 +17,6 @@
     import NumberField from "../components/base/NumberField.svelte";
     import Sticker from "../components/base/Sticker.svelte";
     import { toolLabel } from "../tools/labels";
-    import DefaultsBar from "./DefaultsBar.svelte";
     import { formatDuration } from "./format";
 
     let { operation }: { operation: DrillingOperation } = $props();
@@ -235,7 +234,6 @@
     {:else if !job && sizes.length > 0}
         <Callout tone="info">{t("machining.stale")}</Callout>
     {/if}
-    <DefaultsBar kind="drilling" values={operation.params} />
 </article>
 
 <style>

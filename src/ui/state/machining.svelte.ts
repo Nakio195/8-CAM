@@ -22,7 +22,6 @@ import {
 } from "@project/index";
 import { automaticTabs, ImportCancelledError, runCutout, startDrilling, startIsolation, type WorkerJob } from "@workers/index";
 import { machineState } from "./machine.svelte";
-import { defaults } from "./defaults.svelte";
 import { project } from "./project.svelte";
 import { toolLibrary } from "./tools.svelte";
 
@@ -149,9 +148,8 @@ class MachiningState
         {
             assignments[diameterKey(entry.hole.diameter)] = entry.tool?.id ?? null;
         }
-        const created = createDrilling(`drilling-${nextOperation++}`, layers.map((layer) => layer.id), assignments,
+        const operation = createDrilling(`drilling-${nextOperation++}`, layers.map((layer) => layer.id), assignments,
             roundDepth(project.thickness + DRILL_EXTRA_DEPTH));
-        const operation = { ...created, params: { ...created.params, ...defaults.values.drilling } };
         this.drillings = [...this.drillings, operation];
         void this.runDrilling(operation.id);
         return operation;
@@ -235,7 +233,6 @@ class MachiningState
             return null;
         }
         const outline = this.outlineLayers()[0] ?? null;
-        const { tabCount = 4, ...cutoutDefaults } = defaults.values.cutout ?? {};
         const operation: CutoutOperation = {
             id: `cutout-${nextOperation++}`,
             kind: "cutout",
@@ -246,10 +243,9 @@ class MachiningState
                 // Without outline the cut goes around the copper: keep some board around it
                 margin: outline ? 0 : BOUNDING_BOX_MARGIN,
                 thickness: project.thickness,
-                depth: roundDepth(project.thickness + CUTOUT_DEPTH_MARGIN),
-                ...cutoutDefaults
+                depth: roundDepth(project.thickness + CUTOUT_DEPTH_MARGIN)
             },
-            tabCount,
+            tabCount: 4,
             tabs: [],
             result: null,
             visible: true
@@ -432,8 +428,7 @@ class MachiningState
         {
             return null;
         }
-        const created = createIsolation(`isolation-${nextOperation++}`, layer.id, tool.id);
-        const operation = { ...created, params: { ...created.params, ...defaults.values.isolation } };
+        const operation = createIsolation(`isolation-${nextOperation++}`, layer.id, tool.id);
         this.operations = [...this.operations, operation];
         void this.run(operation.id);
         return operation;

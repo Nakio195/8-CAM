@@ -16,7 +16,6 @@
     import NumberField from "../components/base/NumberField.svelte";
     import Sticker from "../components/base/Sticker.svelte";
     import { toolLabel } from "../tools/labels";
-    import DefaultsBar from "./DefaultsBar.svelte";
     import { formatDuration } from "./format";
 
     let { operation }: { operation: CutoutOperation } = $props();
@@ -199,7 +198,6 @@
             <p class="note">{t("machining.timeNote", { rapid: machineState.active.rapidFeed })}</p>
         </div>
     {/if}
-    <DefaultsBar kind="cutout" values={{ ...operation.params, tabCount: operation.tabCount }} />
 </article>
 
 <style>

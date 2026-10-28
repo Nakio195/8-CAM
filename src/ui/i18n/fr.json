@@ -191,7 +191,7 @@
   "help.overlap.warning": "À 0 %, un fil de cuivre peut rester entre deux passes.",
   "help.millingDirection.title": "Sens de coupe",
   "help.millingDirection.body": "En avalant (climb), l'outil tourne dans le sens d'avance : meilleure finition sur machine rigide. En opposition (conventional) : plus tolérant au jeu mécanique.",
-  "help.millingDirection.advice": "En avalant par défaut pour l'isolation (comme FlatCAM) ; passez en opposition si la machine a du jeu.",
+  "help.millingDirection.advice": "Opposition conseillée sur CNC hobby à jeu.",
   "help.peck.title": "Débourrage (peck)",
   "help.peck.body": "Profondeur percée à chaque descente en mode débourrage. Entre deux descentes, le foret ressort du trou pour évacuer les copeaux, puis redescend en avance lente depuis 0,5 mm au-dessus de la carte.",
   "help.peck.advice": "0,5 mm en général ; moins pour les forets de moins de 0,6 mm.",
@@ -951,13 +951,5 @@
   "export.simulationEmpty": "Écrivez d'abord le G-code à l'étape précédente : la simulation le relit tel que la machine le lira.",
   "import.archive": "{file} : {count} fichier(s) Gerber ou de perçage importé(s).",
   "import.archiveEmpty": "{file} : aucun fichier Gerber ou de perçage dans l'archive.",
-  "import.archiveSkipped": "{count} autre(s) fichier(s) laissé(s) de côté",
-  "defaults.save": "Utiliser par défaut",
-  "defaults.current": "Réglages par défaut",
-  "defaults.reset": "Revenir aux réglages d'origine",
-  "help.operationDefaults.title": "Utiliser par défaut",
-  "help.operationDefaults.body": "Garde les réglages de cette opération (passes, recouvrement, sens d'usinage, cycle, attaches…) pour les prochaines opérations du même type. Les profondeurs, les couches et l'outil restent choisis selon la carte. Mémorisé dans ce navigateur.",
-  "help.operationDefaults.advice": "Réglez une opération comme vous l'aimez sur une carte d'essai, puis gardez-la par défaut.",
-  "help.operationDefaultsReset.title": "Revenir aux réglages d'origine",
-  "help.operationDefaultsReset.body": "Les prochaines opérations de ce type reprennent les réglages fournis avec 8-CAM. Les opérations déjà créées ne changent pas."
+  "import.archiveSkipped": "{count} autre(s) fichier(s) laissé(s) de côté"
 }
