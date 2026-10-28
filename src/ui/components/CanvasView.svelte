@@ -22,13 +22,24 @@
     import { help as helpState } from "../state/help.svelte";
     import IconButton from "./base/IconButton.svelte";
 
-    let { layers, fitRequest, focus = null, overlays = [] }: {
+    let { layers, fitRequest, focus = null, overlays = [], pick = null }: {
         layers: ProjectLayer[];
         fitRequest: number;
         focus?: FocusRequest | null;
         /** Drawn above the layers: toolpaths, non isolated areas. */
         overlays?: RenderLayer[];
+        /**
+         * Clicks on the board are sent to onPick (point and tolerance in mm) instead of only panning: used to place
+         * cutout tabs. A drag still pans the view.
+         */
+        pick?: { hint: string; onPick: (point: ScreenPoint, tolerance: number) => void } | null;
     } = $props();
+
+    /** A press that moves less than this (px) before release is a click. */
+    const CLICK_SLOP = 4;
+    /** Clicks this close (px) to something hit it. */
+    const PICK_TOLERANCE = 10;
+    let press: ScreenPoint | null = null;
 
     const t = i18n.t;
 
@@ -143,6 +154,7 @@
             }
             return;
         }
+        press = event.button === 0 ? point : null;
         if (event.button === 0 || event.button === 1)
         {
             drag = { x: event.clientX, y: event.clientY, pointer: event.pointerId };
@@ -169,6 +181,12 @@
 
     function onPointerUp(event: PointerEvent): void
     {
+        const point = localPoint(event);
+        if (pick && press && event.type === "pointerup" && Math.hypot(point.x - press.x, point.y - press.y) < CLICK_SLOP)
+        {
+            pick.onPick(screenToWorld(view, point.x, point.y), PICK_TOLERANCE / view.scale);
+        }
+        press = null;
         if (drag && drag.pointer === event.pointerId)
         {
             drag = null;
@@ -363,6 +381,7 @@
         <canvas
             bind:this={canvas}
             class:measuring
+            class:picking={pick !== null && !measuring}
             tabindex="0"
             aria-label={t("view.canvasLabel")}
             onpointerdown={onPointerDown}
@@ -375,6 +394,8 @@
         ></canvas>
         {#if measuring}
             <p class="hint" role="status">{t("view.measureHint")}</p>
+        {:else if pick}
+            <p class="hint" role="status">{pick.hint}</p>
         {/if}
     </div>
 
@@ -479,7 +500,8 @@
         cursor: grabbing;
     }
 
-    canvas.measuring
+    canvas.measuring,
+    canvas.picking
     {
         cursor: crosshair;
     }

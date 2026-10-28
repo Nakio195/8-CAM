@@ -1,10 +1,11 @@
 // Machining operations of a project and their computed results (what the CAM worker sends back).
 
 import type { ClearanceSpot } from "@cam/analysis/index";
+import type { CutoutIssueCode, CutoutParams } from "@cam/cutout/index";
 import { DEFAULT_DRILLING, type DrillingIssue, type DrillingParams, type DrillMethod, type RouteDistances } from "@cam/drilling/index";
 import { DEFAULT_ISOLATION, type IsolationParams } from "@cam/isolation/index";
 import type { Tool } from "@cam/tools/index";
-import type { Path, PackedPolygons, Point } from "@core/geometry/index";
+import type { BBox, Path, PackedPolygons, Point } from "@core/geometry/index";
 
 export interface IsolationZoneOutput
 {
@@ -96,7 +97,58 @@ export interface DrillingOperation
     showFileOrder: boolean;
 }
 
-export type Operation = IsolationOperation | DrillingOperation;
+export interface CutoutOutput
+{
+    /** Tool as it was when computing. */
+    tool: Tool;
+    /** False when the cut goes around the copper because no outline layer was chosen. */
+    fromOutline: boolean;
+    /** Closed path of the tool centre (one ring). */
+    contour: PackedPolygons;
+    /** One small rectangle across the path at each tab, for display. */
+    tabMarks: PackedPolygons;
+    /** Tab centres on the contour, internal units. */
+    tabs: Point[];
+    passes: number;
+    /** Length of one lap, mm. */
+    lapLength: number;
+    /** Estimated machining time, seconds. */
+    duration: number;
+    issues: CutoutIssueCode[];
+    /** Machine safety problems found in the generated moves (none expected). */
+    safetyIssues: number;
+    computeMs: number;
+}
+
+export interface CutoutOperation
+{
+    id: string;
+    kind: "cutout";
+    /** Outline layer giving the board edge; null: around the copper with a margin. */
+    outlineLayerId: string | null;
+    toolId: string;
+    params: CutoutParams;
+    /** Number of tabs placed automatically. */
+    tabCount: number;
+    /** Tab centres, internal units: placed automatically, then moved by clicks on the board. */
+    tabs: Point[];
+    result: CutoutOutput | null;
+    visible: boolean;
+}
+
+export type Operation = IsolationOperation | DrillingOperation | CutoutOperation;
+
+/** What the cutout computation needs. */
+export interface CutoutRequestData
+{
+    /** Polygons of the outline layer, or null to go around box. */
+    outline: PackedPolygons | null;
+    /** Bounding box of the copper and drill layers, internal units. */
+    box: BBox;
+    tool: Tool;
+    params: CutoutParams;
+    tabs: Point[];
+}
 
 export function createIsolation(id: string, layerId: string, toolId: string): IsolationOperation
 {

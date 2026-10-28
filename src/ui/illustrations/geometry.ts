@@ -374,3 +374,60 @@ export function holeMilling(hole: number, tool: number): HoleMillingShape
         blocked: tool > hole + 1e-9
     };
 }
+
+// ----- Cutout with tabs -----
+
+export interface CutoutTabsShape
+{
+    board: { x: number; y: number; width: number; height: number };
+    /** Rectangle followed by the tool centre and the width of the cut, px. */
+    path: { x: number; y: number; width: number; height: number };
+    cutWidth: number;
+    /** Each tab as a rectangle across the cut. */
+    tabs: { x: number; y: number; width: number; height: number }[];
+    /** Side view: board and tab heights, px from the bottom of the board. */
+    side: { x: number; bottomY: number; boardHeight: number; tabHeight: number };
+}
+
+/**
+ * Top view of a 50 x 30 mm board with its cutout and tabs spread like autoTabs (first one in the middle of the long
+ * top side), to scale except the tabs, enlarged to stay visible in a tooltip (at least 10 px long, wider than the
+ * cut); side view of a tab, to scale.
+ */
+export function cutoutTabs(count: number, tabWidth: number, tabHeight: number, thickness: number, margin: number, toolDiameter: number): CutoutTabsShape
+{
+    const scale = 2.4;
+    const board = { x: 28, y: 36, width: 50 * scale, height: 30 * scale };
+    const reach = Math.min(12, (margin + toolDiameter / 2) * scale);
+    const cutWidth = Math.max(3, Math.min(14, toolDiameter * scale));
+    const path = { x: board.x - reach, y: board.y - reach, width: board.width + 2 * reach, height: board.height + 2 * reach };
+    const perimeter = 2 * (path.width + path.height);
+    const length = Math.max(10, Math.min(path.width / 3, tabWidth * scale));
+    const across = cutWidth + 4;
+    const tabs = Array.from({ length: Math.max(0, Math.min(16, Math.round(count))) }, (_, index) =>
+    {
+        // Distance along the path, clockwise from the top left corner
+        const s = (path.width / 2 + (index * perimeter) / Math.max(1, Math.round(count))) % perimeter;
+        if (s < path.width)
+        {
+            return { x: path.x + s - length / 2, y: path.y - across / 2, width: length, height: across };
+        }
+        if (s < path.width + path.height)
+        {
+            return { x: path.x + path.width - across / 2, y: path.y + s - path.width - length / 2, width: across, height: length };
+        }
+        if (s < 2 * path.width + path.height)
+        {
+            return { x: path.x + path.width - (s - path.width - path.height) - length / 2, y: path.y + path.height - across / 2, width: length, height: across };
+        }
+        return { x: path.x - across / 2, y: path.y + path.height - (s - 2 * path.width - path.height) - length / 2, width: across, height: length };
+    });
+    const sideScale = 40 / Math.max(thickness, 0.1);
+    return {
+        board,
+        path,
+        cutWidth,
+        tabs: tabs.map((tab) => ({ x: round(tab.x), y: round(tab.y), width: round(tab.width), height: round(tab.height) })),
+        side: { x: 186, bottomY: 108, boardHeight: round(thickness * sideScale), tabHeight: round(Math.min(thickness, Math.max(0, tabHeight)) * sideScale) }
+    };
+}

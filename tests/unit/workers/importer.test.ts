@@ -104,6 +104,44 @@ describe("analysis at import", () =>
     });
 });
 
+describe("cutout job", () =>
+{
+    it("goes around the copper with a margin without outline, and along a drawn outline otherwise", async () =>
+    {
+        const { runCutout, automaticTabs } = await import("@workers/cutoutJob");
+        const { defaultLibrary } = await import("@cam/tools/index");
+        const { DEFAULT_CUTOUT } = await import("@cam/cutout/index");
+        const { strokePolylines } = await import("@core/geometry/index");
+        const tool = defaultLibrary().find((entry) => entry.id === "cornmill-1.5");
+        if (!tool)
+        {
+            throw new Error("Missing tool");
+        }
+        const MM = mmToInternal(1);
+        const box = { minX: 5 * MM, minY: 5 * MM, maxX: 45 * MM, maxY: 25 * MM };
+        const params = { ...DEFAULT_CUTOUT, margin: 2 };
+        const tabs = automaticTabs({ outline: null, box, tool, params }, 4);
+        const around = runCutout({ outline: null, box, tool, params, tabs });
+        expect(around.fromOutline).toBe(false);
+        expect(around.issues).toEqual([]);
+        expect(around.safetyIssues).toBe(0);
+        expect(around.tabs).toHaveLength(4);
+        // 40 x 20 mm of copper, 2 mm margin and 0.75 mm tool radius: a 45.5 x 25.5 mm rectangle
+        expect(around.lapLength).toBeCloseTo(2 * (45.5 + 25.5), 3);
+        expect(around.passes).toBe(5);
+
+        const corners = rectanglePath(0, 0, 50 * MM, 30 * MM);
+        const outline = packPolygons(strokePolylines([[...corners, corners[0] as { x: number; y: number }]], 0.1 * MM));
+        const edgeParams = { ...DEFAULT_CUTOUT };
+        const shaped = runCutout({ outline, box, tool, params: edgeParams, tabs: automaticTabs({ outline, box, tool, params: edgeParams }, 2) });
+        expect(shaped.fromOutline).toBe(true);
+        // The tool centre goes 0.75 mm outside the 50 x 30 mm edge, corners rounded
+        expect(shaped.lapLength).toBeCloseTo(2 * (50 + 30) + 2 * Math.PI * 0.75, 1);
+        expect(unpackPolygons(shaped.tabMarks)).toHaveLength(2);
+        expect(shaped.duration).toBeGreaterThan(0);
+    });
+});
+
 describe("isolation job", () =>
 {
     it("packs loops, travels and zones and estimates the duration", async () =>

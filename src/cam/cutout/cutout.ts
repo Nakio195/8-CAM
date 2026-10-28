@@ -52,7 +52,7 @@ export const DEFAULT_CUTOUT: Readonly<CutoutParams> = {
     depth: 1.6 + CUTOUT_DEPTH_MARGIN,
     thickness: 1.6,
     tabWidth: 2,
-    tabHeight: 0.6
+    tabHeight: 0.5
 };
 
 /** Margin used around the copper when the project has no outline layer, mm. */

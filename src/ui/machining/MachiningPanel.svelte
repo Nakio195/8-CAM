@@ -1,18 +1,21 @@
 <script lang="ts">
     import { i18n } from "../state/i18n.svelte";
     import { machining } from "../state/machining.svelte";
+    import { project } from "../state/project.svelte";
     import Button from "../components/base/Button.svelte";
     import Callout from "../components/base/Callout.svelte";
+    import CutoutCard from "./CutoutCard.svelte";
     import DrillingCard from "./DrillingCard.svelte";
     import IsolationCard from "./IsolationCard.svelte";
     import ToolComparator from "./ToolComparator.svelte";
 
-    // Machining operations (specification 6.4, 6.5 and 6.9); cutout joins them in J8
+    // Machining operations (specification 6.4, 6.5, 6.6 and 6.9)
     const t = i18n.t;
 
     let hasCopper = $derived(machining.copperLayers().length > 0);
     let hasTool = $derived(machining.isolationTools().length > 0);
     let hasDrills = $derived(machining.drillLayers().length > 0);
+    let hasCutoutTool = $derived(machining.cutoutTools().length > 0);
 </script>
 
 <section class="panel" aria-labelledby="machining-title">
@@ -42,6 +45,22 @@
         </div>
         {#each machining.drillings as operation (operation.id)}
             <DrillingCard {operation} />
+        {/each}
+    {/if}
+</section>
+
+<section class="panel" aria-labelledby="cutout-title">
+    <h2 id="cutout-title">{t("machining.cutout")}</h2>
+    {#if project.layers.length === 0}
+        <Callout tone="help">{t("machining.cutoutEmpty")}</Callout>
+    {:else if !hasCutoutTool}
+        <Callout tone="warning">{t("machining.cutoutNoTool")}</Callout>
+    {:else}
+        <div>
+            <Button variant="primary" icon="plus" help="cutoutNew" onclick={() => machining.addCutout()}>{t("machining.cutoutAdd")}</Button>
+        </div>
+        {#each machining.cutouts as operation (operation.id)}
+            <CutoutCard {operation} />
         {/each}
     {/if}
 </section>

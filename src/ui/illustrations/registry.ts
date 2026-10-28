@@ -3,6 +3,7 @@
 
 import type { Component } from "svelte";
 import BoardThickness from "./BoardThickness.svelte";
+import CutoutTabs from "./CutoutTabs.svelte";
 import DepthPasses from "./DepthPasses.svelte";
 import DrillCycle from "./DrillCycle.svelte";
 import HoleMilling from "./HoleMilling.svelte";
@@ -48,6 +49,15 @@ const cycle = (values: IllustrationValues, peck: boolean): Record<string, unknow
     depth: values.drillDepth ?? 1.8,
     peckDepth: values.peckDepth ?? 0.5,
     thickness: values.thickness ?? 1.6
+});
+
+const tabs = (values: IllustrationValues): Record<string, unknown> => ({
+    count: values.tabs ?? 4,
+    tabWidth: values.tabWidth ?? 2,
+    tabHeight: values.tabHeight ?? 0.5,
+    thickness: values.thickness ?? 1.6,
+    margin: values.margin ?? 0,
+    toolDiameter: values.toolDiameter ?? 1.5
 });
 
 const heights = (values: IllustrationValues): Record<string, unknown> => ({
@@ -96,6 +106,14 @@ export const ILLUSTRATIONS: Readonly<Record<string, TopicIllustration>> = {
         component: as(HoleMilling),
         props: (values) => ({ hole: values.hole ?? 3, tool: values.toolDiameter ?? 1.5 })
     },
+    tabs: { component: as(CutoutTabs), props: tabs },
+    tabWidth: { component: as(CutoutTabs), props: tabs },
+    tabHeight: { component: as(CutoutTabs), props: tabs },
+    cutoutMargin: { component: as(CutoutTabs), props: (values) => ({ ...tabs(values), margin: values.margin ?? 1 }) },
+    cutoutDepth: {
+        component: as(DepthPasses),
+        props: (values) => ({ depth: values.cutDepth ?? 1.7, depthPerPass: values.depthPerPass ?? 0.4, thickness: values.thickness ?? 1.6 })
+    },
     nonIsolated: {
         component: as(NonIsolated),
         props: (values) => ({ gap: values.gap ?? 0.4, width: values.width ?? 0.8 })
@@ -107,9 +125,6 @@ export const ILLUSTRATIONS: Readonly<Record<string, TopicIllustration>> = {
  * The help test fails if a geometric topic is neither illustrated nor listed here.
  */
 export const PENDING_ILLUSTRATIONS: Readonly<Record<string, string>> = {
-    tabs: "J8",
-    tabHeight: "J8",
-    cutoutMargin: "J8",
     origin: "J10",
     mirror: "J10"
 };

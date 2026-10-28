@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import { render } from "svelte/server";
 import { effectiveWidth } from "@cam/tools/index";
 import { HELP_TOPICS } from "@ui/help/topics";
-import { depthPasses, drillCycle, holeMilling, isolationPasses, nonIsolated, toolProfile, vbitSection, zHeights } from "@ui/illustrations/geometry";
+import { cutoutTabs, depthPasses, drillCycle, holeMilling, isolationPasses, nonIsolated, toolProfile, vbitSection, zHeights } from "@ui/illustrations/geometry";
 import { ILLUSTRATIONS, PENDING_ILLUSTRATIONS } from "@ui/illustrations/registry";
 import BoardThickness from "@ui/illustrations/BoardThickness.svelte";
+import CutoutTabs from "@ui/illustrations/CutoutTabs.svelte";
 import DepthPasses from "@ui/illustrations/DepthPasses.svelte";
 import DrillCycle from "@ui/illustrations/DrillCycle.svelte";
 import HoleMilling from "@ui/illustrations/HoleMilling.svelte";
@@ -28,6 +29,19 @@ describe("illustration geometry", () =>
         expect(peck.depthY).toBeGreaterThan(peck.bottomY);
         // Between pecks the drill comes out above the surface
         expect(peck.profile.filter((point) => point.y < peck.surfaceY).length).toBeGreaterThan(4);
+    });
+
+    it("spreads the tabs on the sides of the cut and shows the board they keep", () =>
+    {
+        const shape = cutoutTabs(4, 2, 0.5, 1.6, 0, 1.5);
+        expect(shape.tabs).toHaveLength(4);
+        // One tab in the middle of each side of the cut
+        const centreX = shape.path.x + shape.path.width / 2;
+        const centreY = shape.path.y + shape.path.height / 2;
+        const middles = shape.tabs.filter((tab) => Math.abs(tab.x + tab.width / 2 - centreX) < 0.2 || Math.abs(tab.y + tab.height / 2 - centreY) < 0.2);
+        expect(middles).toHaveLength(4);
+        expect(shape.side.tabHeight / shape.side.boardHeight).toBeCloseTo(0.5 / 1.6, 2);
+        expect(cutoutTabs(0, 2, 0.5, 1.6, 0, 1.5).tabs).toEqual([]);
     });
 
     it("draws the circle followed by the tool centre inside a milled hole", () =>
@@ -125,6 +139,11 @@ describe("illustration components", () =>
         expect(render(IsolationPasses, { props: { width: 0.254, passes: 2, overlap: 0.15 } }).body).toMatchSnapshot();
         expect(render(MillingDirection, { props: { direction: "conventional" } }).body).toMatchSnapshot();
         expect(render(NonIsolated, { props: { gap: 0.4, width: 0.8 } }).body).toMatchSnapshot();
+    });
+
+    it("renders the cutout drawing", () =>
+    {
+        expect(render(CutoutTabs, { props: { count: 4, tabWidth: 2, tabHeight: 0.5, margin: 1 } }).body).toMatchSnapshot();
     });
 
     it("renders the drilling drawings", () =>

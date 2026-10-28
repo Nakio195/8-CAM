@@ -22,7 +22,7 @@
     import { toolLibrary } from "./state/tools.svelte";
     import ToolLibraryPanel from "./tools/ToolLibraryPanel.svelte";
     import MachiningPanel from "./machining/MachiningPanel.svelte";
-    import { drillingOverlays, toolpathOverlays } from "./machining/overlays";
+    import { cutoutOverlays, drillingOverlays, toolpathOverlays } from "./machining/overlays";
     import { machining } from "./state/machining.svelte";
 
     const t = i18n.t;
@@ -110,7 +110,15 @@
         }
     });
 
-    let overlays = $derived([...toolpathOverlays(machining.operations), ...drillingOverlays(machining.drillings)]);
+    let overlays = $derived([
+        ...toolpathOverlays(machining.operations),
+        ...drillingOverlays(machining.drillings),
+        ...cutoutOverlays(machining.cutouts)
+    ]);
+    // Clicks on the board place or remove the tabs of the cutout being edited
+    let pick = $derived(machining.editingTabs
+        ? { hint: i18n.t("machining.tabsHint"), onPick: (point: { x: number; y: number }, tolerance: number) => void machining.pickTab(point, tolerance) }
+        : null);
     let showEmpty = $derived(project.layers.length === 0 && project.tasks.length === 0);
 </script>
 
@@ -175,7 +183,7 @@
             <p class="version">{t("app.version", { version: APP_VERSION })}</p>
         </aside>
         <section class="viewport">
-            <CanvasView layers={project.layers} fitRequest={project.fitRequest} focus={project.focus} {overlays} />
+            <CanvasView layers={project.layers} fitRequest={project.fitRequest} focus={project.focus} {overlays} {pick} />
             {#if showEmpty}
                 <EmptyState onOpen={openFiles} onExample={() => project.loadExample()} />
             {/if}

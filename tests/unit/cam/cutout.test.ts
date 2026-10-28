@@ -144,7 +144,7 @@ describe("cutout plan and moves", () =>
             expect(low).toBeGreaterThan(0);
         }
         expect(plan.depths.map((depth) => Math.round(depth * 1000) / 1000)).toEqual([0.4, 0.8, 1.2, 1.6, 1.7]);
-        expect(plan.tabTop).toBeCloseTo(-1.0, 9);
+        expect(plan.tabTop).toBeCloseTo(-1.1, 9);
         expect(tabMarks(plan, 2, tool.diameter)).toHaveLength(4);
     });
 
@@ -155,8 +155,8 @@ describe("cutout plan and moves", () =>
         expect(checkMoves(moves, tool.travelZ, tool.safeZ)).toEqual([]);
         const zMoves = moves.filter((move): move is Extract<Move, { kind: "linear" }> => move.kind === "linear" && move.x === undefined)
             .map((move) => Math.round((move.z ?? 0) * 1000) / 1000);
-        // Passes at 1.2, 1.6 and 1.7 mm are below the tab top (1.0 mm): up and down at each of the 4 tabs
-        expect(zMoves.filter((z) => z === -1)).toHaveLength(3 * 4);
+        // Passes at 1.2, 1.6 and 1.7 mm are below the tab top (1.1 mm): up and down at each of the 4 tabs
+        expect(zMoves.filter((z) => z === -1.1)).toHaveLength(3 * 4);
         expect(Math.min(...zMoves)).toBe(-1.7);
         // Five laps of the contour at the XY feed, plus the plunges
         const stats = moveStatistics(moves, 1000, { x: 0, y: 0, z: tool.safeZ });

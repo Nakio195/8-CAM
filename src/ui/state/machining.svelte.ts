@@ -1,20 +1,25 @@
-// Machining operations of the user interface: isolation and drilling operations, their computation in the CAM worker,
-// and the tool comparator (specification 6.10).
+// Machining operations of the user interface: isolation, drilling and cutout operations, their computation (in the
+// CAM worker, or directly for the cutout), and the tool comparator (specification 6.10).
 
-import { recommendDrilling, recommendIsolation } from "@cam/analysis/index";
+import { recommendCutout, recommendDrilling, recommendIsolation } from "@cam/analysis/index";
+import { BOUNDING_BOX_MARGIN, CUTOUT_DEPTH_MARGIN, DEFAULT_CUTOUT, projectOnPath } from "@cam/cutout/index";
 import { DRILL_EXTRA_DEPTH } from "@cam/drilling/index";
 import type { IsolationParams } from "@cam/isolation/index";
 import type { Tool } from "@cam/tools/index";
+import { distance, unpackPolygons } from "@core/geometry/index";
+import { mmToInternal } from "@core/units/index";
 import {
     createDrilling,
     createIsolation,
+    layersBBox,
+    type CutoutOperation,
     type DrillingOperation,
     type DrillingSetData,
     type IsolationOperation,
     type IsolationOutput,
     type ProjectLayer
 } from "@project/index";
-import { ImportCancelledError, startDrilling, startIsolation, type WorkerJob } from "@workers/index";
+import { automaticTabs, ImportCancelledError, runCutout, startDrilling, startIsolation, type WorkerJob } from "@workers/index";
 import { project } from "./project.svelte";
 import { toolLibrary } from "./tools.svelte";
 
@@ -56,6 +61,12 @@ function hasHoles(layer: ProjectLayer): boolean
     return layer.file.drill !== null && (layer.file.drill.hits.length > 0 || layer.file.drill.slots.length > 0);
 }
 
+/** Depths shown in fields: 1.6 + 0.1 is 1.7000000000000002 in floating point. */
+function roundDepth(value: number): number
+{
+    return Math.round(value * 1000) / 1000;
+}
+
 /** Key of a hole diameter in the tool assignments of a drilling operation. */
 export function diameterKey(diameter: number): string
 {
@@ -66,6 +77,9 @@ class MachiningState
 {
     public operations: IsolationOperation[] = $state.raw([]);
     public drillings: DrillingOperation[] = $state.raw([]);
+    public cutouts: CutoutOperation[] = $state.raw([]);
+    /** Cutout whose tabs are being added or removed by clicks on the board. */
+    public editingTabs: string | null = $state(null);
     /** Running computations by operation id. */
     public jobs: Record<string, RunningJob> = $state({});
     public errors: Record<string, string> = $state({});
@@ -133,7 +147,7 @@ class MachiningState
             assignments[diameterKey(entry.hole.diameter)] = entry.tool?.id ?? null;
         }
         const operation = createDrilling(`drilling-${nextOperation++}`, layers.map((layer) => layer.id), assignments,
-            project.thickness + DRILL_EXTRA_DEPTH);
+            roundDepth(project.thickness + DRILL_EXTRA_DEPTH));
         this.drillings = [...this.drillings, operation];
         void this.runDrilling(operation.id);
         return operation;
@@ -193,6 +207,134 @@ class MachiningState
         finally
         {
             this.jobs = without(this.jobs, id);
+        }
+    }
+
+    /** Outline layers (board edge). */
+    public outlineLayers(): ProjectLayer[]
+    {
+        return project.layers.filter((layer) => layer.file.layerType.kind === "outline" && layer.file.geometry.length > 1);
+    }
+
+    /** End mills able to cut the board out, the recommended one first (J5). */
+    public cutoutTools(): Tool[]
+    {
+        return recommendCutout(toolLibrary.tools, project.board).map((advice) => advice.tool);
+    }
+
+    /** New cutout around the first outline layer (or the copper), with the recommended mill and 4 tabs. */
+    public addCutout(): CutoutOperation | null
+    {
+        const tool = this.cutoutTools()[0];
+        if (!tool || project.layers.length === 0)
+        {
+            return null;
+        }
+        const outline = this.outlineLayers()[0] ?? null;
+        const operation: CutoutOperation = {
+            id: `cutout-${nextOperation++}`,
+            kind: "cutout",
+            outlineLayerId: outline?.id ?? null,
+            toolId: tool.id,
+            params: {
+                ...DEFAULT_CUTOUT,
+                // Without outline the cut goes around the copper: keep some board around it
+                margin: outline ? 0 : BOUNDING_BOX_MARGIN,
+                thickness: project.thickness,
+                depth: roundDepth(project.thickness + CUTOUT_DEPTH_MARGIN)
+            },
+            tabCount: 4,
+            tabs: [],
+            result: null,
+            visible: true
+        };
+        this.cutouts = [...this.cutouts, operation];
+        this.placeTabs(operation.id);
+        return operation;
+    }
+
+    /** The cutout is recomputed at once: a single contour takes a few milliseconds. */
+    public updateCutout(id: string, changes: Partial<Pick<CutoutOperation, "outlineLayerId" | "toolId" | "params" | "tabCount" | "tabs" | "visible">>): void
+    {
+        this.cutouts = this.cutouts.map((operation) => (operation.id === id ? this.computeCutout({ ...operation, ...changes }) : operation));
+    }
+
+    public removeCutout(id: string): void
+    {
+        if (this.editingTabs === id)
+        {
+            this.editingTabs = null;
+        }
+        this.cutouts = this.cutouts.filter((operation) => operation.id !== id);
+    }
+
+    /** Spreads the operation's number of tabs evenly along its contour. */
+    public placeTabs(id: string): void
+    {
+        const operation = this.cutouts.find((entry) => entry.id === id);
+        const request = operation ? this.cutoutRequest(operation) : null;
+        if (!operation || !request)
+        {
+            return;
+        }
+        this.updateCutout(id, { tabs: automaticTabs(request, operation.tabCount) });
+    }
+
+    /**
+     * Click on the board (mm) while editing tabs: removes the tab under the click, or adds one where the click is near
+     * the contour. Returns false when the click is too far from the contour to mean anything.
+     */
+    public pickTab(point: { x: number; y: number }, tolerance: number): boolean
+    {
+        const operation = this.cutouts.find((entry) => entry.id === this.editingTabs);
+        const result = operation?.result;
+        if (!operation || !result)
+        {
+            return false;
+        }
+        const clicked = { x: mmToInternal(point.x), y: mmToInternal(point.y) };
+        const reach = mmToInternal(Math.max(tolerance, operation.params.tabWidth / 2));
+        const near = result.tabs.findIndex((tab) => distance(tab, clicked) <= reach);
+        if (near >= 0)
+        {
+            this.updateCutout(operation.id, { tabs: result.tabs.filter((_, index) => index !== near) });
+            return true;
+        }
+        const contour = unpackPolygons(result.contour)[0]?.outer ?? [];
+        const projected = projectOnPath(contour, clicked);
+        if (projected.distance > mmToInternal(Math.max(tolerance, result.tool.diameter)))
+        {
+            return false;
+        }
+        this.updateCutout(operation.id, { tabs: [...result.tabs, clicked] });
+        return true;
+    }
+
+    private cutoutRequest(operation: CutoutOperation): Parameters<typeof runCutout>[0] | null
+    {
+        const tool = toolLibrary.find(operation.toolId);
+        const outline = project.layers.find((layer) => layer.id === operation.outlineLayerId);
+        const others = project.layers.filter((layer) => layer.file.layerType.kind !== "outline");
+        const box = layersBBox(others.length > 0 ? others : project.layers, false);
+        if (!tool || !Number.isFinite(box.minX))
+        {
+            return null;
+        }
+        return { outline: outline?.file.geometry ?? null, box, tool: $state.snapshot(tool), params: { ...operation.params }, tabs: operation.tabs };
+    }
+
+    private computeCutout(operation: CutoutOperation): CutoutOperation
+    {
+        const request = this.cutoutRequest(operation);
+        try
+        {
+            this.errors = without(this.errors, operation.id);
+            return { ...operation, result: request ? runCutout(request) : null };
+        }
+        catch (error)
+        {
+            this.errors[operation.id] = error instanceof Error ? error.message : String(error);
+            return { ...operation, result: null };
         }
     }
 

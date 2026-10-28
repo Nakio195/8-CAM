@@ -744,3 +744,61 @@ débourrage tous les 0,5 mm.
 
 - Pas encore de G-code : les mouvements sont prêts pour les post-processeurs (J9).
 - Les trous métallisés et non métallisés peuvent être séparés en deux opérations ; rien ne l'impose.
+
+---
+
+## 14. Résultats du jalon J8 (détourage et attaches)
+
+### 14.1 Contour (`src/cam/cutout/`)
+
+- **Bord de la carte** pris dans une couche contour (Edge.Cuts, GKO…) : le plus grand contour, trous comblés. Un
+  contour tracé en trait donne une bande autour du vrai bord : le bord retenu est le **milieu du trait**. La largeur
+  du trait est déduite de la surface de la bande divisée par la longueur moyenne de ses deux bords (test : à moins
+  de 1 µm du tracé d'origine). Un contour rempli est pris tel quel.
+- **Forme exacte** : offset du bord de marge + rayon de la fraise, joints ronds (FlatCAM : `buffer(margin + dia/2)`).
+  **Rectangle englobant** : rectangle du bord agrandi d'autant, coins vifs.
+- **Sans couche contour** : rectangle autour du cuivre et des trous, avec 2 mm de marge par défaut (comme FlatCAM,
+  la spécification 6.6 demande la boîte englobante avec marge).
+- **Sens** : en avalant, la carte est à gauche de l'outil (sens antihoraire autour d'elle) ; en opposition (par
+  défaut), le sens inverse. Même convention que l'isolation.
+- Les découpes intérieures d'une carte (trous de forme dans le contour) ne sont pas encore usinées.
+
+### 14.2 Attaches
+
+- **Placement automatique** par distance le long de la coupe : régulier, la première au milieu du plus long côté
+  droit. Sur un rectangle, 2 attaches tombent au milieu des grands côtés et 4 au milieu de chaque côté. Chaque attache
+  est ensuite glissée sur une partie droite assez longue pour la tenir, jamais sur un coin arrondi. Le placement
+  fonctionne aussi sur une carte ronde ou en L, contrairement aux positions fixes de FlatCAM (`4`, `2LR`, `2TB`…).
+- **Placement à la main** : « Placer sur la carte » ; un clic sur la coupe ajoute une attache, un clic sur une attache
+  la retire. Glisser déplace toujours la vue (un appui qui bouge de moins de 4 px est un clic).
+- **Largeur** mesurée sur le bord de la carte : l'outil s'arrête à son rayon de chaque côté, l'interruption de la
+  coupe vaut donc largeur + diamètre de la fraise.
+- **Hauteur** = épaisseur de carte laissée sous l'attache, depuis le dessous de la carte. Seules les passes plus
+  profondes que le haut des attaches remontent au-dessus (exigence 6.6 : attaches sur les dernières passes). Avec
+  1,6 mm, 0,5 mm d'attache et 0,4 mm par passe : passes à 0,4 / 0,8 complètes, passes à 1,2 / 1,6 / 1,7 interrompues.
+- La coupe redémarre au milieu du plus long tronçon sans attache : la fraise ne plonge jamais sur une attache.
+- **Problèmes signalés** : aucune attache (la carte peut être projetée), attaches qui se chevauchent, trop
+  nombreuses, aussi hautes que la carte.
+
+### 14.3 Interface
+
+- Section **Détourage** dans l'onglet Usinage : bord de la carte (couche contour ou « autour du cuivre »), forme,
+  fraise conseillée en J5 avec son nombre de passes, marge, profondeur (épaisseur + 0,1 mm), sens, attaches (nombre,
+  largeur, hauteur), boutons « Répartir » et « Placer sur la carte ».
+- Le détourage n'est qu'un contour : il est **recalculé à chaque changement** (quelques millisecondes), sans Worker
+  ni bouton « Calculer ».
+- Carte : bande de la largeur de la fraise en vert, attaches en rouge.
+- Illustration : carte vue de dessus avec la coupe et les attaches réparties comme le placement automatique,
+  attache vue de côté avec la hauteur laissée. Les attaches sont agrandies sur la vue de dessus pour rester visibles
+  dans une infobulle.
+- Profondeurs par défaut arrondies : 1,6 + 0,1 s'affichait « 1,7000000000000002 » (aussi corrigé pour le perçage).
+
+### 14.4 Carte d'exemple FTDI_Max
+
+Pas de couche contour dans les fichiers Proteus : coupe rectangulaire à 2 mm du cuivre, fraise maïs 1,5 mm,
+5 passes de 170,1 mm, 4 attaches au milieu des côtés, 6 min estimées.
+
+### 14.5 Reste ouvert
+
+- Découpes intérieures de la carte.
+- Vérification que la coupe tient dans la course de la machine : avec les profils machine (J9 / J10).
