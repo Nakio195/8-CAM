@@ -18,6 +18,8 @@ export interface MachineProfile
     safeZ: number;
     /** rpm. */
     maxSpindleSpeed: number;
+    /** Lowest spindle speed the machine runs at, rpm (0: no minimum). Slower requests are raised by the firmware. */
+    minSpindleSpeed: number;
     /** mm/min. */
     maxFeedXY: number;
     maxFeedZ: number;
@@ -39,13 +41,39 @@ export const DEFAULT_MACHINE: Readonly<MachineProfile> = {
     safeZ: 5,
     // The built-in corn cob mill runs at 12 000 rpm (specification 6.10)
     maxSpindleSpeed: 12_000,
+    minSpindleSpeed: 0,
     maxFeedXY: 1500,
     maxFeedZ: 500,
     rapidFeed: 1000,
     postProfileId: "grbl-1.1"
 };
 
-export type MachineIssueCode = "missingName" | "notPositive" | "safeAboveTravel" | "invalidFormat";
+/**
+ * Snapmaker Artisan with its 200 W CNC module: 400 x 400 mm work area, spindle from 8 000 to 18 000 rpm (the firmware
+ * raises slower requests to 8 000 rpm), 50 mm/s at most in wood. Z travel and rapid speed are cautious values to check
+ * on the machine, the module and the spoil board taking part of the height.
+ */
+export const SNAPMAKER_ARTISAN: Readonly<MachineProfile> = {
+    format: MACHINE_FORMAT,
+    version: MACHINE_VERSION,
+    id: "snapmaker-artisan",
+    name: "Snapmaker Artisan",
+    travelX: 400,
+    travelY: 400,
+    travelZ: 60,
+    safeZ: 5,
+    maxSpindleSpeed: 18_000,
+    minSpindleSpeed: 8000,
+    maxFeedXY: 3000,
+    maxFeedZ: 600,
+    rapidFeed: 3000,
+    postProfileId: "snapmaker-artisan"
+};
+
+/** Machines the user can start from. */
+export const MACHINE_PRESETS: readonly MachineProfile[] = [DEFAULT_MACHINE, SNAPMAKER_ARTISAN];
+
+export type MachineIssueCode = "missingName" | "notPositive" | "safeAboveTravel" | "invalidFormat" | "minAboveMax";
 
 export interface MachineIssue
 {
@@ -76,6 +104,10 @@ export function validateMachine(machine: MachineProfile): MachineIssue[]
     if (machine.safeZ >= machine.travelZ)
     {
         issues.push({ code: "safeAboveTravel", field: "safeZ" });
+    }
+    if (!Number.isFinite(machine.minSpindleSpeed) || machine.minSpindleSpeed < 0 || machine.minSpindleSpeed >= machine.maxSpindleSpeed)
+    {
+        issues.push({ code: "minAboveMax", field: "minSpindleSpeed" });
     }
     return issues;
 }

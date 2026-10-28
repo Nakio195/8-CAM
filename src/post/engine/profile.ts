@@ -11,6 +11,9 @@ export type CommentStyle = "parentheses" | "semicolon" | "none";
  * Template lines may hold variables in braces, replaced when writing: {date}, {version}, {jobName}, {profileName},
  * {machineName}, {toolNumber}, {toolId}, {toolName}, {toolDiameter}, {spindleSpeed}, {feedXY}, {feedZ}, {safeZ},
  * {travelZ}, {cutDepth}, {rapidFeed}, {seconds}, {milliseconds}, {message}. A line left empty is dropped.
+ * The file header may also use values known once the whole file is written: {lineCount}, {estimatedSeconds},
+ * {xMin}, {xMax}, {yMin}, {yMax}, {zMin}, {zMax}, {workSpeed} (fastest cutting feed), {spindlePercent} (fastest
+ * spindle speed in % of the machine maximum).
  */
 export type TemplateLines = string[];
 
@@ -45,6 +48,22 @@ export interface PostProfile
     footer: TemplateLines;
     /** Words the controller refuses: their presence in the output is reported as an error. */
     forbidden: string[];
+    /**
+     * Lines written first, before the descriptive comments, as they are (no comment conversion): metadata some
+     * controllers read, such as the ";Header Start" block of Snapmaker screens. Optional: older profiles have none.
+     */
+    fileHeader?: TemplateLines;
+    /** Extension of the files written, without the dot ("nc" when not given). */
+    fileExtension?: string;
+}
+
+/** Extension used when a profile does not give one. */
+export const DEFAULT_FILE_EXTENSION = "nc";
+
+/** The profile with its optional fields filled in. */
+export function normalizeProfile(profile: PostProfile): PostProfile
+{
+    return { ...profile, fileHeader: profile.fileHeader ?? [], fileExtension: profile.fileExtension ?? DEFAULT_FILE_EXTENSION };
 }
 
 export type ProfileIssueCode =
@@ -55,7 +74,8 @@ export type ProfileIssueCode =
     | "invalidDecimals"
     | "invalidLineNumbers"
     | "invalidCommand"
-    | "invalidTemplate";
+    | "invalidTemplate"
+    | "invalidExtension";
 
 export interface ProfileIssue
 {
@@ -118,6 +138,14 @@ export function validateProfile(value: unknown): ProfileIssue[]
     {
         issues.push({ code: "invalidTemplate", field: "forbidden" });
     }
+    if (profile.fileHeader !== undefined && !isStringArray(profile.fileHeader))
+    {
+        issues.push({ code: "invalidTemplate", field: "fileHeader" });
+    }
+    if (profile.fileExtension !== undefined && !/^[a-z0-9]{1,5}$/i.test(String(profile.fileExtension)))
+    {
+        issues.push({ code: "invalidExtension", field: "fileExtension" });
+    }
     if (!["parentheses", "semicolon", "none"].includes(String(profile.comments)) || !["mm", "inch"].includes(String(profile.units))
         || !["native", "linearize"].includes(String(profile.arcs)) || !["modal", "everyLine"].includes(String(profile.feeds))
         || typeof profile.rapidWithFeed !== "boolean")
@@ -150,5 +178,5 @@ export function importProfile(text: string): { profile: PostProfile } | { issues
     {
         return { issues };
     }
-    return { profile: { ...(parsed as PostProfile), builtIn: false } };
+    return { profile: normalizeProfile({ ...(parsed as PostProfile), builtIn: false }) };
 }

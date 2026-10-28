@@ -9,6 +9,7 @@ import {
     exportProfile,
     importMachine,
     importProfile,
+    normalizeProfile,
     type MachineIssue,
     type MachineProfile,
     type PostProfile,
@@ -82,7 +83,7 @@ class MachineState
         }
         if (Array.isArray(profiles))
         {
-            this.userProfiles = profiles;
+            this.userProfiles = profiles.map(normalizeProfile);
         }
     }
 
@@ -118,6 +119,15 @@ class MachineState
     public addMachine(name: string): MachineProfile
     {
         const machine = { ...this.active, id: newId("machine"), name };
+        this.setMachines([...this.machines, machine]);
+        this.select(machine.id);
+        return machine;
+    }
+
+    /** New machine from a preset (CNC 3018, Snapmaker Artisan...), made active. */
+    public addPreset(preset: MachineProfile): MachineProfile
+    {
+        const machine = { ...preset, id: newId("machine") };
         this.setMachines([...this.machines, machine]);
         this.select(machine.id);
         return machine;

@@ -1052,3 +1052,70 @@ défensives). 304 tests unitaires, 3 fichiers G-code de référence, bancs de me
   fichier.
 - Sous miroir, l'hélice des trous fraisés change de sens (sans effet notable).
 - Hors périmètre V1 (section 11 du cahier des charges) : gravure laser, retrait du cuivre (NCC), panelisation, double face avec trous d'alignement, pilotage direct (WebSerial), carte de hauteur, DXF / SVG, vue 3D, DRC.
+
+---
+
+## 19. Post-processeur Snapmaker Artisan (après la V1)
+
+### 19.1 Sources
+
+Pas de documentation officielle complète : le profil s'appuie sur le **code source publié par Snapmaker**, lu le
+28/10/2026.
+
+- `Snapmaker/Artisan-Controller` (firmware de l'Artisan, Marlin 2.1) : `snapmaker/src/gcode/M3-M5.cpp`,
+  `snapmaker/src/module/toolhead_cnc_200w.h`, `Marlin/src/gcode/feature/pause/M600.cpp`, `Marlin/src/gcode/gcode.cpp`,
+  `Marlin/Configuration_adv.h`.
+- `Snapmaker/Snapmaker-Artisan-Screen-App` (écran tactile) : `SnapmakerParser.java` (lecture de l'en-tête).
+- `Snapmaker/Luban` : `src/server/lib/parseGcodeHeader.js` (en-tête ajouté aux G-code externes, extension `.cnc`).
+- `Snapmaker/snapmaker_cnc_post_process` : post-processeurs officiels (Fusion 360, Aspire, FreeCAD) et
+  `gcode_reference.md`.
+- `Snapmaker/Snapmaker2-Controller` (firmware de la 2.0), pour comparer.
+
+### 19.2 Ce que le firmware de l'Artisan accepte
+
+| Point              | Constat dans le code                                                                                                                  | Choix du profil                                        |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Broche 200 W       | `M3 P<pourcentage>` ou `M3 S<tr/min>` ; vitesse ramenée entre 8 000 et 18 000 tr/min                                                  | `M3 S{spindleSpeed}` puis `G4 S3` (montée en vitesse)  |
+| Changement d'outil | pas de `M6` ; `M0` / `M1` non compilés (`HAS_RESUME_CONTINUE` faux) ; `M76` ne met en pause que le minuteur                           | `M5`, montée à la hauteur de sécurité, message, `M600` |
+| `M600`             | réécrit par Snapmaker : attend la fin des mouvements, met la tâche en pause (« pause G-code » à l'écran), reprend à la ligne suivante | pause du changement d'outil                            |
+| Arcs               | `ARC_SUPPORT` actif sur l'Artisan (pas dans la documentation de la 2.0)                                                               | petits segments, comme les post-processeurs officiels  |
+| Avance             | Marlin garde **une seule avance** pour `G0` et `G1`                                                                                   | `F` sur chaque coupe (voir 19.4)                       |
+| Écran              | lit un bloc `;Header Start` … `;Header End` : type `cnc`, lignes, durée, étendue X / Y / Z, vitesses, puissance                       | bloc écrit en tête de fichier                          |
+| Extension          | Luban reconnaît un fichier CNC à son extension                                                                                        | `.cnc`                                                 |
+
+### 19.3 Moteur
+
+- **En-tête de fichier** (`fileHeader`, facultatif) : lignes écrites en premier, telles quelles, avec des valeurs
+  du travail entier : `{lineCount}` (remplacé une fois le fichier écrit), `{estimatedSeconds}`, `{xMin}` … `{zMax}`,
+  `{workSpeed}`, `{spindlePercent}` (rapporté à la broche maxi de la machine).
+- **Extension** des fichiers par profil (`fileExtension`, `nc` par défaut). Les profils enregistrés avant ces deux
+  champs sont complétés à l'ouverture.
+- **Vitesse de broche minimale** dans le profil machine (0 par défaut) : un outil plus lent est signalé, la machine
+  le ferait tourner plus vite.
+- **Modèles de machine** : « Ajouter un modèle… » dans l'onglet Machine propose la CNC 3018 et la Snapmaker Artisan
+  (400 x 400 mm, broche 8 000 à 18 000 tr/min, 3 000 mm/min, post-processeur Snapmaker). La course Z (60 mm) et la
+  vitesse des rapides sont prudentes : à vérifier avec le module et la planche martyre en place.
+- Le lecteur de G-code connaît `M600`.
+
+### 19.4 Défaut trouvé et corrigé : l'avance après un rapide
+
+Quand un profil écrit `F` sur les rapides (Marlin, Snapmaker) et l'avance seulement quand elle change, une coupe qui
+suit un `G0 … F3000` repartait **à 3 000 mm/min** : Marlin n'a qu'une avance pour `G0` et `G1`. Le défaut est apparu
+en comparant la durée de l'en-tête (calculée sur les mouvements) à celle de la simulation (G-code relu comme Marlin le
+lit). Corrections :
+
+- l'écrivain oublie l'avance courante après un rapide qui porte un `F` : la coupe suivante réécrit la sienne ;
+- le profil Snapmaker écrit `F` sur chaque coupe ;
+- nouveau test pour tous les profils : chaque coupe relue dans le G-code avance à une des avances des outils, jamais à
+  la vitesse des rapides. Vérifié en retirant les deux corrections : le test échoue.
+
+Le profil Marlin (J9) n'était pas touché : il écrit déjà `F` sur chaque ligne.
+
+### 19.5 À vérifier sur la machine
+
+- **Zéro Z après chaque changement d'outil** : les outils n'ont pas la même longueur. Le plus simple est d'exporter
+  **un fichier par opération** et de refaire le zéro Z entre deux fichiers. La reprise après `M600` garde le zéro du
+  premier outil.
+- Au tout début, la tâche se met en pause pour monter le premier outil : c'est voulu, le zéro doit être fait avant de
+  lancer le fichier.
+- Les attaches et le perçage descendent sous la carte : planche martyre indispensable.

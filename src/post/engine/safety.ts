@@ -21,6 +21,7 @@ export type JobIssueCode =
     | "safeAboveMachine"
     | "feedAboveMachine"
     | "spindleAboveMachine"
+    | "spindleBelowMachine"
     | "depthAberrant"
     | "feedAberrant"
     | "diameterAberrant";
@@ -63,6 +64,10 @@ export function checkJob(job: PostJob, machine: MachineProfile): JobIssue[]
         if (tool.spindleSpeed > machine.maxSpindleSpeed)
         {
             add("spindleAboveMachine", index, "warning");
+        }
+        if (tool.spindleSpeed < (machine.minSpindleSpeed ?? 0))
+        {
+            add("spindleBelowMachine", index, "warning");
         }
         if (tool.diameter < ABERRANT_DIAMETER.min || tool.diameter > ABERRANT_DIAMETER.max)
         {

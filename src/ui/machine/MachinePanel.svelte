@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { checkGcode, checkJob, sampleJob, writeGcode, type SampleTools } from "@post/index";
+    import { checkGcode, checkJob, MACHINE_PRESETS, sampleJob, writeGcode, type SampleTools } from "@post/index";
     import { APP_VERSION } from "@core/index";
     import { downloadText, readChosenFile } from "../files";
     import { help } from "../help";
@@ -59,6 +59,16 @@
     function addMachine(): void
     {
         machineState.addMachine(t("machine.newName"));
+    }
+
+    function addPreset(id: string): void
+    {
+        const preset = MACHINE_PRESETS.find((entry) => entry.id === id);
+        if (preset)
+        {
+            machineState.addPreset(preset);
+            message = { tone: "success", text: t("machine.presetAdded", { name: preset.name }) };
+        }
     }
 
     function removeMachine(): void
@@ -131,6 +141,13 @@
     </label>
     <div class="actions">
         <Button variant="secondary" icon="plus" help="machineAdd" onclick={addMachine}>{t("machine.add")}</Button>
+        <select class="preset" aria-label={t("machine.preset")} use:help={"machinePreset"} value=""
+            onchange={(event) => { addPreset(event.currentTarget.value); event.currentTarget.value = ""; }}>
+            <option value="" disabled>{t("machine.preset")}</option>
+            {#each MACHINE_PRESETS as preset (preset.id)}
+                <option value={preset.id}>{preset.name}</option>
+            {/each}
+        </select>
         <Button variant="ghost" icon="upload" help="machineImport" onclick={() => machineInput.click()}>{t("machine.import")}</Button>
         <Button variant="ghost" icon="download" help="machineExport"
             onclick={() => downloadText(`${machine.name.replace(/[^\w.-]+/g, "_")}.8cam-machine.json`, machineState.exportMachine())}>
@@ -233,6 +250,11 @@
         border-radius: var(--radius);
         background: var(--surface);
         font-weight: 400;
+    }
+
+    .preset
+    {
+        max-width: 180px;
     }
 
     .actions

@@ -6,6 +6,7 @@ import { unpackPolygons } from "@core/geometry/index";
 import {
     checkGcode,
     checkJob,
+    DEFAULT_FILE_EXTENSION,
     inversePoint,
     movesExtent,
     readGcode,
@@ -113,7 +114,7 @@ export function runExport(request: ExportRequestData): ExportOutput
     {
         const job: PostJob = { name: group.name, operations: group.operations, date, version: request.version };
         const output = writeGcode(job, request.profile, request.machine);
-        const fileName = `${group.name.replace(/[^\w.-]+/g, "_")}.nc`;
+        const fileName = `${group.name.replace(/[^\w.-]+/g, "_")}.${request.profile.fileExtension ?? DEFAULT_FILE_EXTENSION}`;
         for (const entry of output.forbidden)
         {
             forbidden.push({ file: fileName, ...entry });

@@ -86,7 +86,7 @@ export function readGcode(text: string): ReadGcode
                     {
                         moves.push({ kind: "toolChange", toolId: "" });
                     }
-                    else if (![0, 2, 30, 400].includes(value))
+                    else if (![0, 2, 30, 400, 600].includes(value))
                     {
                         unknown.push(index + 1);
                     }

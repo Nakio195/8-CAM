@@ -49,6 +49,8 @@
             helpLabel={helpLabel("help.safeZ.title")} {helpValues} />
         <NumberField id={id("spindle")} label={t("machine.maxSpindle")} help="maxSpindleSpeed" unit={t("unit.rpm")} step={100} min={1}
             bind:value={draft.maxSpindleSpeed} helpLabel={helpLabel("help.maxSpindleSpeed.title")} />
+        <NumberField id={id("min-spindle")} label={t("machine.minSpindle")} help="minSpindleSpeed" unit={t("unit.rpm")} step={100} min={0}
+            bind:value={draft.minSpindleSpeed} helpLabel={helpLabel("help.minSpindleSpeed.title")} />
         <NumberField id={id("feed-xy")} label={t("machine.maxFeedXY")} help="maxFeed" unit="mm/min" step={10} min={1} bind:value={draft.maxFeedXY}
             helpLabel={helpLabel("help.maxFeed.title")} />
         <NumberField id={id("feed-z")} label={t("machine.maxFeedZ")} help="maxFeed" unit="mm/min" step={10} min={1} bind:value={draft.maxFeedZ}

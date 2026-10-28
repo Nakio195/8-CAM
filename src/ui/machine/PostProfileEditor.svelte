@@ -12,11 +12,11 @@
     let { profile }: { profile: PostProfile } = $props();
 
     const t = i18n.t;
-    const TEMPLATES = ["header", "toolChange", "spindleOn", "spindleOff", "dwell", "footer"] as const;
+    const TEMPLATES = ["fileHeader", "header", "toolChange", "spindleOn", "spindleOff", "dwell", "footer"] as const;
     type TemplateField = (typeof TEMPLATES)[number];
 
     let draft = $state(untrack(() => structuredClone($state.snapshot(profile))));
-    let templates = $state(untrack(() => Object.fromEntries(TEMPLATES.map((field) => [field, profile[field].join("\n")])) as Record<TemplateField, string>));
+    let templates = $state(untrack(() => Object.fromEntries(TEMPLATES.map((field) => [field, (profile[field] ?? []).join("\n")])) as Record<TemplateField, string>));
     let forbidden = $state(untrack(() => profile.forbidden.join(", ")));
 
     let assembled = $derived<PostProfile>({
@@ -35,7 +35,8 @@
         }
     });
 
-    const LABELS: Record<TemplateField, "post.header" | "post.toolChange" | "post.spindleOn" | "post.spindleOff" | "post.dwell" | "post.footer"> = {
+    const LABELS: Record<TemplateField, "post.fileHeader" | "post.header" | "post.toolChange" | "post.spindleOn" | "post.spindleOff" | "post.dwell" | "post.footer"> = {
+        fileHeader: "post.fileHeader",
         header: "post.header",
         toolChange: "post.toolChange",
         spindleOn: "post.spindleOn",
@@ -44,6 +45,7 @@
         footer: "post.footer"
     };
     const TOPICS: Record<TemplateField, string> = {
+        fileHeader: "postFileHeader",
         header: "postHeader",
         toolChange: "postToolChange",
         spindleOn: "postSpindle",
@@ -94,6 +96,10 @@
             </select>
         </label>
     </div>
+    <label class="field">
+        <span>{t("post.fileExtension")}</span>
+        <input type="text" class="mono" bind:value={draft.fileExtension} size="6" use:help={"postFileExtension"} />
+    </label>
     <label class="check" use:help={"postRapidFeed"}>
         <input type="checkbox" bind:checked={draft.rapidWithFeed} />
         {t("post.rapidWithFeed")}

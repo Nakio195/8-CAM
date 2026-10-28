@@ -1,7 +1,7 @@
 // G-code writer: translates the machine-independent moves (specification 6.7) with a post-processor profile.
 // One writer for every controller; the differences live in the profile (words, templates, number format).
 
-import type { Move } from "@cam/toolpath/index";
+import { moveStatistics, type Move } from "@cam/toolpath/index";
 import type { Tool } from "@cam/tools/index";
 import type { MachineProfile } from "../machine";
 import type { PostProfile, TemplateLines } from "./profile";
@@ -159,6 +159,12 @@ class Writer
         if (move.kind === "rapid")
         {
             this.code(`${this.mProfile.commands.rapid}${words}${this.mProfile.rapidWithFeed ? ` F${this.number(this.mRapidFeed, this.mProfile.decimals.feed)}` : ""}`);
+            if (this.mProfile.rapidWithFeed)
+            {
+                // Marlin keeps one feed for G0 and G1: after "G0 ... F3000", a cut without F would run at 3000.
+                // The next cut must write its own feed again.
+                this.mFeed = null;
+            }
             return;
         }
         this.code(`${this.mProfile.commands.linear}${words}${this.feedWord(move.feed)}`);
@@ -228,6 +234,74 @@ export function movesExtent(operations: readonly PostOperation[]): { xMin: numbe
     return extent;
 }
 
+/** Stands for the line count in the file header until the whole file is written. */
+const LINE_COUNT_MARK = "\u0000lineCount\u0000";
+
+/**
+ * Lines of the profile written first, with values of the whole job: extent of the moves (X, Y and Z), estimated time
+ * at the machine rapid speed, fastest cutting feed and spindle speed. They are written as they are, without numbering
+ * or comment conversion, since controllers read them as given (Snapmaker ";Header Start" block).
+ */
+function writeFileHeader(writer: Writer, job: PostJob, profile: PostProfile, machine: MachineProfile): void
+{
+    const lines = profile.fileHeader ?? [];
+    if (lines.length === 0)
+    {
+        return;
+    }
+    const n = (value: number, digits = profile.decimals.coordinates): string => writer.number(value, digits);
+    const extent = movesExtent(job.operations) ?? { xMin: 0, xMax: 0, yMin: 0, yMax: 0 };
+    let zMin = Infinity;
+    let zMax = -Infinity;
+    let seconds = 0;
+    let workSpeed = 0;
+    let spindle = 0;
+    for (const operation of job.operations)
+    {
+        for (const move of operation.moves)
+        {
+            if ((move.kind === "rapid" || move.kind === "linear") && move.z !== undefined)
+            {
+                zMin = Math.min(zMin, move.z);
+                zMax = Math.max(zMax, move.z);
+            }
+            if ((move.kind === "linear" || move.kind === "arc") && (move.kind === "arc" || move.x !== undefined || move.y !== undefined))
+            {
+                workSpeed = Math.max(workSpeed, move.feed);
+            }
+            if (move.kind === "spindle" && move.on)
+            {
+                spindle = Math.max(spindle, move.rpm ?? operation.tool.spindleSpeed);
+            }
+        }
+        seconds += moveStatistics(operation.moves, machine.rapidFeed, { x: 0, y: 0, z: operation.tool.safeZ }).duration;
+    }
+    const values: Record<string, string> = {
+        lineCount: LINE_COUNT_MARK,
+        estimatedSeconds: String(Math.round(seconds)),
+        xMin: n(extent.xMin),
+        xMax: n(extent.xMax),
+        yMin: n(extent.yMin),
+        yMax: n(extent.yMax),
+        zMin: n(Number.isFinite(zMin) ? zMin : 0),
+        zMax: n(Number.isFinite(zMax) ? zMax : 0),
+        workSpeed: n(workSpeed, profile.decimals.feed),
+        rapidFeed: n(machine.rapidFeed, profile.decimals.feed),
+        spindlePercent: String(Math.min(100, Math.round((spindle / Math.max(1, machine.maxSpindleSpeed)) * 100))),
+        jobName: sanitizeComment(job.name),
+        machineName: sanitizeComment(machine.name),
+        version: job.version
+    };
+    for (const line of lines)
+    {
+        const filled = line.replace(/\{(\w+)\}/g, (match: string, name: string) => values[name] ?? match).trim();
+        if (filled !== "")
+        {
+            writer.lines.push(filled);
+        }
+    }
+}
+
 /** Date written in the header, independent of the user's locale: 2026-10-28 14:05. */
 function formatDate(date: Date): string
 {
@@ -242,6 +316,7 @@ function formatDate(date: Date): string
 export function writeGcode(job: PostJob, profile: PostProfile, machine: MachineProfile): GcodeOutput
 {
     const writer = new Writer(profile, machine.rapidFeed);
+    writeFileHeader(writer, job, profile, machine);
     const n = (value: number, digits = profile.decimals.coordinates): string => writer.number(value, digits);
     const unit = profile.units === "inch" ? "in" : "mm";
     const toolNumbers = new Map<string, number>();
@@ -337,6 +412,13 @@ export function writeGcode(job: PostJob, profile: PostProfile, machine: MachineP
     }
     writer.blank();
     writer.template(profile.footer, common);
+
+    // The line count is known only now: it replaces its mark in the file header (same number of lines)
+    const lineCount = String(writer.lines.length);
+    for (let i = 0; i < writer.lines.length; i++)
+    {
+        writer.lines[i] = (writer.lines[i] ?? "").replace(LINE_COUNT_MARK, lineCount);
+    }
 
     const forbidden: GcodeOutput["forbidden"] = [];
     writer.lines.forEach((line, index) =>

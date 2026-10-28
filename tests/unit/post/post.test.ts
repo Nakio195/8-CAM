@@ -55,7 +55,7 @@ describe("built-in profiles", () =>
 {
     it("are valid and survive an export and import", () =>
     {
-        expect(BUILT_IN_PROFILES.map((entry) => entry.id)).toEqual(["grbl-1.1", "marlin", "linuxcnc"]);
+        expect(BUILT_IN_PROFILES.map((entry) => entry.id)).toEqual(["grbl-1.1", "marlin", "linuxcnc", "snapmaker-artisan"]);
         for (const entry of BUILT_IN_PROFILES)
         {
             expect(validateProfile(entry)).toEqual([]);
@@ -93,6 +93,10 @@ describe("golden G-code", () =>
             const safeZ = Math.max(...job.operations.map((operation) => operation.tool.safeZ));
             expect(checkGcode(output.text, travelZ, safeZ)).toEqual([]);
             expect(readGcode(output.text).unknown).toEqual([]);
+            // Every cut read back runs at a feed of the tools: never at the rapid speed a "G0 ... F" left behind
+            const feeds = new Set(job.operations.flatMap((operation) => [operation.tool.feedXY, operation.tool.feedZ]));
+            const cutFeeds = new Set(readGcode(output.text).moves.flatMap((move) => (move.kind === "linear" ? [move.feed] : [])));
+            expect([...cutFeeds].filter((feed) => !feeds.has(feed))).toEqual([]);
             // The text moves the tool exactly as the moves do: same cut length
             const written = moveStatistics(readGcode(output.text).moves, 1000, { x: 0, y: 0, z: safeZ });
             const expected = job.operations.reduce((sum, operation) => sum + moveStatistics(operation.moves, 1000, { x: 0, y: 0, z: safeZ }).cutLength, 0);
@@ -215,5 +219,47 @@ describe("machine profile and job checks", () =>
         const unsafe: PostJob = { ...job, operations: [{ ...first, moves: [{ kind: "rapid", z: 0.5 }, { kind: "rapid", x: 5, y: 5 }, { kind: "linear", z: -4, feed: 2 }] }] };
         expect(checkJob(unsafe, DEFAULT_MACHINE).map((issue) => issue.code).sort())
             .toEqual(["depthAberrant", "endBelowSafe", "feedAberrant", "rapidBelowTravel"]);
+    });
+});
+
+describe("Snapmaker Artisan", () =>
+{
+    it("writes the header block read by the screen with the values of the whole file", async () =>
+    {
+        const { SNAPMAKER_ARTISAN } = await import("@post/index");
+        const output = writeGcode(sampleJob(), profile("snapmaker-artisan"), SNAPMAKER_ARTISAN);
+        // The text ends with a line break: every line before it counts, the blank ones too
+        const lines = output.text.slice(0, -1).split("\n");
+        expect(lines[0]).toBe(";Header Start");
+        expect(lines).toContain(";header_type: cnc");
+        expect(lines).toContain(`;file_total_lines: ${lines.length}`);
+        // Fastest spindle 12 000 rpm out of 18 000
+        expect(lines).toContain(";power(%): 67");
+        expect(lines).toContain(";jog_speed(mm/minute): 3000");
+        expect(lines.indexOf(";Header End")).toBeLessThan(lines.findIndex((line) => line.startsWith("; 8-CAM")));
+        // Spindle in rpm, pause for the tool change, no arc, nothing the firmware refuses
+        expect(output.text).toMatch(/^M3 S12000$/m);
+        expect(output.text.match(/^M600$/gm)).toHaveLength(3);
+        expect(output.text).not.toMatch(/^G[23] /m);
+        expect(output.forbidden).toEqual([]);
+        expect(readGcode(output.text).unknown).toEqual([]);
+        expect(checkJob(sampleJob(), SNAPMAKER_ARTISAN)).toEqual([]);
+    });
+
+    it("reports spindle speeds the 200 W module cannot hold", async () =>
+    {
+        const { SNAPMAKER_ARTISAN } = await import("@post/index");
+        const job = sampleJob();
+        const slow = { ...job, operations: job.operations.map((operation) => ({ ...operation, tool: { ...operation.tool, spindleSpeed: 6000 } })) };
+        expect(checkJob(slow, SNAPMAKER_ARTISAN).map((issue) => issue.code)).toContain("spindleBelowMachine");
+        expect(validateMachine({ ...SNAPMAKER_ARTISAN, minSpindleSpeed: 20_000 }).map((issue) => issue.code)).toEqual(["minAboveMax"]);
+    });
+
+    it("keeps the optional fields of profiles saved before they existed", () =>
+    {
+        const older = Object.fromEntries(Object.entries(profile("grbl-1.1")).filter(([key]) => key !== "fileHeader" && key !== "fileExtension"));
+        const imported = importProfile(JSON.stringify(older));
+        expect(imported).toMatchObject({ profile: { fileHeader: [], fileExtension: "nc" } });
+        expect(validateProfile({ ...profile("grbl-1.1"), fileExtension: ".nc" }).map((issue) => issue.code)).toEqual(["invalidExtension"]);
     });
 });
