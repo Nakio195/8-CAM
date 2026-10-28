@@ -7,6 +7,7 @@
     import { ILLUSTRATIONS } from "../illustrations/registry";
     import FirstBoardGuide from "./FirstBoardGuide.svelte";
     import { helpAction } from "./helpAction";
+    import { modalLayer } from "./modalLayer";
     import { HELP_GROUPS, HELP_TOPICS } from "./topics";
 
     // Side help panel (specification 6.11): the "Ma première carte" guide, and the illustrated glossary of every topic
@@ -50,7 +51,7 @@
 </script>
 
 {#if help.panelOpen}
-    <div class="panel" bind:this={panel} tabindex="-1" role="dialog" aria-modal="false" aria-labelledby="help-panel-title"
+    <div class="panel" bind:this={panel} use:modalLayer tabindex="-1" role="dialog" aria-modal="false" aria-labelledby="help-panel-title"
         onkeydown={(event) => event.key === "Escape" && help.closePanel()}>
         <header>
             <Icon name="book" />

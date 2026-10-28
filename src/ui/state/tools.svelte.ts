@@ -1,6 +1,7 @@
 // Tool library of the user, kept in this browser (IndexedDB) and exchangeable as JSON files.
 
 import {
+    cleanToolNumbers,
     defaultLibrary,
     duplicateTool,
     exportLibrary,
@@ -46,7 +47,7 @@ class ToolLibraryState
         const stored = await loadSetting<Tool[]>(STORAGE_KEY);
         if (Array.isArray(stored) && stored.length > 0)
         {
-            this.tools = stored;
+            this.tools = stored.map(cleanToolNumbers);
         }
     }
 
@@ -58,7 +59,7 @@ class ToolLibraryState
     /** Adds or replaces a tool; an edited built-in tool becomes the user's own. */
     public save(tool: Tool): void
     {
-        const saved = { ...tool, builtIn: false };
+        const saved = { ...cleanToolNumbers(tool), builtIn: false };
         this.set(this.tools.some((entry) => entry.id === tool.id)
             ? this.tools.map((entry) => (entry.id === tool.id ? saved : entry))
             : [...this.tools, saved]);

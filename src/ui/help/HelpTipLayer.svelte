@@ -6,6 +6,7 @@
     import Icon from "../components/Icon.svelte";
     import { ILLUSTRATIONS } from "../illustrations/registry";
     import { TOOLTIP_ID } from "./helpAction";
+    import { modalLayer } from "./modalLayer";
 
     // The single tooltip of the application (specification 6.11): title, explanation, advice, warning,
     // "learn more" link to the help panel, and a pin. Parametric illustrations join it with the parameters (J5+).
@@ -89,6 +90,7 @@
         class:pinned={help.tip.pinned}
         class:above={position.above}
         role="tooltip"
+        use:modalLayer={help.tip.id}
         style:left={`${position.left}px`}
         style:top={`${position.top}px`}
         onpointerenter={() => help.keep()}

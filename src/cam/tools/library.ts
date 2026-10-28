@@ -36,8 +36,9 @@ function builtIn(id: string, type: ToolType, values: Partial<Tool> & { diameter:
  */
 export function defaultLibrary(): Tool[]
 {
-    const drillDepth = BOARD_THICKNESS + 0.2;
-    const cutoutDepth = BOARD_THICKNESS + 0.1;
+    // 1.6 + 0.1 is 1.7000000000000002 in floating point: rounded so the fields show 1.7
+    const drillDepth = roundValue(BOARD_THICKNESS + 0.2);
+    const cutoutDepth = roundValue(BOARD_THICKNESS + 0.1);
     return [
         builtIn("vbit-20-0.1", "vbit", {
             diameter: 3.175, tipDiameter: 0.1, tipAngle: 20, cutDepth: 0.075, depthPerPass: 0.075,
@@ -81,6 +82,23 @@ const NUMBER_FIELDS = [
     "diameter", "tipDiameter", "tipAngle", "cutDepth", "depthPerPass", "feedXY", "feedZ", "spindleSpeed", "travelZ", "safeZ"
 ] as const;
 
+/** Tool values are kept to 6 decimals (1 nm): enough for any tool, and free of floating point leftovers. */
+function roundValue(value: number): number
+{
+    return Math.round(value * 1e6) / 1e6;
+}
+
+/** The tool with its numbers rounded to 6 decimals (tools stored by earlier versions may hold 1.7000000000000002). */
+export function cleanToolNumbers(tool: Tool): Tool
+{
+    const clean = { ...tool };
+    for (const field of NUMBER_FIELDS)
+    {
+        clean[field] = roundValue(tool[field]);
+    }
+    return clean;
+}
+
 export type LibraryImportError = "notJson" | "wrongFormat" | "newerVersion" | "invalidTool";
 
 export type LibraryImport = { tools: Tool[]; skipped: number } | { error: LibraryImportError };
@@ -104,7 +122,7 @@ function readTool(value: unknown): Tool | null
         {
             return null;
         }
-        numbers[field] = number;
+        numbers[field] = roundValue(number);
     }
     const usages = Array.isArray(record.usages)
         ? record.usages.filter((usage): usage is ToolUsage => USAGES.includes(usage as ToolUsage))

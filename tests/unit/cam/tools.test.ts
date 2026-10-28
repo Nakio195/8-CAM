@@ -149,3 +149,17 @@ describe("library files", () =>
         expect(copy).toMatchObject({ id: "copy", builtIn: false, tipAngle: 20 });
     });
 });
+
+describe("tool values", () =>
+{
+    it("are free of floating point leftovers, built in or stored by an earlier version", async () =>
+    {
+        const { cleanToolNumbers } = await import("@cam/tools/index");
+        const library = defaultLibrary();
+        // 1.6 + 0.1 and 1.6 + 0.2 are not 1.7 and 1.8 in floating point
+        expect(library.find((tool) => tool.id === "cornmill-1.5")?.cutDepth).toBe(1.7);
+        expect(library.find((tool) => tool.id === "drill-0.8")?.cutDepth).toBe(1.8);
+        const stored = { ...(library[0] as Tool), cutDepth: 1.6 + 0.1, diameter: 0.1 + 0.2 };
+        expect(cleanToolNumbers(stored)).toMatchObject({ cutDepth: 1.7, diameter: 0.3 });
+    });
+});
