@@ -191,7 +191,7 @@
   "help.overlap.warning": "At 0 %, a copper hair can remain between two passes.",
   "help.millingDirection.title": "Milling direction",
   "help.millingDirection.body": "Climb milling: the tool turns in the feed direction, better finish on a rigid machine. Conventional milling: more tolerant of mechanical backlash.",
-  "help.millingDirection.advice": "Conventional is advised on hobby CNCs with backlash.",
+  "help.millingDirection.advice": "Climb by default for isolation (as in FlatCAM); switch to conventional if the machine has backlash.",
   "help.peck.title": "Peck drilling",
   "help.peck.body": "Depth drilled at each plunge in peck mode. Between plunges the drill comes out of the hole to clear the chips, then feeds down again from 0.5 mm above the board.",
   "help.peck.advice": "0.5 mm in general; less for drills under 0.6 mm.",
@@ -951,5 +951,13 @@
   "export.simulationEmpty": "Write the G-code at the previous step first: the simulation reads it back as the machine will.",
   "import.archive": "{file}: {count} Gerber or drill file(s) imported.",
   "import.archiveEmpty": "{file}: no Gerber or drill file in the archive.",
-  "import.archiveSkipped": "{count} other file(s) left aside"
+  "import.archiveSkipped": "{count} other file(s) left aside",
+  "defaults.save": "Use as default",
+  "defaults.current": "Default settings",
+  "defaults.reset": "Back to the built-in settings",
+  "help.operationDefaults.title": "Use as default",
+  "help.operationDefaults.body": "Keeps the settings of this operation (passes, overlap, milling direction, cycle, tabs…) for the next operations of the same kind. Depths, layers and the tool are still chosen from the board. Remembered in this browser.",
+  "help.operationDefaults.advice": "Tune an operation to your liking on a test board, then keep it as default.",
+  "help.operationDefaultsReset.title": "Back to the built-in settings",
+  "help.operationDefaultsReset.body": "The next operations of this kind take the settings shipped with 8-CAM again. Operations already created do not change."
 }

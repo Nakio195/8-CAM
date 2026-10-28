@@ -18,6 +18,7 @@
     import NumberField from "../components/base/NumberField.svelte";
     import Sticker from "../components/base/Sticker.svelte";
     import { toolLabel } from "../tools/labels";
+    import DefaultsBar from "./DefaultsBar.svelte";
     import { formatDuration } from "./format";
 
     let { operation }: { operation: IsolationOperation } = $props();
@@ -202,6 +203,7 @@
     {:else if !job && layer && tool}
         <Callout tone="info">{t("machining.stale")}</Callout>
     {/if}
+    <DefaultsBar kind="isolation" values={operation.params} />
 </article>
 
 <style>

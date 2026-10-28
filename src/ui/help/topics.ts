@@ -110,6 +110,8 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     { id: "passes", group: "machining", geometric: true },
     { id: "overlap", group: "machining", geometric: true },
     { id: "millingDirection", group: "machining", geometric: true },
+    { id: "operationDefaults", group: "machining" },
+    { id: "operationDefaultsReset", group: "machining" },
     { id: "peck", group: "machining", geometric: true },
     { id: "tabs", group: "machining", geometric: true },
     { id: "tabHeight", group: "machining", geometric: true },

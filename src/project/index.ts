@@ -6,3 +6,4 @@ export * from "./operations";
 export type * from "./export";
 export * from "./projectFile";
 export * from "./archive";
+export * from "./defaults";

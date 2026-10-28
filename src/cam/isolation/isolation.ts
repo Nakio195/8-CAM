@@ -41,7 +41,8 @@ export interface IsolationParams
 export const DEFAULT_ISOLATION: Readonly<IsolationParams> = {
     passes: 2,
     overlap: 0.15,
-    direction: "conventional",
+    // Climb like FlatCAM: cleaner copper edges with the small engraving machines of a fab lab
+    direction: "climb",
     combinePasses: true,
     extraOffset: 0
 };
