@@ -961,3 +961,94 @@ légèrement en X / Y négatifs.
 ### 16.7 Reste ouvert (J11)
 
 Panneau d'aide complet, guide « Ma première carte », relecture EN, finitions.
+
+---
+
+## 17. Résultats du jalon J11 (aide, guide, anglais, finitions)
+
+### 17.1 Infobulles : couverture vérifiée par les tests
+
+- `tests/unit/ui/coverage.test.ts` lit tous les composants et échoue si un bouton, un champ, une liste ou un indicateur
+  n'a pas de sujet d'aide (`use:help` ou `help=`). Exceptions listées et justifiées : champs de fichier cachés (le
+  bouton qui les ouvre a son aide), commandes de l'aide elle-même, page styleguide, cases à cocher dans une étiquette
+  ou un groupe qui porte l'aide.
+- Le premier passage a trouvé **5 commandes sans aide** (deux boutons « Fermer », le choix du fichier et la zone de
+  modification du G-code, les boutons « zoomer sur la zone » de l'isolation) : corrigées.
+- Chaque sujet utilisé dans le code existe et a ses textes ; **chaque paramètre numérique a une valeur conseillée**
+  (un champ en manquait : la numérotation des lignes du post-processeur). Le test a été vérifié en retirant une
+  valeur conseillée : il échoue bien.
+- Textes du tableau 6.11 repris tels quels ; le conseil « Miroir » reprend la phrase du cahier des charges
+  (« obligatoire pour la face arrière d'une carte double face »).
+- **163 sujets d'aide**, tous illustrés quand ils sont géométriques. Plus aucun sujet n'attend son illustration.
+
+### 17.2 Guide « Ma première carte »
+
+Dans le panneau d'aide (onglet **Ma première carte**, et bouton « Guide pas à pas » sur l'écran d'accueil), 8 étapes :
+importer, lire l'analyse, vérifier les outils, isoler, percer, détourer, écrire le G-code, sur la machine.
+
+- L'état de chaque étape est **lu dans le projet** : fichiers importés, onglets Analyse et Outils ouverts,
+  opérations calculées, G-code écrit. Le perçage est marqué « sauté » sans fichier de perçage. Une barre indique
+  l'avancement et l'étape à faire est mise en avant avec son illustration.
+- Chaque étape a un bouton qui **la fait avec les réglages conseillés** (charger la carte d'exemple, créer
+  l'isolation…) ou ouvre l'endroit où elle se fait.
+- Testé dans le navigateur de bout en bout sur la carte d'exemple : 7 étapes sur 7, sans erreur.
+
+### 17.3 Panneau d'aide
+
+Deux onglets : le guide et le **glossaire illustré** (tous les sujets par thème, avec illustration, valeur conseillée
+et mise en garde). Une **recherche** filtre le glossaire sans tenir compte des accents ni des majuscules (« decalage »
+trouve « Décalage »).
+
+### 17.4 Anglais
+
+Les deux catalogues ont exactement les mêmes clés (vérifié à la compilation). Un nouveau test refuse les accents et les
+mots français courants dans le catalogue anglais : aucun reste. Les 27 valeurs identiques en français et en anglais
+sont des mots communs aux deux langues (Simulation, Isolation, Notes…).
+
+### 17.5 Finitions
+
+- Les durées estimées des cartes d'opération et du comparateur utilisent la **vitesse des rapides de la machine
+  utilisée** (onglet Machine), comme l'export, au lieu d'une valeur fixe de 1 000 mm/min.
+- Commentaires périmés corrigés (annulation non prévue au cahier des charges, renvois aux jalons).
+- README : utilisation, déploiement (site statique, aucun serveur), bancs de mesure.
+
+### 17.6 Couverture des tests (exigence section 8 : > 80 %)
+
+| Périmètre                        | Lignes | Branches | Fonctions |
+| -------------------------------- | ------ | -------- | --------- |
+| `core`, `parsers`, `cam`, `post` | 97 %   | 89 %     | 99 %      |
+
+Le module le plus bas est `cam/cutout` (99 % des lignes, 78 % des branches : il reste les valeurs de repli
+défensives). 304 tests unitaires, 3 fichiers G-code de référence, bancs de mesure séparés.
+
+---
+
+## 18. Bilan de la V1
+
+### 18.1 Cahier des charges
+
+| Exigence                                                      | Statut                                                                         |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Gerber RS-274X / X2, Excellon, perçage Gerber X2              | fait (J2, J3)                                                                  |
+| Bibliothèque d'outils, analyse, recommandations, comparateur  | fait (J5, J6)                                                                  |
+| Isolation, zones non isolées                                  | fait, équivalente à FlatCAM à 2 µm (J6)                                        |
+| Perçage optimisé, débourrage, trous fraisés, rainures         | fait (J7)                                                                      |
+| Détourage, attaches automatiques et manuelles                 | fait (J8)                                                                      |
+| Post-processeurs JSON GRBL, Marlin, LinuxCNC, éditeur, aperçu | fait (J9)                                                                      |
+| Origine, miroir, export, simulation, projet                   | fait (J10)                                                                     |
+| Infobulles complètes, illustrations, guide, FR / EN           | fait (J11)                                                                     |
+| Parsing 5 Mo < 3 s                                            | 0,4 s pour 9,2 Mo (J4)                                                         |
+| Isolation 2 passes, carte dense < 5 s                         | 0,9 s sans plan de masse ; 3 à 7 s avec plan de masse (pire cas, section 12.4) |
+| Interface jamais bloquée                                      | calculs lourds dans des Workers, annulables                                    |
+| Précision < 1 µm                                              | tests à l'appui (sections 6.3, 14.1)                                           |
+| Couverture > 80 %                                             | 97 % des lignes (17.6)                                                         |
+
+### 18.2 Reste ouvert
+
+- **Essai sur la CNC de l'atelier** : seul critère que les tests ne peuvent pas remplacer (J10).
+- Isolation d'une carte dense **avec plan de masse** : jusqu'à 7 s au lieu de 5 s (section 12.4).
+- Découpes intérieures d'une carte (trous de forme dans le contour) : non usinées.
+- Couche contour réelle (Edge.Cuts, GKO) : couverte par des tests, pas encore essayée dans le navigateur faute de
+  fichier.
+- Sous miroir, l'hélice des trous fraisés change de sens (sans effet notable).
+- Hors périmètre V1 (section 11 du cahier des charges) : gravure laser, retrait du cuivre (NCC), panelisation, double face avec trous d'alignement, pilotage direct (WebSerial), carte de hauteur, DXF / SVG, vue 3D, DRC.

@@ -57,6 +57,13 @@ describe("board edge", () =>
         }
     });
 
+    it("keeps the outer outline of a band too wide to be a drawn line", () =>
+    {
+        // A 50 x 30 mm frame 8 mm wide is a part of the board, not the line of its edge
+        const frame: Polygon = { outer: rectanglePath(0, 0, 50 * MM, 30 * MM), holes: [rectanglePath(8 * MM, 8 * MM, 42 * MM, 22 * MM)] };
+        expect(boardEdge([frame])?.outer).toEqual(frame.outer);
+    });
+
     it("keeps a filled outline as it is and ignores an empty layer", () =>
     {
         expect(boardEdge([BOARD])?.outer).toEqual(BOARD.outer);
@@ -163,6 +170,18 @@ describe("cutout plan and moves", () =>
         const lap = pathLength(contour, true) / MM;
         expect(stats.cutLength).toBeGreaterThan(5 * lap);
         expect(stats.cutLength).toBeLessThan(5 * lap + 20);
+    });
+
+    it("writes nothing for an empty contour and walks a contour with very close points", () =>
+    {
+        const plan = planCutout(contour, [], DEFAULT_CUTOUT, tool);
+        expect(cutoutMoves({ ...plan, contour: [] }, tool)).toEqual([]);
+        // Points closer than one internal unit are skipped without breaking the lap
+        const crowded = [...contour.slice(0, 2), { x: (contour[1]?.x ?? 0) + 0.2, y: contour[1]?.y ?? 0 }, ...contour.slice(2)];
+        const moves = cutoutMoves(planCutout(crowded, [], DEFAULT_CUTOUT, tool), tool);
+        expect(checkMoves(moves, tool.travelZ, tool.safeZ)).toEqual([]);
+        // A distance beyond the end of the loop wraps around to its start
+        expect(pointAt(contour, pathLength(contour, true))).toEqual({ x: contour[0]?.x, y: contour[0]?.y });
     });
 
     it("reports tabs that cannot be made", () =>

@@ -18,3 +18,25 @@ npm run build
 
 Code conventions (specification section 4): Allman braces, private members prefixed with `m`, English identifiers
 and comments, user-facing text in `src/ui/i18n/*.json`. ESLint enforces them (`npm run format` fixes most issues).
+
+## Using 8-CAM
+
+1. Open or drop the Gerber files of the board (copper, outline) and its drill files, or load the example board.
+2. Read the analysis: tightest gap, thinnest track, hole sizes, and the tools that fit.
+3. In the Machining tab, create the isolation, drilling and cutout operations (the recommended tools are chosen).
+4. Write the G-code with the profile of your machine (Machine tab), watch the simulation, download the files.
+5. Save the project (`.8cam.json`) to find everything again, source files included.
+
+The help panel (book icon) holds the step by step guide "Ma première carte" and the illustrated glossary; every
+button and field has its own tooltip.
+
+## Deployment
+
+`npm run build` writes a static site to `dist/`: copy it to any web server (no back end, no database). Files never
+leave the user's browser; tools, machines and post-processor profiles are kept in its IndexedDB.
+
+## Benchmarks
+
+```bash
+npm run bench      # parsing, copper, isolation and hole order of dense boards (machine dependent)
+```
