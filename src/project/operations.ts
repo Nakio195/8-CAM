@@ -4,6 +4,7 @@ import type { ClearanceSpot } from "@cam/analysis/index";
 import type { CutoutIssueCode, CutoutParams } from "@cam/cutout/index";
 import { DEFAULT_DRILLING, type DrillingIssue, type DrillingParams, type DrillMethod, type RouteDistances } from "@cam/drilling/index";
 import { DEFAULT_ISOLATION, type IsolationParams } from "@cam/isolation/index";
+import type { Move } from "@cam/toolpath/index";
 import type { Tool } from "@cam/tools/index";
 import type { BBox, Path, PackedPolygons, Point } from "@core/geometry/index";
 
@@ -79,6 +80,8 @@ export interface DrillingOutput
     duration: number;
     /** Machine safety problems found in the generated moves (none expected). */
     safetyIssues: number;
+    /** Machine moves of each tool (same order as runs), written to G-code by the export (Gerber millimetres). */
+    runMoves: Move[][];
     computeMs: number;
 }
 
@@ -117,6 +120,8 @@ export interface CutoutOutput
     issues: CutoutIssueCode[];
     /** Machine safety problems found in the generated moves (none expected). */
     safetyIssues: number;
+    /** Machine moves, written to G-code by the export (Gerber millimetres). */
+    moves: Move[];
     computeMs: number;
 }
 

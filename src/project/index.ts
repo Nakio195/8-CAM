@@ -3,3 +3,4 @@
 export type * from "./importedFile";
 export * from "./layers";
 export * from "./operations";
+export type * from "./export";

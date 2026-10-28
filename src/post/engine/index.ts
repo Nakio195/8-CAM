@@ -3,4 +3,5 @@ export * from "./profile";
 export * from "./reader";
 export * from "./safety";
 export * from "./sample";
+export * from "./setup";
 export * from "./writer";

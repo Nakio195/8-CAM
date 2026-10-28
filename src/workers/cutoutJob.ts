@@ -42,6 +42,7 @@ export function runCutout(request: CutoutRequestData): CutoutOutput
         duration: statistics.duration,
         issues: plan.issues.map((issue) => issue.code),
         safetyIssues: checkMoves(moves, request.tool.travelZ, request.tool.safeZ).length,
+        moves,
         computeMs: performance.now() - start
     };
 }
