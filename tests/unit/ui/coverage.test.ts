@@ -86,7 +86,7 @@ describe("help coverage", () =>
         const withoutAdvice: string[] = [];
         for (const file of svelteFiles(ROOT))
         {
-            for (const match of readFileSync(file, "utf8").matchAll(/<NumberField[^>]*?help="(\w+)"/gs))
+            for (const match of readFileSync(file, "utf8").matchAll(/<NumberField\b[^>]*?help="(\w+)"/gs))
             {
                 const topic = match[1] ?? "";
                 if (!(`help.${topic}.advice` in fr))
