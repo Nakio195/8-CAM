@@ -18,6 +18,8 @@
     import Icon from "./components/Icon.svelte";
     import LayerPanel from "./components/LayerPanel.svelte";
     import SidebarTabs from "./components/SidebarTabs.svelte";
+    import MachinePanel from "./machine/MachinePanel.svelte";
+    import { machineState } from "./state/machine.svelte";
     import AnalysisPanel from "./analysis/AnalysisPanel.svelte";
     import { toolLibrary } from "./state/tools.svelte";
     import ToolLibraryPanel from "./tools/ToolLibraryPanel.svelte";
@@ -98,6 +100,7 @@
         document.documentElement.lang = i18n.locale;
         // The analysis needs the tool library even before the Tools tab is opened
         void toolLibrary.load();
+        void machineState.load();
         // Development helper: ?load=url1,url2 imports files served by the dev server (performance checks)
         if (import.meta.env.DEV)
         {
@@ -167,7 +170,8 @@
                 { id: "project", label: t("tabs.project"), help: "tabProject" },
                 { id: "tools", label: t("tabs.tools"), help: "tabTools" },
                 { id: "analysis", label: t("tabs.analysis"), help: "tabAnalysis" },
-                { id: "machining", label: t("tabs.machining"), help: "tabMachining" }
+                { id: "machining", label: t("tabs.machining"), help: "tabMachining" },
+                { id: "machine", label: t("tabs.machine"), help: "tabMachine" }
             ]} />
             <div class="tab-panel" id={`panel-${sidebarTab}`} role="tabpanel" aria-labelledby={`tab-${sidebarTab}`}>
                 {#if sidebarTab === "project"}
@@ -176,8 +180,10 @@
                     <ToolLibraryPanel />
                 {:else if sidebarTab === "analysis"}
                     <AnalysisPanel />
-                {:else}
+                {:else if sidebarTab === "machining"}
                     <MachiningPanel />
+                {:else}
+                    <MachinePanel />
                 {/if}
             </div>
             <p class="version">{t("app.version", { version: APP_VERSION })}</p>

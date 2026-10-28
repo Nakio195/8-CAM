@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { autoTabs, cutoutContour, cutoutMoves, DEFAULT_CUTOUT, planCutout } from "@cam/cutout/index";
-import { DEFAULT_DRILLING, drillingMoves, planDrilling } from "@cam/drilling/index";
-import { moveStatistics, segmentsToMoves, type Move } from "@cam/toolpath/index";
+import { moveStatistics, type Move } from "@cam/toolpath/index";
 import { defaultLibrary, type Tool } from "@cam/tools/index";
-import { rectanglePath } from "@core/geometry/index";
-import { mmToInternal } from "@core/units/index";
 import {
     BUILT_IN_PROFILES,
     checkGcode,
@@ -15,6 +11,7 @@ import {
     importMachine,
     importProfile,
     readGcode,
+    sampleJob as sampleJobOf,
     sanitizeComment,
     validateMachine,
     validateProfile,
@@ -22,8 +19,6 @@ import {
     type PostJob,
     type PostProfile
 } from "@post/index";
-
-const MM = mmToInternal(1);
 
 function tool(id: string): Tool
 {
@@ -45,30 +40,15 @@ function profile(id: string): PostProfile
     return found;
 }
 
-/** A small but complete job: isolation of two pads, three holes pecked with a dwell, cutout with two tabs. */
+/** The sample job of the profile preview, with the built-in tools. */
 function sampleJob(): PostJob
 {
-    const vbit = tool("vbit-30-0.2");
-    const isolation = segmentsToMoves([
-        { points: rectanglePath(2 * MM, 2 * MM, 4 * MM, 4 * MM), closed: true },
-        { points: rectanglePath(8 * MM, 2 * MM, 10 * MM, 4 * MM), closed: true }
-    ], { ...vbit, toolId: vbit.id }, "Isolation");
-    const drill = tool("drill-0.8");
-    const drilling = drillingMoves(planDrilling([{ diameter: 0.8 * MM, holes: [{ x: 3 * MM, y: 3 * MM }, { x: 9 * MM, y: 3 * MM }, { x: 6 * MM, y: 8 * MM }], slots: [], tool: drill }]),
-        { ...DEFAULT_DRILLING, cycle: "peck", peckDepth: 0.9, dwell: 0.5 });
-    const mill = tool("cornmill-1.5");
-    const contour = cutoutContour(null, { minX: 0, minY: 0, maxX: 12 * MM, maxY: 10 * MM }, { ...DEFAULT_CUTOUT, mode: "rectangle", margin: 1 }, mill.diameter);
-    const plan = planCutout(contour, autoTabs(contour, 2, (DEFAULT_CUTOUT.tabWidth + mill.diameter) * MM), DEFAULT_CUTOUT, mill);
-    return {
-        name: "Golden test board",
-        version: "0.0.1",
-        date: new Date(2026, 9, 28, 14, 5),
-        operations: [
-            { label: "Isolation, bottom copper", tool: vbit, toolLabel: "V-bit 30° 0,2 mm", moves: isolation },
-            { label: "Drilling", tool: drill, toolLabel: "Foret 0,8 mm", moves: drilling },
-            { label: "Cutout", tool: mill, toolLabel: "Fraise maïs 1,5 mm", moves: cutoutMoves(plan, mill) }
-        ]
-    };
+    const job = sampleJobOf({
+        isolation: { tool: tool("vbit-30-0.2"), label: "V-bit 30° 0,2 mm" },
+        drill: { tool: tool("drill-0.8"), label: "Foret 0,8 mm" },
+        cutout: { tool: tool("cornmill-1.5"), label: "Fraise maïs 1,5 mm" }
+    }, new Date(2026, 9, 28, 14, 5), "0.0.1");
+    return { ...job, name: "Golden test board", operations: job.operations.map((operation, index) => ({ ...operation, label: ["Isolation, bottom copper", "Drilling", "Cutout"][index] ?? operation.label })) };
 }
 
 describe("built-in profiles", () =>

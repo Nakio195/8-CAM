@@ -201,7 +201,7 @@ Critère d'acceptation : `docs/architecture.md` validé, `npm test` vert.
 
 ### 5.1 Profil machine réglable
 
-Les dimensions machine ne sont **pas figées dans le code** : un modèle `MachineProfile` (dans `project/`) contient au
+Les dimensions machine ne sont **pas figées dans le code** : un modèle `MachineProfile` (dans `post/`, voir 15.4) contient au
 minimum
 
 | Champ                           | Description                      | Valeur par défaut (3018) |
@@ -209,7 +209,7 @@ minimum
 | `name`                          | nom du profil                    | « CNC 3018 »             |
 | `travelX`, `travelY`, `travelZ` | courses utiles (mm)              | 300 / 180 / 45           |
 | `safeZ`                         | hauteur de sécurité machine (mm) | 5                        |
-| `maxSpindleSpeed`               | vitesse broche maxi (tr/min)     | 10 000                   |
+| `maxSpindleSpeed`               | vitesse broche maxi (tr/min)     | 12 000 (voir 15.4)       |
 | `maxFeedXY`, `maxFeedZ`         | avances maxi (mm/min)            | 1 500 / 500              |
 
 Plusieurs profils peuvent coexister (une machine par profil), persistés dans IndexedDB, exportables en JSON et
@@ -802,3 +802,86 @@ Pas de couche contour dans les fichiers Proteus : coupe rectangulaire à 2 mm du
 
 - Découpes intérieures de la carte.
 - Vérification que la coupe tient dans la course de la machine : avec les profils machine (J9 / J10).
+
+---
+
+## 15. Résultats du jalon J9 (post-processeurs et profils machine)
+
+### 15.1 Moteur (`src/post/engine/`)
+
+- **Profil JSON déclaratif** (`8cam-post`, version 1) : unités (G21 / G20 avec conversion), décimales des
+  coordonnées et des avances, numérotation N, style de commentaire, arcs G2 / G3 natifs ou découpés en segments à
+  moins de 5 µm, avance F modale ou sur chaque ligne, F sur les rapides, mots des quatre mouvements, gabarits de
+  début, changement d'outil, broche, temporisation et fin, mots refusés. Les classes Python de FlatCAM deviennent des
+  données que l'utilisateur peut modifier, importer et exporter.
+- **Gabarits à variables** : `{safeZ}`, `{spindleSpeed}`, `{toolNumber}`, `{toolName}`, `{toolDiameter}`, `{feedXY}`,
+  `{feedZ}`, `{seconds}`, `{milliseconds}`, `{rapidFeed}`, `{message}`, `{date}`, `{jobName}`… Une ligne de gabarit
+  entre parenthèses est un commentaire, écrit dans le style du profil.
+- **Écrivain unique** : en-tête commenté (logiciel et version, travail, date, machine et courses, unités, étendue X / Y,
+  chaque opération avec son outil, ses avances, sa vitesse et ses hauteurs ; section 7), puis les mouvements. Seuls les
+  axes qui changent sont écrits ; « -0.0000 » devient « 0.0000 ». Les commentaires sont réduits à l'ASCII sans
+  parenthèses (« ° » → « deg », « Ø » → « D », accents retirés) : certains contrôleurs s'arrêtent sur le reste.
+- **Extensible** : la broche est un gabarit (`M3 S…`), un profil laser (M4, puissance S) ne demandera que des
+  gabarits et peut-être une variable de puissance.
+
+### 15.2 Profils fournis
+
+| Profil   | D'après FlatCAM | Particularités                                                                                                                     |
+| -------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| GRBL 1.1 | `GRBL_11.py`    | `G00`/`G01`, F modal ; **pas de M6** (GRBL 1.1 le refuse, erreur 20) : `M05`, montée, message, pause `M0` ; `M6` est un mot refusé |
+| Marlin   | `Marlin.py`     | `;` pour les commentaires, F sur chaque coupe et sur les `G0`, `M400` avant `M5`, `G4 P` en millisecondes, `M0 message`            |
+| LinuxCNC | `default.py`    | `T{n} M06` (LinuxCNC affiche sa fenêtre de changement d'outil), `G04 P` en secondes, `G40 G49` au début                            |
+
+Tous démarrent la broche avec 2 s de temporisation pour qu'elle prenne sa vitesse.
+
+### 15.3 Tests
+
+- **Fichiers de référence** (`tests/golden/*.nc`) : un travail fixe (isolation de deux pastilles, trois trous avec
+  débourrage et temporisation, détourage avec deux attaches), écrit avec chaque profil et comparé au caractère près.
+  Le même travail sert d'aperçu dans l'interface (`src/post/engine/sample.ts`).
+- **Relecture** : un lecteur G-code minimal (`reader.ts`) relit chaque fichier écrit. Les règles de sécurité de la
+  section 7 sont vérifiées **sur le texte envoyé à la machine**, pas seulement sur les mouvements dont il vient. On
+  vérifie aussi que la longueur coupée relue égale celle des mouvements et qu'aucun mot inconnu n'est écrit.
+- Options : numérotation, pouces, arcs natifs ou découpés (chaque point à 10 mm du centre), mots refusés détectés,
+  profils invalides refusés, import / export aller-retour.
+
+### 15.4 Profil machine (`src/post/machine.ts`)
+
+Champs de la section 5.1 (courses X / Y / Z, hauteur de sécurité, broche maxi, avances maxi) plus la vitesse des
+rapides (estimation des durées, `F` des `G0` Marlin) et le profil de post-processeur de la machine. Il est rangé dans
+`post` et non dans `project`, comme prévu au départ, parce que les vérifications de sécurité qui le lisent sont dans
+`post` et que `post` ne peut pas importer `project`.
+
+**Changement** : broche maxi par défaut **12 000 tr/min** au lieu de 10 000. La fraise maïs de la bibliothèque
+d'origine tourne à 12 000 tr/min (tableau 6.10), et le travail FlatCAM de To indique aussi 12 000 : avec 10 000, la
+bibliothèque d'origine aurait été signalée sur la machine d'origine.
+
+**Vérifications d'un travail** (`checkJob`) : rapides et hauteurs (section 7), travail plus grand que la course X / Y,
+profondeur + hauteur de sécurité au-delà de la course Z, hauteur de sécurité d'un outil au-delà de la course Z
+(erreurs) ; avance ou broche au-dessus du maximum, profondeur de plus de 3 mm, avance de moins de 5 mm/min, diamètre
+inhabituel (avertissements). La position du travail dans la course dépend de l'origine choisie : elle sera vérifiée
+en J10 avec le choix de l'origine.
+
+### 15.5 Interface
+
+- 5e onglet **Machine** : machine utilisée, nouvelle (copie), import / export JSON, suppression (il en reste toujours
+  une), champs avec infobulles. Les courses ont une illustration : plateau à l'échelle avec une carte de 10 x 10 cm.
+- **Post-processeur** : choix du profil de la machine, description dans la langue de l'interface, « Copier pour
+  modifier » (les profils fournis ne se modifient pas), import / export, suppression. L'éditeur couvre tous les champs
+  du profil ; chaque modification valide est enregistrée tout de suite.
+- **Aperçu en direct** coloré (mots G, mots M, coordonnées, avances, commentaires, numéros de ligne). Il est mis à jour
+  à chaque frappe et accompagné des mots refusés trouvés (avec leur ligne), des problèmes de sécurité du texte relu et
+  des avertissements du travail.
+- Machines et profils sont enregistrés dans le navigateur (IndexedDB), vérifié après rechargement.
+
+### 15.6 Défauts trouvés et corrigés
+
+- Lignes vides en double dans l'aperçu (lignes en bloc plus sauts de ligne) : les lignes sont en ligne. Une copie de
+  l'aperçu donne le G-code exact.
+- Descriptions des profils fournis en anglais dans l'interface française : traduites.
+- Une erreur « boucle d'effets » de l'infobulle est apparue une fois dans le panneau étroit, sans pouvoir être
+  reproduite. Le placement de l'infobulle n'écrit plus une position inchangée et ne suit plus ce qu'il lit.
+
+### 15.7 Reste ouvert
+
+- Export du G-code du projet, backplot et choix de l'origine / miroir : J10.

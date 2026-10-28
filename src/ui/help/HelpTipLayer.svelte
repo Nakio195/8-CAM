@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { untrack } from "svelte";
     import { isMessageKey } from "../i18n";
     import { i18n } from "../state/i18n.svelte";
     import { help } from "../state/help.svelte";
@@ -42,14 +43,20 @@
         const above = window.innerHeight - below < box.height + MARGIN && anchor.top - GAP - box.height > MARGIN;
         const left = Math.min(Math.max(MARGIN, anchor.left + anchor.width / 2 - box.width / 2),
             window.innerWidth - box.width - MARGIN);
-        position = { left, top: above ? anchor.top - GAP - box.height : below, above };
+        const next = { left, top: above ? anchor.top - GAP - box.height : below, above };
+        // Writing an unchanged position would render again for nothing
+        if (next.left !== position.left || next.top !== position.top || next.above !== position.above)
+        {
+            position = next;
+        }
     }
 
     $effect(() =>
     {
         if (help.tip && tooltip)
         {
-            place();
+            // Placing reads the position and the tooltip size: only a new tip or a new tooltip element places it again
+            untrack(place);
         }
     });
 

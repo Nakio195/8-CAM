@@ -8,6 +8,7 @@ import DepthPasses from "./DepthPasses.svelte";
 import DrillCycle from "./DrillCycle.svelte";
 import HoleMilling from "./HoleMilling.svelte";
 import IsolationPasses from "./IsolationPasses.svelte";
+import MachineTravel from "./MachineTravel.svelte";
 import MillingDirection from "./MillingDirection.svelte";
 import NonIsolated from "./NonIsolated.svelte";
 import ToolProfile from "./ToolProfile.svelte";
@@ -113,6 +114,10 @@ export const ILLUSTRATIONS: Readonly<Record<string, TopicIllustration>> = {
     cutoutDepth: {
         component: as(DepthPasses),
         props: (values) => ({ depth: values.cutDepth ?? 1.7, depthPerPass: values.depthPerPass ?? 0.4, thickness: values.thickness ?? 1.6 })
+    },
+    machineTravel: {
+        component: as(MachineTravel),
+        props: (values) => ({ travelX: values.machineX ?? 300, travelY: values.machineY ?? 180, travelZ: values.machineZ ?? 45 })
     },
     nonIsolated: {
         component: as(NonIsolated),

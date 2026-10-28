@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { render } from "svelte/server";
 import { effectiveWidth } from "@cam/tools/index";
 import { HELP_TOPICS } from "@ui/help/topics";
-import { cutoutTabs, depthPasses, drillCycle, holeMilling, isolationPasses, nonIsolated, toolProfile, vbitSection, zHeights } from "@ui/illustrations/geometry";
+import { cutoutTabs, depthPasses, drillCycle, machineTravel, holeMilling, isolationPasses, nonIsolated, toolProfile, vbitSection, zHeights } from "@ui/illustrations/geometry";
 import { ILLUSTRATIONS, PENDING_ILLUSTRATIONS } from "@ui/illustrations/registry";
 import BoardThickness from "@ui/illustrations/BoardThickness.svelte";
 import CutoutTabs from "@ui/illustrations/CutoutTabs.svelte";
@@ -10,6 +10,7 @@ import DepthPasses from "@ui/illustrations/DepthPasses.svelte";
 import DrillCycle from "@ui/illustrations/DrillCycle.svelte";
 import HoleMilling from "@ui/illustrations/HoleMilling.svelte";
 import IsolationPasses from "@ui/illustrations/IsolationPasses.svelte";
+import MachineTravel from "@ui/illustrations/MachineTravel.svelte";
 import MillingDirection from "@ui/illustrations/MillingDirection.svelte";
 import NonIsolated from "@ui/illustrations/NonIsolated.svelte";
 import ToolProfile from "@ui/illustrations/ToolProfile.svelte";
@@ -42,6 +43,15 @@ describe("illustration geometry", () =>
         expect(middles).toHaveLength(4);
         expect(shape.side.tabHeight / shape.side.boardHeight).toBeCloseTo(0.5 / 1.6, 2);
         expect(cutoutTabs(0, 2, 0.5, 1.6, 0, 1.5).tabs).toEqual([]);
+    });
+
+    it("draws the machine bed to scale with a 10 x 10 cm board", () =>
+    {
+        const shape = machineTravel(300, 180, 45);
+        expect(shape.bed.width / shape.bed.height).toBeCloseTo(300 / 180, 1);
+        expect(shape.board.width / shape.bed.width).toBeCloseTo(100 / 300, 1);
+        expect(shape.tooSmall).toBe(false);
+        expect(machineTravel(80, 200, 30).tooSmall).toBe(true);
     });
 
     it("draws the circle followed by the tool centre inside a milled hole", () =>
@@ -141,8 +151,9 @@ describe("illustration components", () =>
         expect(render(NonIsolated, { props: { gap: 0.4, width: 0.8 } }).body).toMatchSnapshot();
     });
 
-    it("renders the cutout drawing", () =>
+    it("renders the cutout and machine drawings", () =>
     {
+        expect(render(MachineTravel, { props: { travelX: 300, travelY: 180, travelZ: 45 } }).body).toMatchSnapshot();
         expect(render(CutoutTabs, { props: { count: 4, tabWidth: 2, tabHeight: 0.5, margin: 1 } }).body).toMatchSnapshot();
     });
 

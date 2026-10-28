@@ -431,3 +431,33 @@ export function cutoutTabs(count: number, tabWidth: number, tabHeight: number, t
         side: { x: 186, bottomY: 108, boardHeight: round(thickness * sideScale), tabHeight: round(Math.min(thickness, Math.max(0, tabHeight)) * sideScale) }
     };
 }
+
+// ----- Machine travel -----
+
+export interface MachineTravelShape
+{
+    /** Machine bed (X and Y travel) seen from above. */
+    bed: { x: number; y: number; width: number; height: number };
+    /** A 10 x 10 cm board in the bed corner, to scale. */
+    board: { x: number; y: number; width: number; height: number };
+    /** Z travel drawn as a bar, to scale with the bed up to a limit. */
+    zBar: { x: number; top: number; height: number };
+    /** The board does not fit in the travel. */
+    tooSmall: boolean;
+}
+
+/** Bed of travelX x travelY mm with a 100 x 100 mm board at the origin (front left corner), and the Z travel. */
+export function machineTravel(travelX: number, travelY: number, travelZ: number): MachineTravelShape
+{
+    const x = Math.max(1, travelX);
+    const y = Math.max(1, travelY);
+    const scale = Math.min(150 / x, 104 / y, 150 / 100, 104 / 100);
+    const bed = { x: 16, y: 16 + (104 - y * scale), width: x * scale, height: y * scale };
+    const board = Math.min(100 * scale, 150);
+    return {
+        bed: { x: round(bed.x), y: round(bed.y), width: round(bed.width), height: round(bed.height) },
+        board: { x: round(bed.x), y: round(bed.y + bed.height - Math.min(board, 104)), width: round(Math.min(board, 150)), height: round(Math.min(board, 104)) },
+        zBar: { x: 196, top: round(120 - Math.min(104, Math.max(2, travelZ * scale))), height: round(Math.min(104, Math.max(2, travelZ * scale))) },
+        tooSmall: travelX < 100 || travelY < 100
+    };
+}
