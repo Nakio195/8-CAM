@@ -885,3 +885,79 @@ en J10 avec le choix de l'origine.
 ### 15.7 Reste ouvert
 
 - Export du G-code du projet, backplot et choix de l'origine / miroir : J10.
+
+---
+
+## 16. Résultats du jalon J10 (export, simulation, sauvegarde du projet)
+
+### 16.1 Placement sur la machine (`src/post/engine/setup.ts`)
+
+- **Origine** : coin bas-gauche de la carte (par défaut), centre de la carte, ou origine des fichiers Gerber. La carte
+  est le rectangle de toutes les couches, visibles ou non.
+- **Miroir** gauche-droite pour fraiser la face inférieure d'une carte retournée : la carte est retournée autour de
+  son propre axe vertical (elle reste en place), ou autour de l'axe Y Gerber quand l'origine Gerber est gardée. Les arcs
+  changent de sens.
+- **Le sens de coupe est conservé** : un miroir inverse tous les parcours, donc l'avalant deviendrait opposition. Les
+  boucles d'isolation sont retournées avant le miroir et le détourage est recalculé dans l'autre sens. Testé : la
+  première boucle tourne dans le même sens avec ou sans miroir. Exception : l'hélice des trous fraisés change de sens
+  sous miroir (sans effet notable sur un trou).
+- **Miroir désactivé par défaut**. Le travail FlatCAM de To sur la face inférieure de FTDI_Max n'était pas en miroir
+  (nos parcours non mirés coïncident avec les siens à 2 µm, section 12.2). Quand une couche de dessous est isolée sans
+  miroir, un message rappelle quand cocher le miroir.
+
+### 16.2 Export (`src/workers/exportJob.ts`, dans le Worker CAM)
+
+- Opérations calculées dans l'ordre d'usinage : isolation, perçage **un outil par opération** (chaque foret a son
+  changement d'outil nommé), détourage. Chacune peut être décochée.
+- Un seul fichier, ou **un fichier par opération** (`Nom-1-Isolation.nc`…). Nom par défaut tiré du premier fichier
+  importé (`FTDI_Max`).
+- Chaque fichier passe par le post-processeur de la machine (J9), puis par les vérifications : travail
+  (`checkJob` : course, profondeur, vitesses, valeurs aberrantes) et **texte relu** (`checkGcode` : rapides, hauteurs
+  de sécurité). Les mots refusés par le contrôleur sont signalés avec le fichier et la ligne.
+- **Texte du G-code** coloré (1 500 premières lignes affichées, le fichier téléchargé est complet) et **modifiable à
+  la main**. Le texte modifié est revérifié et c'est lui qui est téléchargé.
+- Téléchargement fichier par fichier ou en une fois (`.nc`).
+
+### 16.3 Simulation (backplot)
+
+- Le **G-code écrit est relu** (lecteur de J9) et ramené dans les coordonnées de la carte. La simulation montre donc
+  ce qui partira vers la machine, pas les parcours d'origine.
+- Trajet complet en pâle, partie faite en couleur (coupes vertes, rapides roses en pointillés), outil en jaune, zéro
+  machine marqué d'une croix rouge.
+- Lecture et pause, curseur de position, vitesse ×1 à ×500, barre de progression, temps écoulé et total.
+  La durée suit les avances, les rapides à la vitesse de la machine et les temporisations.
+- La lecture avance par pas de 100 ms (dix images par seconde suffisent). Une première version suivait
+  l'affichage du navigateur et s'arrêtait quand la fenêtre n'était pas redessinée.
+
+### 16.4 Projet (`src/project/projectFile.ts`)
+
+- Fichier `.8cam.json` (`8cam-project`, version 1) : **contenu des fichiers importés**, affichage des couches,
+  épaisseur, bibliothèque d'outils, machine (et son post-processeur s'il est personnel), opérations avec leurs
+  réglages (attaches comprises), origine, miroir et options d'export. Les résultats ne sont pas enregistrés : ils sont
+  recalculés à l'ouverture.
+- **Ouvrir** remplace le projet (après confirmation) : fichiers importés de nouveau dans le même ordre, outils du projet
+  remis dans la bibliothèque (même identifiant remplacé), machine ajoutée ou mise à jour, opérations recalculées.
+  On peut aussi déposer le fichier sur la fenêtre.
+- Testé dans le navigateur : FTDI_Max enregistré puis rouvert, mêmes couches dans le même ordre, isolation, perçage
+  (3 forets) et détourage (4 attaches) recalculés.
+
+### 16.5 Illustration origine et miroir
+
+**Miniature de la carte réelle** (spécification 6.12) : le cuivre de la première couche, simplifié à quelques
+centaines de points, posé comme sur la machine (en miroir si coché), avec le zéro et les axes X / Y. Une carte simple
+la remplace avant tout import. Plus aucun sujet géométrique n'attend son illustration.
+
+### 16.6 Flux complet sur FTDI_Max (critère du jalon)
+
+Carte d'exemple → isolation V-bit 30° → perçage (forets 0,8 et 1,0, fraise maïs 1,5 pour les trous de 3 mm) →
+détourage 4 attaches → G-code GRBL 1.1 : **9 709 lignes, 23 min 06 s**, vérifications passées, 36,8 x 48,2 mm sur la
+machine à partir de X −2,75 / Y −2,75. Ce décalage négatif est voulu : le détourage passe à 2 mm de marge plus le
+rayon de fraise autour du cuivre, donc avant le coin du cuivre pris comme origine.
+
+**À valider par To sur la CNC** : seule la machine réelle dira si le fichier est utilisable (profondeurs, avances,
+réglage du zéro). Points à surveiller : le premier changement d'outil (pause `M0` de GRBL) et le détourage, qui commence
+légèrement en X / Y négatifs.
+
+### 16.7 Reste ouvert (J11)
+
+Panneau d'aide complet, guide « Ma première carte », relecture EN, finitions.

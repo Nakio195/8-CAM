@@ -6,6 +6,7 @@
     import Callout from "../components/base/Callout.svelte";
     import CutoutCard from "./CutoutCard.svelte";
     import DrillingCard from "./DrillingCard.svelte";
+    import ExportPanel from "./ExportPanel.svelte";
     import IsolationCard from "./IsolationCard.svelte";
     import ToolComparator from "./ToolComparator.svelte";
 
@@ -64,6 +65,8 @@
         {/each}
     {/if}
 </section>
+
+<ExportPanel />
 
 <style>
     .panel

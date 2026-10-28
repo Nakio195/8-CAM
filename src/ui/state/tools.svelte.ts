@@ -81,6 +81,12 @@ class ToolLibraryState
         this.set(this.tools.filter((tool) => tool.id !== id));
     }
 
+    /** Whole library replaced (a project opened with its tools). */
+    public replaceAll(tools: Tool[]): void
+    {
+        this.set(tools);
+    }
+
     public reset(): void
     {
         this.set(defaultLibrary());

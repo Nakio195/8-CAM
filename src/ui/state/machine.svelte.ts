@@ -92,6 +92,23 @@ class MachineState
         void saveSetting(ACTIVE_KEY, id).then((saved) => (this.persistent = saved));
     }
 
+    /**
+     * Machine and post-processor of a project file: the machine replaces the one with the same id or is added, and
+     * becomes the machine used; a user profile is added when it is not there yet.
+     */
+    public restore(machine: MachineProfile, profile: PostProfile | null): void
+    {
+        if (profile && !this.profile(profile.id))
+        {
+            this.setProfiles([...this.userProfiles, { ...profile, builtIn: false }]);
+        }
+        const restored = { ...DEFAULT_MACHINE, ...machine };
+        this.setMachines(this.machines.some((entry) => entry.id === restored.id)
+            ? this.machines.map((entry) => (entry.id === restored.id ? restored : entry))
+            : [...this.machines, restored]);
+        this.select(restored.id);
+    }
+
     public saveMachine(machine: MachineProfile): void
     {
         this.setMachines(this.machines.map((entry) => (entry.id === machine.id ? machine : entry)));

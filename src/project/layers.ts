@@ -14,6 +14,8 @@ export interface ProjectLayer
     color: string;
     visible: boolean;
     opacity: number;
+    /** Content of the imported file, kept to save the project. */
+    source: string;
 }
 
 // Brand colours (specification section 6.13): front copper red, back copper co-working purple,
@@ -70,10 +72,11 @@ export function layerName(fileName: string): string
     return proteus ? (proteus[1] as string) : base;
 }
 
-export function createLayer(file: ImportedFile, id: string): ProjectLayer
+export function createLayer(file: ImportedFile, id: string, source = ""): ProjectLayer
 {
     return {
         id,
+        source,
         name: layerName(file.fileName),
         file,
         color: defaultLayerColor(file.layerType),

@@ -1,6 +1,7 @@
 // Main thread side of the import worker: one worker per job, so cancelling is simply terminating it.
 
 import type { ImportedFile } from "@project/importedFile";
+import type { ExportOutput, ExportRequestData } from "@project/export";
 import type { DrillingOutput, DrillingRequestData, IsolationOutput, IsolationRequestData } from "@project/operations";
 import type { CamRequest, ImportRequest, ImportResponse, ImportStage, WorkerReply } from "./protocol";
 
@@ -133,6 +134,12 @@ export function startIsolation(data: IsolationRequestData, onProgress: (fraction
 export function startDrilling(data: DrillingRequestData): WorkerJob<DrillingOutput>
 {
     return runInCamWorker<DrillingOutput>({ kind: "drilling", data }, () => undefined);
+}
+
+/** G-code files of the project with their checks and simulation, in the CAM worker. */
+export function startExport(data: ExportRequestData): WorkerJob<ExportOutput>
+{
+    return runInCamWorker<ExportOutput>({ kind: "export", data }, () => undefined);
 }
 
 function runInCamWorker<Result>(request: CamRequest, onProgress: (fraction: number) => void): WorkerJob<Result>

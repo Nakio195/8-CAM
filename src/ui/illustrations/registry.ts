@@ -11,6 +11,7 @@ import IsolationPasses from "./IsolationPasses.svelte";
 import MachineTravel from "./MachineTravel.svelte";
 import MillingDirection from "./MillingDirection.svelte";
 import NonIsolated from "./NonIsolated.svelte";
+import OriginMirror from "./OriginMirror.svelte";
 import ToolProfile from "./ToolProfile.svelte";
 import VbitSection from "./VbitSection.svelte";
 import ZHeights from "./ZHeights.svelte";
@@ -119,6 +120,9 @@ export const ILLUSTRATIONS: Readonly<Record<string, TopicIllustration>> = {
         component: as(MachineTravel),
         props: (values) => ({ travelX: values.machineX ?? 300, travelY: values.machineY ?? 180, travelZ: values.machineZ ?? 45 })
     },
+    origin: { component: as(OriginMirror), props: (values) => ({ origin: values.origin ?? 0, mirror: values.mirror === 1 }) },
+    // The mirror topic shows the mirror even from the help panel
+    mirror: { component: as(OriginMirror), props: (values) => ({ origin: values.origin ?? 0, mirror: values.mirror !== 0 }) },
     nonIsolated: {
         component: as(NonIsolated),
         props: (values) => ({ gap: values.gap ?? 0.4, width: values.width ?? 0.8 })
@@ -130,6 +134,4 @@ export const ILLUSTRATIONS: Readonly<Record<string, TopicIllustration>> = {
  * The help test fails if a geometric topic is neither illustrated nor listed here.
  */
 export const PENDING_ILLUSTRATIONS: Readonly<Record<string, string>> = {
-    origin: "J10",
-    mirror: "J10"
 };

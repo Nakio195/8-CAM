@@ -8,6 +8,7 @@
     import { help as helpState } from "../state/help.svelte";
     import IconButton from "./base/IconButton.svelte";
     import Icon from "./Icon.svelte";
+    import ProjectFileBar from "./ProjectFileBar.svelte";
 
     const t = i18n.t;
 
@@ -30,6 +31,7 @@
 
 <section class="panel" aria-labelledby="layers-title">
     <h2 id="layers-title">{t("layers.title")}</h2>
+    <ProjectFileBar />
 
     {#each project.tasks as task (task.id)}
         <div class="task" role="status">

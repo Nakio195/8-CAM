@@ -24,7 +24,10 @@
     import { toolLibrary } from "./state/tools.svelte";
     import ToolLibraryPanel from "./tools/ToolLibraryPanel.svelte";
     import MachiningPanel from "./machining/MachiningPanel.svelte";
+    import { backplotLines, backplotOverlays, pointAt } from "./machining/backplot";
     import { cutoutOverlays, drillingOverlays, toolpathOverlays } from "./machining/overlays";
+    import { exportState } from "./state/export.svelte";
+    import { openFiles as openDroppedFiles } from "./state/projectFile.svelte";
     import { machining } from "./state/machining.svelte";
 
     const t = i18n.t;
@@ -44,7 +47,7 @@
         const files = event.currentTarget.files;
         if (files && files.length > 0)
         {
-            void project.importFiles(files);
+            void openDroppedFiles(files);
         }
         // Allows choosing the same file again
         event.currentTarget.value = "";
@@ -91,7 +94,7 @@
         const files = event.dataTransfer?.files;
         if (files && files.length > 0)
         {
-            void project.importFiles(files);
+            void openDroppedFiles(files);
         }
     }
 
@@ -113,10 +116,22 @@
         }
     });
 
+    // The whole simulated path is packed once per export; the part done follows the play head
+    let backplotFaint = $derived(exportState.output
+        ? {
+            cuts: backplotLines(exportState.output.backplot, 1, 0, Infinity),
+            rapids: backplotLines(exportState.output.backplot, 0, 0, Infinity)
+        }
+        : null);
+    let backplot = $derived(exportState.output && backplotFaint && exportState.showBackplot
+        ? backplotOverlays(exportState.output.backplot, backplotFaint, pointAt(exportState.output.backplot, exportState.time),
+            exportState.origin ?? { x: 0, y: 0 }, 1)
+        : []);
     let overlays = $derived([
         ...toolpathOverlays(machining.operations),
         ...drillingOverlays(machining.drillings),
-        ...cutoutOverlays(machining.cutouts)
+        ...cutoutOverlays(machining.cutouts),
+        ...backplot
     ]);
     // Clicks on the board place or remove the tabs of the cutout being edited
     let pick = $derived(machining.editingTabs

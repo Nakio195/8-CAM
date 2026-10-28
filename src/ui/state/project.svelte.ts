@@ -72,7 +72,8 @@ class ProjectState
         await Promise.all(entries.map((entry) => this.importText(entry.name, entry.text)));
     }
 
-    public async importText(fileName: string, text: string): Promise<void>
+    /** Imports one file; returns the id of its layer (null when it failed or was cancelled). */
+    public async importText(fileName: string, text: string): Promise<string | null>
     {
         const id = this.mNextId++;
         const job = startImport(fileName, text, (stage, fraction) =>
@@ -93,7 +94,9 @@ class ProjectState
         try
         {
             const file = await job.promise;
-            this.layers = addLayer(this.layers, createLayer(file, `layer-${id}`));
+            const layer = createLayer(file, `layer-${id}`, text);
+            this.layers = addLayer(this.layers, layer);
+            return layer.id;
         }
         catch (error)
         {
@@ -101,6 +104,7 @@ class ProjectState
             {
                 this.failures.push({ id, fileName, message: error instanceof Error ? error.message : String(error) });
             }
+            return null;
         }
         finally
         {
@@ -127,6 +131,31 @@ class ProjectState
             return { name, text: await response.text() };
         }));
         await Promise.all(entries.map((entry) => (entry ? this.importText(entry.name, entry.text) : undefined)));
+    }
+
+    /** Empty project (before opening a project file). */
+    public clear(): void
+    {
+        for (const task of this.tasks)
+        {
+            task.cancel();
+        }
+        this.tasks = [];
+        this.failures = [];
+        this.layers = [];
+        this.focus = null;
+    }
+
+    /** Display settings given back by a project file. */
+    public restoreDisplay(id: string, display: { color: string; visible: boolean; opacity: number }): void
+    {
+        this.layers = updateLayer(this.layers, id, display);
+    }
+
+    /** Asks the view to show the whole board. */
+    public fit(): void
+    {
+        this.fitRequest++;
     }
 
     public setVisible(id: string, visible: boolean): void

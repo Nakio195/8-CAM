@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { render } from "svelte/server";
 import { effectiveWidth } from "@cam/tools/index";
 import { HELP_TOPICS } from "@ui/help/topics";
-import { cutoutTabs, depthPasses, drillCycle, machineTravel, holeMilling, isolationPasses, nonIsolated, toolProfile, vbitSection, zHeights } from "@ui/illustrations/geometry";
+import { cutoutTabs, depthPasses, drillCycle, machineTravel, originMirror, holeMilling, isolationPasses, nonIsolated, toolProfile, vbitSection, zHeights } from "@ui/illustrations/geometry";
 import { ILLUSTRATIONS, PENDING_ILLUSTRATIONS } from "@ui/illustrations/registry";
 import BoardThickness from "@ui/illustrations/BoardThickness.svelte";
 import CutoutTabs from "@ui/illustrations/CutoutTabs.svelte";
@@ -13,6 +13,7 @@ import IsolationPasses from "@ui/illustrations/IsolationPasses.svelte";
 import MachineTravel from "@ui/illustrations/MachineTravel.svelte";
 import MillingDirection from "@ui/illustrations/MillingDirection.svelte";
 import NonIsolated from "@ui/illustrations/NonIsolated.svelte";
+import OriginMirror from "@ui/illustrations/OriginMirror.svelte";
 import ToolProfile from "@ui/illustrations/ToolProfile.svelte";
 import VbitSection from "@ui/illustrations/VbitSection.svelte";
 import ZHeights from "@ui/illustrations/ZHeights.svelte";
@@ -43,6 +44,22 @@ describe("illustration geometry", () =>
         expect(middles).toHaveLength(4);
         expect(shape.side.tabHeight / shape.side.boardHeight).toBeCloseTo(0.5 / 1.6, 2);
         expect(cutoutTabs(0, 2, 0.5, 1.6, 0, 1.5).tabs).toEqual([]);
+    });
+
+    it("puts the machine zero on the chosen point of the board, mirrored or not", () =>
+    {
+        const plain = originMirror(50, 30, 0, false);
+        expect(plain.origin).toEqual({ x: plain.board.x, y: plain.board.y + plain.board.height });
+        // Turned over, the lower left corner on the machine is the lower right corner of the drawing in the file
+        const mirrored = originMirror(50, 30, 0, true);
+        expect(mirrored.origin).toEqual(plain.origin);
+        const centre = originMirror(50, 30, 1, false);
+        expect(centre.origin).toEqual({ x: centre.board.x + centre.board.width / 2, y: centre.board.y + centre.board.height / 2 });
+        // Gerber origin 10 mm right of the board corner, moved to the other side by the mirror
+        const gerber = originMirror(50, 30, 2, false, { x: 10, y: 0 });
+        const gerberMirrored = originMirror(50, 30, 2, true, { x: 10, y: 0 });
+        expect(gerber.origin.x - gerber.board.x).toBeCloseTo(10 * gerber.scale, 0);
+        expect(gerberMirrored.board.x + gerberMirrored.board.width - gerberMirrored.origin.x).toBeCloseTo(10 * gerber.scale, 0);
     });
 
     it("draws the machine bed to scale with a 10 x 10 cm board", () =>
@@ -153,6 +170,8 @@ describe("illustration components", () =>
 
     it("renders the cutout and machine drawings", () =>
     {
+        // No board loaded in the tests: a plain board stands in for the thumbnail
+        expect(render(OriginMirror, { props: { origin: 0, mirror: true } }).body).toMatchSnapshot();
         expect(render(MachineTravel, { props: { travelX: 300, travelY: 180, travelZ: 45 } }).body).toMatchSnapshot();
         expect(render(CutoutTabs, { props: { count: 4, tabWidth: 2, tabHeight: 0.5, margin: 1 } }).body).toMatchSnapshot();
     });

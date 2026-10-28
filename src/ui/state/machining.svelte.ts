@@ -2,6 +2,7 @@
 // CAM worker, or directly for the cutout), and the tool comparator (specification 6.10).
 
 import { recommendCutout, recommendDrilling, recommendIsolation } from "@cam/analysis/index";
+import type { Move } from "@cam/toolpath/index";
 import { BOUNDING_BOX_MARGIN, CUTOUT_DEPTH_MARGIN, DEFAULT_CUTOUT, projectOnPath } from "@cam/cutout/index";
 import { DRILL_EXTRA_DEPTH } from "@cam/drilling/index";
 import type { IsolationParams } from "@cam/isolation/index";
@@ -310,6 +311,25 @@ class MachiningState
         return true;
     }
 
+    /**
+     * Moves of a cutout for the export. A mirror reverses the path: it is then computed in the other direction, so the
+     * milling direction chosen stays the one cut on the machine.
+     */
+    public cutoutMoves(operation: CutoutOperation, mirrored: boolean): Move[]
+    {
+        const request = this.cutoutRequest(operation);
+        if (!request)
+        {
+            return [];
+        }
+        if (!mirrored)
+        {
+            return operation.result?.moves ?? runCutout(request).moves;
+        }
+        const direction = request.params.direction === "climb" ? "conventional" : "climb";
+        return runCutout({ ...request, params: { ...request.params, direction } }).moves;
+    }
+
     private cutoutRequest(operation: CutoutOperation): Parameters<typeof runCutout>[0] | null
     {
         const tool = toolLibrary.find(operation.toolId);
@@ -335,6 +355,57 @@ class MachiningState
         {
             this.errors[operation.id] = error instanceof Error ? error.message : String(error);
             return { ...operation, result: null };
+        }
+    }
+
+    /** Removes every operation and stops their computations (before opening a project). */
+    public clear(): void
+    {
+        for (const job of Object.values(this.jobs))
+        {
+            job.cancel();
+        }
+        this.cancelComparison();
+        this.jobs = {};
+        this.errors = {};
+        this.operations = [];
+        this.drillings = [];
+        this.cutouts = [];
+        this.editingTabs = null;
+        this.comparison = null;
+    }
+
+    /**
+     * Operations of a project file, layers already imported (layerIds maps the ids of the file to the new layers).
+     * Their results are computed again.
+     */
+    public restore(isolations: readonly Omit<IsolationOperation, "result">[], drillings: readonly Omit<DrillingOperation, "result">[],
+        cutouts: readonly Omit<CutoutOperation, "result">[], layerIds: Readonly<Record<string, string>>): void
+    {
+        const layer = (id: string | null): string | null => (id === null ? null : layerIds[id] ?? null);
+        // New ids must not collide with the restored ones
+        for (const operation of [...isolations, ...drillings, ...cutouts])
+        {
+            nextOperation = Math.max(nextOperation, Number(/(\d+)$/.exec(operation.id)?.[1] ?? 0) + 1);
+        }
+        this.operations = isolations.flatMap((operation) =>
+        {
+            const layerId = layer(operation.layerId);
+            return layerId ? [{ ...operation, layerId, result: null }] : [];
+        });
+        this.drillings = drillings.map((operation) => ({
+            ...operation,
+            layerIds: operation.layerIds.flatMap((id) => layer(id) ?? []),
+            result: null
+        }));
+        this.cutouts = cutouts.map((operation) => this.computeCutout({ ...operation, outlineLayerId: layer(operation.outlineLayerId), result: null }));
+        for (const operation of this.operations)
+        {
+            void this.run(operation.id);
+        }
+        for (const operation of this.drillings)
+        {
+            void this.runDrilling(operation.id);
         }
     }
 

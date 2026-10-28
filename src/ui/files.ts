@@ -19,3 +19,9 @@ export async function readChosenFile(event: Event & { currentTarget: HTMLInputEl
     event.currentTarget.value = "";
     return file ? file.text() : null;
 }
+
+/** Current date and time as written in saved files. */
+export function isoNow(): string
+{
+    return new Date().toISOString();
+}

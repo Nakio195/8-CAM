@@ -461,3 +461,37 @@ export function machineTravel(travelX: number, travelY: number, travelZ: number)
         tooSmall: travelX < 100 || travelY < 100
     };
 }
+
+// ----- Origin and mirror -----
+
+export interface OriginMirrorShape
+{
+    /** Board rectangle in the frame. */
+    board: { x: number; y: number; width: number; height: number };
+    /** Machine zero in the frame. */
+    origin: Point2;
+    /** Board millimetres to frame: x first mirrored if asked. */
+    scale: number;
+    mirror: boolean;
+}
+
+/**
+ * Board of width x height mm seen from above, as it lies on the machine (mirrored left to right for the bottom side),
+ * with the machine zero at the chosen point: 0 lower left corner, 1 centre, 2 Gerber origin (gerber gives where the
+ * Gerber origin falls, relative to the board corner, mm).
+ */
+export function originMirror(width: number, height: number, origin: number, mirror: boolean, gerber: Point2 = { x: 0, y: 0 }): OriginMirrorShape
+{
+    const scale = Math.min(150 / Math.max(width, 1), 96 / Math.max(height, 1));
+    const board = { x: 40, y: 18 + (96 - height * scale) / 2, width: width * scale, height: height * scale };
+    const toFrame = (x: number, y: number): Point2 => ({ x: board.x + (mirror ? width - x : x) * scale, y: board.y + board.height - y * scale });
+    const point = origin === 1 ? toFrame(width / 2, height / 2)
+        : origin === 2 ? toFrame(gerber.x, gerber.y)
+            : toFrame(mirror ? width : 0, 0);
+    return {
+        board: { x: round(board.x), y: round(board.y), width: round(board.width), height: round(board.height) },
+        origin: { x: round(Math.max(4, Math.min(FRAME_WIDTH - 4, point.x))), y: round(Math.max(4, Math.min(FRAME_HEIGHT - 4, point.y))) },
+        scale,
+        mirror
+    };
+}

@@ -3,6 +3,7 @@
 
 import type { IsolationOutput, IsolationRequestData } from "@project/operations";
 import { runDrilling } from "./drillingJob";
+import { runExport } from "./exportJob";
 import {
     assembleIsolationOutput,
     isolationParts,
@@ -79,6 +80,15 @@ scope.onmessage = async (event: MessageEvent<{ id: number; data: CamRequest }>) 
             onProgress(1);
             scope.postMessage({ id, kind: "result", value: output } satisfies WorkerReply<typeof output>,
                 [output.route.buffer, output.fileRoute.buffer, output.milledPaths.buffer]);
+            return;
+        }
+        if (request.kind === "export")
+        {
+            const output = runExport(request.data);
+            onProgress(1);
+            const { backplot } = output;
+            scope.postMessage({ id, kind: "result", value: output } satisfies WorkerReply<typeof output>,
+                [backplot.points.buffer, backplot.kinds.buffer, backplot.times.buffer]);
             return;
         }
         const data = request.data;
