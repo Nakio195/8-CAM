@@ -21,5 +21,23 @@
     "tabCount": 4,
     "tabWidth": 2,
     "tabHeight": 0.5
+  },
+  "machine": {
+    "$comment": "Machine of a first visit (users keep the machines they already have). Same fields as a machine file exported from the Machine tab; remove this block for the built-in CNC 3018.",
+    "format": "8cam-machine",
+    "version": 1,
+    "id": "snapmaker-artisan",
+    "name": "SnapMaker",
+    "travelX": 400,
+    "travelY": 400,
+    "travelZ": 400,
+    "safeZ": 5,
+    "maxSpindleSpeed": 18000,
+    "minSpindleSpeed": 0,
+    "maxFeedXY": 1500,
+    "maxFeedZ": 500,
+    "rapidFeed": 1500,
+    "postProfileId": "snapmaker-artisan",
+    "toolChangeMode": "pause"
   }
 }

@@ -38,6 +38,8 @@ class MachineState
     public persistent = $state(true);
 
     private mLoaded = false;
+    /** True once machines of the user were read from storage: the site machine is then not used. */
+    private mStored = false;
 
     public get active(): MachineProfile
     {
@@ -76,6 +78,7 @@ class MachineState
         {
             // Fields added in later versions take their default values
             this.machines = machines.map((machine) => ({ ...DEFAULT_MACHINE, ...machine }));
+            this.mStored = true;
         }
         if (typeof active === "string")
         {
@@ -84,6 +87,19 @@ class MachineState
         if (Array.isArray(profiles))
         {
             this.userProfiles = profiles.map(normalizeProfile);
+        }
+    }
+
+    /**
+     * Machine chosen by the site (defaults.json) for a user who has none stored: replaces the built-in one, without
+     * being stored, so a later change of the site file still applies until the user edits their machines.
+     */
+    public useSiteMachine(machine: MachineProfile): void
+    {
+        if (!this.mStored)
+        {
+            this.machines = [{ ...machine }];
+            this.activeId = machine.id;
         }
     }
 
@@ -220,6 +236,7 @@ class MachineState
     private setMachines(machines: MachineProfile[]): void
     {
         this.machines = machines;
+        this.mStored = true;
         // IndexedDB clones what it stores and refuses reactive proxies: always hand it plain data
         void saveSetting(MACHINES_KEY, $state.snapshot(machines)).then((saved) => (this.persistent = saved));
     }

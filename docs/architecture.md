@@ -1212,4 +1212,9 @@ navigateur de chacun (un premier essai de réglages par utilisateur a été reti
 - Un réglage absent ou invalide garde la valeur du code (`BUILT_IN_DEFAULTS`, `src/project/defaults.ts`), et la
   console du navigateur dit lequel. Fichier absent ou illisible : toutes les valeurs du code.
 - Valeurs actuelles : isolation **en avalant (climb)**, comme FlatCAM ; le reste inchangé.
+- **Machine de base** (bloc `machine`, mêmes champs qu'un fichier `.8cam-machine.json` exporté de l'onglet Machine) :
+  celle d'un utilisateur qui n'a encore aucune machine enregistrée. Elle n'est pas enregistrée chez lui tant qu'il ne
+  modifie pas ses machines, donc un changement du fichier s'applique encore ; un utilisateur qui a déjà ses machines
+  les garde. Bloc absent ou invalide : la CNC 3018 du code. Valeur actuelle : « SnapMaker » (400 x 400 mm,
+  post-processeur Snapmaker Artisan).
 - Le test `tests/unit/project/defaults.test.ts` vérifie que le fichier livré est lu sans erreur.

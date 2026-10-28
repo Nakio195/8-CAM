@@ -12,6 +12,15 @@ describe("site defaults", () =>
         const { defaults, issues } = parseAppDefaults(readFileSync(SITE_FILE, "utf8"));
         expect(issues).toEqual([]);
         expect(defaults.isolation.direction).toBe("climb");
+        expect(defaults.machine).toMatchObject({ name: "SnapMaker", travelX: 400, postProfileId: "snapmaker-artisan" });
+    });
+
+    it("refuses an invalid machine and keeps the built-in one", () =>
+    {
+        const { defaults, issues } = parseAppDefaults(JSON.stringify({ machine: { name: "", travelX: -1 } }));
+        expect(defaults.machine).toBeNull();
+        expect(issues).toHaveLength(1);
+        expect(issues[0]).toMatch(/^machine: /);
     });
 
     it("keeps the built-in value of every setting missing or invalid, and says which", () =>
