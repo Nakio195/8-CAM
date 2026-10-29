@@ -1,167 +1,166 @@
 # pcbCAM
 
-Logiciel de FAO pour circuits imprimés, dans le navigateur. Il part des fichiers de fabrication d'une carte (Gerber
-et perçage), calcule les parcours d'outil de la fraiseuse et écrit le G-code. Il est né au
-[8 Fablab Drôme](https://8fablab.fr) pour graver des cartes sur les machines de l'atelier.
+PCB CAM software in the browser. It starts from the production files of a board (Gerber and drill files), computes
+the toolpaths of the milling machine and writes the G-code. It was born at [8 Fablab Drôme](https://8fablab.fr) to
+mill boards on the machines of the workshop.
 
-Tout se passe dans le navigateur : rien à installer, pas de compte, et **aucun fichier n'est envoyé sur internet**.
+Everything happens in the browser: nothing to install, no account, and **no file is sent over the internet**.
 
-Il reprend le fonctionnement de [FlatCAM](http://flatcam.org/) (version FlatCAM Plus), avec ses algorithmes réécrits
-en TypeScript. Le but est d'avoir une interface plus simple, guidée pas à pas, pour une première carte.
+It works like [FlatCAM](http://flatcam.org/) (FlatCAM Plus version), with its algorithms rewritten in TypeScript. The
+aim is a simpler interface, guided step by step, for a first board.
 
-Il est disponible en ligne à cette adresse : https://pcbcam.8fablab.fr
+It is available online at https://pcbcam.8fablab.fr
 
-## Ce que fait pcbCAM
+## What pcbCAM does
 
-**Lecture des fichiers**
+**Reading files**
 
-- Gerber RS-274X et X2 : cuivre, contour, et perçage au format Gerber (Proteus).
-- Excellon, en mm ou en pouces, avec les zéros et le format devinés si le fichier ne les donne pas.
-- Archive zip de fabrication entière : les fichiers Gerber et de perçage sont trouvés dedans, le reste est mis de
-  côté et listé.
-- Glisser-déposer de plusieurs fichiers à la fois. Une carte d'exemple est fournie pour essayer.
+- Gerber RS-274X and X2: copper, outline, and drill data as Gerber (Proteus).
+- Excellon, in mm or inches, with the zeros and the number format guessed when the file does not give them.
+- A whole production zip archive: the Gerber and drill files are found inside, the rest is set aside and listed.
+- Drag and drop of several files at once. An example board is provided to try it out.
 
-**Analyse de la carte**
+**Board analysis**
 
-- Espacement le plus serré entre deux cuivres, piste la plus fine, tailles de trous.
-- Outils de la bibliothèque qui conviennent à la carte, et ceux qui ne passent pas.
+- Tightest gap between two copper features, thinnest track, hole sizes.
+- Tools of the library that fit the board, and those that do not.
 
-**Usinage, une étape à la fois**
+**Machining, one step at a time**
 
-- **Isolation des pistes** : plusieurs passes avec recouvrement, sens d'usinage en avalant ou en opposition.
-  - Les zones que l'outil ne peut pas isoler sont repérées sur la carte : risque de court-circuit.
-  - Un comparateur montre ce que donnerait chaque outil.
-- **Perçage** : un outil par taille de trou, ordre des trous optimisé pour raccourcir les déplacements.
-  - Débourrage possible.
-  - Un trou trop gros pour les forets est fraisé, et les rainures sont usinées.
-- **Détourage** : contour de la carte, ou rectangle autour du cuivre.
-  - Les attaches sont placées automatiquement ; on peut les déplacer d'un clic sur la carte.
-- Durée estimée de chaque opération.
+- **Track isolation**: several passes with overlap, climb or conventional milling.
+  - Areas the tool cannot isolate are shown on the board: risk of a short circuit.
+  - A comparator shows what each tool would give.
+- **Drilling**: one tool per hole size, hole order optimised to shorten the travel.
+  - Peck drilling available.
+  - A hole too large for the drills is milled, and slots are machined.
+- **Cutout**: board outline, or a rectangle around the copper.
+  - Tabs are placed automatically; a click on the board moves them.
+- Estimated time of each operation.
 
 **G-code**
 
-- Post-processeurs fournis : GRBL 1.1, Marlin, LinuxCNC et Snapmaker Artisan (module CNC 200 W).
-  - Ils sont modifiables, copiables et échangeables en fichier JSON, avec un aperçu en direct.
-- Profils de machine réglables : courses, vitesses, hauteur de sécurité, mode de changement d'outil.
-- Origine au choix : coin bas-gauche, centre ou origine du fichier Gerber.
-- Miroir pour usiner la face dessous.
-- Changement d'outil par pause dans un seul fichier, ou un fichier par outil quand la machine ne permet pas de refaire
-  le zéro pendant une pause (Snapmaker Artisan).
-- Vérifications avant le téléchargement :
-  - le travail tient dans les courses de la machine ;
-  - aucun rapide dans la matière ;
-  - aucune commande interdite par le profil.
-- **Simulation** du G-code relu tel que la machine le lira, rejouée sur la carte.
-  - Le texte du G-code reste modifiable à la main ; les vérifications sont refaites sur le texte modifié.
+- Post-processors provided: GRBL 1.1, Marlin, LinuxCNC and Snapmaker Artisan (200 W CNC module).
+  - They can be edited, copied and exchanged as JSON files, with a live preview.
+- Adjustable machine profiles: travel, speeds, safe height, tool change mode.
+- Origin of your choice: lower left corner, centre or origin of the Gerber file.
+- Mirror to mill the bottom side.
+- Tool change by a pause within one file, or one file per tool when the machine cannot set the zero again during a
+  pause (Snapmaker Artisan).
+- Checks before download:
+  - the job fits in the travel of the machine;
+  - no rapid move inside the material;
+  - no command forbidden by the profile.
+- **Simulation** of the G-code read back as the machine will read it, played over the board.
+  - The G-code text can still be edited by hand; the checks run again on the edited text.
 
-**Confort**
+**Comfort**
 
-- Projet enregistrable (`.pcbcam.json`) avec les fichiers sources, les outils, la machine et les réglages, pour tout
-  retrouver sur un autre ordinateur.
-- Aide sur chaque réglage : explication, valeur conseillée et illustration qui suit les valeurs saisies.
-- Guide « Ma première carte » et glossaire illustré.
-- Interface en français et en anglais, thème clair ou sombre.
+- Project file (`.pcbcam.json`) holding the source files, tools, machine and settings, to find everything again on
+  another computer.
+- Help on every setting: explanation, advised value and an illustration that follows the values entered.
+- "My first board" guide and illustrated glossary.
+- Interface in French and English, light or dark theme.
 
-## Limites
+## Limits
 
-- **Le G-code n'a pas encore été validé sur toutes les machines.** Il est testé automatiquement, mais seul un essai
-  réel prouve qu'il convient à une machine donnée. Avant une vraie carte :
-  - faire un premier passage « en l'air », au-dessus de la plaque ;
-  - avoir une planche martyre sous la carte ;
-  - garder la main près de l'arrêt d'urgence.
-- Les valeurs des outils fournis (vitesses, profondeurs) sont **des points de départ**, à ajuster sur chaque machine
-  et pour chaque outil.
-- Pas encore pris en charge :
-  - découpes intérieures dans le contour d'une carte (trous de forme) ;
-  - retrait du cuivre des grandes surfaces (NCC) ;
-  - double face avec trous d'alignement ;
-  - panelisation ;
-  - carte de hauteur (autonivellement) ;
-  - gravure laser ;
-  - import DXF ou SVG ;
-  - vue 3D ;
-  - contrôle des règles de dessin (DRC) ;
-  - pilotage direct de la machine depuis le navigateur.
-- Une carte très dense avec un grand plan de masse peut demander quelques secondes de calcul pour l'isolation.
-  L'interface reste utilisable pendant ce temps.
-- Il faut un navigateur récent : Chrome, Edge, Firefox ou Safari de moins de deux ou trois ans.
-- Les réglages de chaque utilisateur (machines, outils, post-processeurs) restent dans son navigateur. Pour les
-  retrouver ailleurs, il faut les exporter, ou enregistrer le projet.
+- **The G-code has not yet been validated on every machine.** It is tested automatically, but only a real run proves
+  that it suits a given machine. Before a real board:
+  - make a first run "in the air", above the plate;
+  - have a spoil board under the board;
+  - keep your hand close to the emergency stop.
+- The values of the tools provided (speeds, depths) are **starting points**, to be adjusted on each machine and for
+  each tool.
+- Not supported yet:
+  - inner cutouts inside the outline of a board (shaped holes);
+  - removal of copper from large areas (NCC);
+  - double-sided boards with alignment holes;
+  - panelisation;
+  - height map (auto-levelling);
+  - laser engraving;
+  - DXF or SVG import;
+  - 3D view;
+  - design rule check (DRC);
+  - driving the machine directly from the browser.
+- A very dense board with a large ground plane can take a few seconds to compute the isolation. The interface stays
+  usable meanwhile.
+- A recent browser is needed: Chrome, Edge, Firefox or Safari less than two or three years old.
+- The settings of each user (machines, tools, post-processors) stay in their browser. To find them elsewhere, export
+  them, or save the project.
 
-## Utilisation
+## Usage
 
-1. **Importer** les fichiers de la carte : cuivre, contour et perçage, ou directement le zip de fabrication.
-   - Pour un premier essai, cliquer sur « Carte d'exemple ».
-2. **Analyse** : regarder l'espacement le plus serré et les outils qui y passent.
-3. **Outils** : comparer la bibliothèque à ses vrais outils, en particulier la pointe et l'angle des V-bits et le
-   diamètre des forets.
-4. **Usinage**, dans l'ordre des étapes :
-   - isolation ;
-   - perçage ;
-   - détourage, avec les attaches.
-5. **Machine** :
-   - choisir sa machine et son post-processeur ;
-   - écrire le G-code et vérifier les messages ;
-   - regarder la simulation ;
-   - télécharger le ou les fichiers.
-6. **Sur la machine** :
-   - fixer la plaque bien à plat sur une planche martyre ;
-   - faire le zéro X / Y à l'origine choisie et le zéro Z sur le cuivre ;
-   - lancer le fichier.
-7. **Enregistrer le projet** pour le retrouver plus tard.
+1. **Import** the files of the board: copper, outline and drill files, or directly the production zip.
+   - For a first try, click "Example board".
+2. **Analysis**: look at the tightest gap and the tools that fit in it.
+3. **Tools**: compare the library with your real tools, in particular the tip and angle of the V-bits and the
+   diameter of the drills.
+4. **Machining**, in the order of the steps:
+   - isolation;
+   - drilling;
+   - cutout, with its tabs.
+5. **Machine**:
+   - choose your machine and its post-processor;
+   - write the G-code and check the messages;
+   - watch the simulation;
+   - download the file or files.
+6. **On the machine**:
+   - fix the plate flat on a spoil board;
+   - set the X / Y zero at the chosen origin and the Z zero on the copper;
+   - run the file.
+7. **Save the project** to find it again later.
 
-Chaque bouton et chaque réglage a sa bulle d'aide : survol, ou bouton « ? » à côté des champs numériques. Le panneau
-d'aide (icône livre) contient le guide pas à pas.
+Every button and every setting has its tooltip: on hover, or with the "?" button next to the numeric fields. The help
+panel (book icon) holds the step by step guide.
 
-## Un logiciel « vibecodé », ouvert à tous
+## Vibecoded software, open to everyone
 
-pcbCAM a été **vibecodé** : il est écrit presque entièrement par une intelligence artificielle (Claude, avec
-Claude Code). Le travail humain a porté sur le besoin, l'orientation, les choix et les essais au fablab.
+pcbCAM was **vibecoded**: it is written almost entirely by an artificial intelligence (Claude, with Claude Code). The
+human work went into the needs, the direction, the choices and the trials at the fablab.
 
-- Le code a été construit par étapes, avec plus de 300 tests automatiques :
-  - comparaison des résultats d'isolation avec ceux de FlatCAM ;
-  - fichiers G-code de référence ;
-  - vérifications de sécurité.
-- Il n'a pas été relu ligne à ligne comme un logiciel écrit à la main : la prudence d'usage sur la machine
-  s'applique d'autant plus.
+- The code was built step by step, with more than 300 automated tests:
+  - isolation results compared with those of FlatCAM;
+  - reference G-code files;
+  - safety checks.
+- It has not been reviewed line by line like hand-written software: the usual caution on the machine applies all the
+  more.
 
-**Le projet est ouvert à toutes les modifications et à tous les clonages.**
+**The project is open to any change and any cloning.**
 
-- Forkez-le, adaptez-le à votre machine ou à votre atelier.
-- Proposez des corrections et des améliorations : signalements et pull requests sont les bienvenus sur
+- Fork it, adapt it to your machine or your workshop.
+- Suggest fixes and improvements: issues and pull requests are welcome on
   [GitHub](https://github.com/Nakio195/8-CAM).
-- Reprenez-en des morceaux dans vos propres projets, dans le respect de la licence ci-dessous.
+- Reuse parts of it in your own projects, within the licence below.
 
-La documentation technique explique comment tout est construit et pourquoi :
+The technical documentation (in French) explains how everything is built and why:
 
-- [`docs/architecture.md`](docs/architecture.md) : les choix, les algorithmes, leurs limites et ce qui reste ouvert ;
-- [`specs/PROMPT_PCB_CAM_WEB.md`](specs/PROMPT_PCB_CAM_WEB.md) : le cahier des charges d'origine.
+- [`docs/architecture.md`](docs/architecture.md): the choices, the algorithms, their limits and what remains open;
+- [`specs/PROMPT_PCB_CAM_WEB.md`](specs/PROMPT_PCB_CAM_WEB.md): the original specification.
 
-## Développement
+## Development
 
-Il faut [Node.js](https://nodejs.org) en version LTS.
+[Node.js](https://nodejs.org) LTS is needed.
 
 ```bash
 npm install
-npm run dev        # serveur de développement
-npm run check      # lint, types et tests
-npm run build      # site statique dans dist/
-npm run bench      # mesures de performance sur des cartes denses
+npm run dev        # development server
+npm run check      # lint, types and tests
+npm run build      # static site in dist/
+npm run bench      # performance measurements on dense boards
 ```
 
-## Mise en ligne
+## Deployment
 
-`npm run build` produit un site **entièrement statique** dans `dist/`, à copier sur n'importe quel serveur web. Il
-n'y a ni serveur applicatif ni base de données. Le détail se trouve dans
-[`docs/mise-en-ligne.md`](docs/mise-en-ligne.md) : HTTPS, en-têtes de sécurité, cache.
+`npm run build` produces a **fully static** site in `dist/`, to copy to any web server. There is no application server
+and no database. The details are in [`docs/mise-en-ligne.md`](docs/mise-en-ligne.md) (in French): HTTPS, security
+headers, cache.
 
-Le fichier [`public/defaults.json`](public/defaults.json) fixe pour tous les utilisateurs du site :
+The file [`public/defaults.json`](public/defaults.json) sets for every user of the site:
 
-- les réglages par défaut des opérations ;
-- la machine proposée à une première visite ;
-- les outils de base.
+- the default settings of the operations;
+- the machine offered on a first visit;
+- the built-in tools.
 
-Il se modifie sur le serveur, sans reconstruire. Vérifier sa syntaxe avant de le mettre en ligne :
+It can be edited on the server, without a new build. Check its syntax before putting it online:
 
 ```bash
 npm run check:defaults
@@ -169,12 +168,12 @@ npm run check:defaults
 
 ## Licence
 
-pcbCAM est un logiciel libre, sous licence
-[Creative Commons Attribution - Partage dans les mêmes conditions 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.fr)
-(CC BY-SA 4.0). Voir [`LICENSE`](LICENSE).
+pcbCAM is free software under the
+[Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/) licence (CC BY-SA 4.0).
+See [`LICENSE`](LICENSE).
 
-Ne sont pas couverts par cette licence :
+Not covered by this licence:
 
-- les éléments de marque du 8 Fablab Drôme (`assets/brand/`) ;
-- les polices, sous licence SIL OFL ;
-- les dépendances, chacune sous sa propre licence.
+- the 8 Fablab Drôme brand assets (`assets/brand/`);
+- the fonts, under the SIL OFL licence;
+- the dependencies, each under its own licence.
