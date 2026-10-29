@@ -105,7 +105,8 @@ class ToolLibraryState
     /**
      * Built-in tools chosen by the site. A first visit gets them as they are, not stored, so a later change of the site
      * file still applies. A stored library gets the new values of its built-in tools (those the user changed are their
-     * own, no longer built-in) and the built-in tools it has never had; one the user removed stays removed.
+     * own, no longer built-in), loses the built-in tools the site no longer ships, and gets those it has never had; one
+     * the user removed stays removed.
      */
     public async useSiteTools(tools: readonly Tool[]): Promise<void>
     {
@@ -117,10 +118,23 @@ class ToolLibraryState
         }
         const seen = new Set((await loadSetting<string[]>(SEEN_KEY)) ?? []);
         const site = new Map(tools.map((tool) => [tool.id, tool]));
-        const updated = this.tools.map((tool) => (tool.builtIn ? site.get(tool.id) ?? tool : tool));
+        const updated = this.tools.flatMap((tool) =>
+        {
+            if (!tool.builtIn)
+            {
+                return [tool];
+            }
+            const current = site.get(tool.id);
+            return current ? [current] : [];
+        });
         const missing = tools.filter((tool) => !seen.has(tool.id) && !this.tools.some((entry) => entry.id === tool.id));
-        // Kept in memory only: the user's file is written when they change something
-        this.tools = [...updated, ...missing];
+        const next = [...updated, ...missing];
+        // Stored together with the ids seen: a tool marked seen is always in the stored library, so one missing from it
+        // was removed by the user
+        if (JSON.stringify(next) !== JSON.stringify($state.snapshot(this.tools)))
+        {
+            this.set(next);
+        }
         void saveSetting(SEEN_KEY, [...new Set([...seen, ...site.keys()])]);
     }
 

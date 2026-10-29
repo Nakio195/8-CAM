@@ -96,9 +96,10 @@ export function parseAppDefaults(text: string): { defaults: AppDefaults; issues:
     {
         data = JSON.parse(text);
     }
-    catch
+    catch (error)
     {
-        return { defaults, issues: ["file: not valid JSON"] };
+        // The parser says where: a missing comma between two tools is the usual mistake
+        return { defaults, issues: [`file: not valid JSON, nothing of it is used (${error instanceof Error ? error.message : String(error)})`] };
     }
     if (typeof data !== "object" || data === null || Array.isArray(data))
     {

@@ -1219,9 +1219,13 @@ navigateur de chacun (un premier essai de réglages par utilisateur a été reti
   post-processeur Snapmaker Artisan).
 - **Outils de base** (bloc `tools`, mêmes champs qu'une bibliothèque exportée) : la bibliothèque d'une première visite
   et de « Rétablir les outils fournis ». Chez un utilisateur qui a déjà sa bibliothèque, les outils de base qu'il n'a
-  pas modifiés prennent les nouvelles valeurs du fichier, et un outil de base ajouté au fichier lui est ajouté une
+  pas modifiés prennent les nouvelles valeurs du fichier, ceux retirés du fichier disparaissent, et un outil de base ajouté au fichier lui est ajouté une
   fois (`builtInToolsSeen`) : un outil qu'il a supprimé ne revient pas. Garder les identifiants : opérations et projets
   y renvoient. Un outil invalide ou un identifiant répété est écarté et signalé dans la console.
+- **Une erreur de syntaxe (virgule oubliée entre deux outils…) rend tout le fichier illisible** : toutes les valeurs
+  du code s'appliquent alors, et la console du navigateur affiche une erreur avec la ligne en cause. Vérifier le
+  fichier avant de le mettre en ligne : `npm run check:defaults`, ou pour la copie du serveur
+  `PCBCAM_DEFAULTS=chemin/defaults.json npm run check:defaults`.
 - Le test `tests/unit/project/defaults.test.ts` vérifie que le fichier livré est lu sans erreur.
 
 ---

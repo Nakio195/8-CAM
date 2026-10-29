@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 import { defaultLibrary, type Tool } from "@cam/tools/index";
 import { BUILT_IN_DEFAULTS, parseAppDefaults } from "@project/index";
 
-const SITE_FILE = join(import.meta.dirname, "..", "..", "..", "public", "defaults.json");
+// npm run check:defaults checks this file; PCBCAM_DEFAULTS=path checks another one (the copy of the server)
+const SITE_FILE = process.env.PCBCAM_DEFAULTS ?? join(import.meta.dirname, "..", "..", "..", "public", "defaults.json");
 
 describe("site defaults", () =>
 {
@@ -14,8 +15,8 @@ describe("site defaults", () =>
         expect(issues).toEqual([]);
         expect(defaults.isolation.direction).toBe("climb");
         expect(defaults.machine).toMatchObject({ name: "SnapMaker", travelX: 400, postProfileId: "snapmaker-artisan" });
-        // The built-in tools of the site are those of the code to start with, marked built-in
-        expect(defaults.tools).toEqual(defaultLibrary());
+        expect(defaults.tools?.length).toBeGreaterThan(0);
+        expect(defaults.tools?.every((tool) => tool.builtIn)).toBe(true);
     });
 
     it("keeps the valid tools of the site, leaves out the others and says which", () =>
@@ -61,7 +62,10 @@ describe("site defaults", () =>
 
     it("falls back to the built-in defaults when the file cannot be read", () =>
     {
-        expect(parseAppDefaults("{ not json")).toEqual({ defaults: BUILT_IN_DEFAULTS, issues: ["file: not valid JSON"] });
+        const broken = parseAppDefaults("{ \"tools\": [ {} {} ] }");
+        expect(broken.defaults).toEqual(BUILT_IN_DEFAULTS);
+        expect(broken.issues).toHaveLength(1);
+        expect(broken.issues[0]).toMatch(/^file: not valid JSON, nothing of it is used \(.+\)$/);
         expect(parseAppDefaults("[]").issues).toEqual(["file: not an object"]);
     });
 });

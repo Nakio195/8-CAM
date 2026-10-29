@@ -30,7 +30,8 @@ class DefaultsState
             const { defaults, issues } = parseAppDefaults(await response.text());
             for (const issue of issues)
             {
-                console.warn(`pcbCAM defaults.json, built-in value kept: ${issue}`);
+                // A file that cannot be read at all drops every setting of the site: an error, not a warning
+                (issue.startsWith("file:") ? console.error : console.warn)(`pcbCAM defaults.json, built-in value kept: ${issue}`);
             }
             this.values = defaults;
         }

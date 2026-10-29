@@ -112,6 +112,9 @@ add_header Referrer-Policy "no-referrer" always;
   - ou l'exclure de la copie au déploiement, par exemple `rsync --exclude defaults.json`, et le modifier seulement sur
     le serveur.
 - Un réglage invalide dans ce fichier ne casse rien : il est ignoré et la console du navigateur dit lequel.
+- **Mais une erreur de syntaxe JSON (virgule oubliée…) fait ignorer tout le fichier.** Le vérifier avant chaque mise
+  en ligne : `npm run check:defaults` dans le dépôt, ou `PCBCAM_DEFAULTS=chemin/defaults.json npm run check:defaults`
+  pour une autre copie.
 - L'accès en écriture au serveur doit rester protégé, puisque ce fichier règle l'application de tout le monde.
 
 ## Mettre à jour le site
