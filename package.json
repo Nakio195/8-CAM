@@ -1,10 +1,10 @@
 {
-  "name": "8-cam",
+  "name": "pcbcam",
   "private": true,
   "version": "0.0.1",
   "description": "Web-based PCB CAM for 8 Fablab Drome: Gerber/Excellon to G-code, fully in the browser",
   "type": "module",
-  "license": "MIT",
+  "license": "CC-BY-SA-4.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

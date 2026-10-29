@@ -24,7 +24,7 @@ describe("project skeleton", () =>
 {
     it("exposes the application name and version from package.json", () =>
     {
-        expect(APP_NAME).toBe("8-CAM");
+        expect(APP_NAME).toBe("pcbCAM");
         expect(APP_VERSION).toBe(packageJson.version);
     });
 

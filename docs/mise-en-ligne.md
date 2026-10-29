@@ -1,10 +1,10 @@
-# 8-CAM : note pour la mise en ligne
+# pcbCAM : note pour la mise en ligne
 
-Note destinée à l'assistant qui gère mon serveur, pour m'aider à publier 8-CAM.
+Note destinée à l'assistant qui gère mon serveur, pour m'aider à publier pcbCAM.
 
 ## Ce qu'est le projet
 
-8-CAM est une application web de FAO pour circuits imprimés, faite pour 8 Fablab Drôme. Elle lit des fichiers Gerber
+pcbCAM est une application web de FAO pour circuits imprimés, faite pour 8 Fablab Drôme. Elle lit des fichiers Gerber
 et de perçage (Excellon) et calcule les parcours d'outil : isolation des pistes, perçage, détourage. Elle écrit ensuite
 le G-code pour la fraiseuse (GRBL, Marlin, LinuxCNC, Snapmaker Artisan).
 
@@ -103,7 +103,7 @@ add_header Referrer-Policy "no-referrer" always;
 ## Le fichier `defaults.json` : à gérer avec soin
 
 - `defaults.json` fixe pour **tous les utilisateurs** les réglages des nouvelles opérations (passes, sens d'usinage,
-  attaches…) et la machine proposée à une première visite (actuellement la Snapmaker Artisan).
+  attaches…), la machine proposée à une première visite (actuellement la Snapmaker Artisan) et les outils de base.
 - Je peux le modifier **directement sur le serveur**, sans reconstruire : le changement s'applique au prochain
   chargement de la page.
 - **Piège au redéploiement :** copier un nouveau `dist/` écrase `defaults.json` avec la version du dépôt

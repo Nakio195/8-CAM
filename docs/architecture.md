@@ -1,4 +1,4 @@
-# 8-CAM : architecture
+# pcbCAM : architecture
 
 > Analyse de la référence, choix techniques et organisation du dépôt (jalon J0).
 > Référence lue : `C:\Users\To\Desktop\FlatCAM-master` (FlatCAM Plus, Python / Shapely).
@@ -136,7 +136,7 @@ derrière la même interface si la mesure de J4 le demande.
 ## 3. Arborescence proposée
 
 ```
-8-CAM/
+pcbCAM/
   docs/                    architecture.md, décisions (ADR), ce document
   assets/brand/            logo et motifs fournis par To (non redessinés)
   public/fonts/            polices auto-hébergées
@@ -180,7 +180,7 @@ placé dans `cam` car c'est du calcul pur réutilisé par l'UI et les workers.
 3. Vitest + couverture, un test « fumée » par module (`core`, `parsers`, `cam`, `post`) pour que `npm test` soit vert.
 4. Squelette des dossiers ci-dessus avec un `index.ts` et un commentaire de rôle par module ; règle ESLint
    `import/no-restricted-paths` qui interdit au cœur d'importer `ui`, `render` ou `workers`.
-5. Page Svelte vide « 8-CAM » qui se lance avec `npm run dev`.
+5. Page Svelte vide « pcbCAM » qui se lance avec `npm run dev`.
 6. CI GitHub Actions (lint, typecheck, tests) — utile seulement si le dépôt est poussé sur GitHub.
 7. `docs/architecture.md` : version finale de ce document après vos retours.
 
@@ -194,7 +194,7 @@ Critère d'acceptation : `docs/architecture.md` validé, `npm test` vert.
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Framework UI     | Svelte 5                                                                                                                                                                                                                                                                                                                                                 |
 | Géométrie        | `clipper2-ts`, benchmark en J1, repli `clipper2-wasm` possible                                                                                                                                                                                                                                                                                           |
-| Dépôt            | git dans `Desktop\8-CAM`, un commit par étape importante ; CI GitHub Actions prête pour un futur dépôt distant                                                                                                                                                                                                                                           |
+| Dépôt            | git dans `Desktop\pcbCAM`, un commit par étape importante ; CI GitHub Actions prête pour un futur dépôt distant                                                                                                                                                                                                                                          |
 | Matière première | `ressources/` (fourni par To) n'est pas versionné ; les fichiers utilisés sont copiés dans `assets/brand/` et `tests/fixtures/`                                                                                                                                                                                                                          |
 | Fixtures         | `tests/fixtures/proteus/` : cuivre face inférieure FTDI_Max (Proteus 8.15, Gerber X2, `%FSLAX45Y45`, mm) et le G-code d'isolation FlatCAM Plus correspondant (préprocesseur `default`, outil 0,2072 mm, Z -0,2 en 2 passes) qui servira au test comparatif. D'autres fichiers (KiCad, Eagle, EasyEDA, Altium, Excellon) seront ajoutés au fil des jalons |
 | Charte           | logos SVG dans `assets/brand/` ; le PDF de la charte reste dans `ressources/` (relu en J4b)                                                                                                                                                                                                                                                              |
@@ -204,13 +204,13 @@ Critère d'acceptation : `docs/architecture.md` validé, `npm test` vert.
 Les dimensions machine ne sont **pas figées dans le code** : un modèle `MachineProfile` (dans `post/`, voir 15.4) contient au
 minimum
 
-| Champ                           | Description                      | Valeur par défaut (3018) |
-| ------------------------------- | -------------------------------- | ------------------------ |
-| `name`                          | nom du profil                    | « CNC 3018 »             |
-| `travelX`, `travelY`, `travelZ` | courses utiles (mm)              | 300 / 180 / 45           |
-| `safeZ`                         | hauteur de sécurité machine (mm) | 5                        |
-| `maxSpindleSpeed`               | vitesse broche maxi (tr/min)     | 12 000 (voir 15.4)       |
-| `maxFeedXY`, `maxFeedZ`         | avances maxi (mm/min)            | 1 500 / 500              |
+| Champ                           | Description                      | Valeur par défaut  |
+| ------------------------------- | -------------------------------- | ------------------ |
+| `name`                          | nom du profil                    | « Fraiseuse GRBL » |
+| `travelX`, `travelY`, `travelZ` | courses utiles (mm)              | 300 / 200 / 50     |
+| `safeZ`                         | hauteur de sécurité machine (mm) | 5                  |
+| `maxSpindleSpeed`               | vitesse broche maxi (tr/min)     | 12 000 (voir 15.4) |
+| `maxFeedXY`, `maxFeedZ`         | avances maxi (mm/min)            | 1 500 / 500        |
 
 Plusieurs profils peuvent coexister (une machine par profil), persistés dans IndexedDB, exportables en JSON et
 enregistrés dans le projet. La vérification de sécurité de la section 7 (limites de course, avances aberrantes) lit
@@ -468,7 +468,7 @@ automatique attend désormais une taille utilisable.
 | Rouge et texte blanc | blanc sur le rouge de la charte = 4,49:1, juste sous AA : les boutons à texte blanc utilisent un rouge un peu plus profond, `#d4083f` (5,38:1) ; le rouge de la charte reste pour le cuivre, la sélection et le graphisme. **À valider par To** |
 | Couleur seule        | jamais : stickers, messages et champs invalides portent toujours une icône ou un mot                                                                                                                                                            |
 | Motifs               | les logos d'habillage (facettes, pois, éclats) utilisés en masque CSS bicolore, seulement sur l'accueil et « À propos », à l'écart du texte, sans couper le lettrage du logo                                                                    |
-| Mise en page         | accueil en « jeu de moitiés » : identité à gauche (titre 8-CAM incliné de −10°, autorisé ici seulement), actions à droite                                                                                                                       |
+| Mise en page         | accueil en « jeu de moitiés » : identité à gauche (titre pcbCAM incliné de −10°, autorisé ici seulement), actions à droite                                                                                                                      |
 | Logos                | logo horizontal en haut à gauche (blanc par masque CSS), cartouche « 8FABLAB.FR » dans « À propos »                                                                                                                                             |
 
 ### 10.3 Composants de base (`src/ui/components/base/`)
@@ -931,7 +931,7 @@ en J10 avec le choix de l'origine.
 
 ### 16.4 Projet (`src/project/projectFile.ts`)
 
-- Fichier `.8cam.json` (`8cam-project`, version 1) : **contenu des fichiers importés**, affichage des couches,
+- Fichier `.pcbcam.json` (`8cam-project`, version 1) : **contenu des fichiers importés**, affichage des couches,
   épaisseur, bibliothèque d'outils, machine (et son post-processeur s'il est personnel), opérations avec leurs
   réglages (attaches comprises), origine, miroir et options d'export. Les résultats ne sont pas enregistrés : ils sont
   recalculés à l'ouverture.
@@ -1092,7 +1092,7 @@ Pas de documentation officielle complète : le profil s'appuie sur le **code sou
   champs sont complétés à l'ouverture.
 - **Vitesse de broche minimale** dans le profil machine (0 par défaut) : un outil plus lent est signalé, la machine
   le ferait tourner plus vite.
-- **Modèles de machine** : « Ajouter un modèle… » dans l'onglet Machine propose la CNC 3018 et la Snapmaker Artisan
+- **Modèles de machine** : « Ajouter un modèle… » dans l'onglet Machine propose une fraiseuse GRBL et la Snapmaker Artisan
   (400 x 400 mm, broche 8 000 à 18 000 tr/min, 3 000 mm/min, post-processeur Snapmaker). La course Z (60 mm) et la
   vitesse des rapides sont prudentes : à vérifier avec le module et la planche martyre en place.
 - Le lecteur de G-code connaît `M600`.
@@ -1212,11 +1212,16 @@ navigateur de chacun (un premier essai de réglages par utilisateur a été reti
 - Un réglage absent ou invalide garde la valeur du code (`BUILT_IN_DEFAULTS`, `src/project/defaults.ts`), et la
   console du navigateur dit lequel. Fichier absent ou illisible : toutes les valeurs du code.
 - Valeurs actuelles : isolation **en avalant (climb)**, comme FlatCAM ; le reste inchangé.
-- **Machine de base** (bloc `machine`, mêmes champs qu'un fichier `.8cam-machine.json` exporté de l'onglet Machine) :
+- **Machine de base** (bloc `machine`, mêmes champs qu'un fichier `.pcbcam-machine.json` exporté de l'onglet Machine) :
   celle d'un utilisateur qui n'a encore aucune machine enregistrée. Elle n'est pas enregistrée chez lui tant qu'il ne
   modifie pas ses machines, donc un changement du fichier s'applique encore ; un utilisateur qui a déjà ses machines
-  les garde. Bloc absent ou invalide : la CNC 3018 du code. Valeur actuelle : « SnapMaker » (400 x 400 mm,
+  les garde. Bloc absent ou invalide : la fraiseuse GRBL du code. Valeur actuelle : « SnapMaker » (400 x 400 mm,
   post-processeur Snapmaker Artisan).
+- **Outils de base** (bloc `tools`, mêmes champs qu'une bibliothèque exportée) : la bibliothèque d'une première visite
+  et de « Rétablir les outils fournis ». Chez un utilisateur qui a déjà sa bibliothèque, les outils de base qu'il n'a
+  pas modifiés prennent les nouvelles valeurs du fichier, et un outil de base ajouté au fichier lui est ajouté une
+  fois (`builtInToolsSeen`) : un outil qu'il a supprimé ne revient pas. Garder les identifiants : opérations et projets
+  y renvoient. Un outil invalide ou un identifiant répété est écarté et signalé dans la console.
 - Le test `tests/unit/project/defaults.test.ts` vérifie que le fichier livré est lu sans erreur.
 
 ---
@@ -1226,7 +1231,7 @@ navigateur de chacun (un premier essai de réglages par utilisateur a été reti
 L'application tourne entièrement dans le navigateur : pas de serveur applicatif, pas de compte, aucun fichier envoyé.
 Les risques viennent des **fichiers ouverts** (qui peuvent venir de n'importe qui) et de l'**hébergement**.
 
-### 24.1 Projets partagés (`.8cam.json`)
+### 24.1 Projets partagés (`.pcbcam.json`)
 
 - Tout le contenu est vérifié avant usage (`parseProject`) : épaisseur, couches, réglages d'export, chaque outil
   (lu comme un outil importé puis `validateTool`), la machine (`importMachine`), le post-processeur
@@ -1283,3 +1288,16 @@ add_header Referrer-Policy "no-referrer" always;
 - `styleguide.html` est publiée avec l'application (page interne, sans danger).
 - Dépendances : `npm audit` sans vulnérabilité pour ce qui est publié ; 2 alertes faibles dans les outils de
   développement (`deepmerge`), non publiés.
+
+---
+
+## 25. Nom, machine de référence et licence
+
+- Le logiciel s'appelle **pcbCAM** (anciennement 8-CAM) : titre, aide, en-tête du G-code, fichiers enregistrés
+  (`.pcbcam.json`, `.pcbcam-machine.json`, `.pcbcam-post.json`), lanceur `Lancer pcbCAM.bat`. Les identifiants
+  internes ne changent pas pour que les fichiers et réglages déjà enregistrés restent lisibles : formats
+  `8cam-project`, `8cam-machine`, `8cam-post`, `8cam-tools`, base IndexedDB `8cam`, clés `8cam.*`.
+- Plus de référence à la CNC 3018 : la machine du code (utilisée quand le site n'en fixe aucune) est une « Fraiseuse
+  GRBL » générique (300 x 200 x 50 mm) ; les conseils de l'aide parlent de petite CNC de loisir.
+- Licence **CC BY-SA 4.0** (`LICENSE`), lien vers le code source et la licence dans « À propos ». Hors licence : les
+  éléments de marque du 8 Fablab Drôme (`assets/brand/`), les polices (SIL OFL) et les dépendances.

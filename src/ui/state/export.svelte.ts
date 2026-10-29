@@ -103,8 +103,8 @@ class ExportState
 
     public defaultName(): string
     {
-        const first = project.layers[0]?.file.fileName ?? "8-CAM";
-        return first.replace(/\.[^.]+$/, "").replace(/\s*-?\s*(CADCAM\s+)?(Bottom|Top)\s+Copper$/i, "").trim() || "8-CAM";
+        const first = project.layers[0]?.file.fileName ?? "pcbCAM";
+        return first.replace(/\.[^.]+$/, "").replace(/\s*-?\s*(CADCAM\s+)?(Bottom|Top)\s+Copper$/i, "").trim() || "pcbCAM";
     }
 
     public async run(): Promise<void>

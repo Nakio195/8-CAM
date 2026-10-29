@@ -18,7 +18,7 @@
     function save(): void
     {
         const name = (exportState.name.trim() || exportState.defaultName()).replace(/[^\w.-]+/g, "_");
-        downloadText(`${name}.8cam.json`, projectText());
+        downloadText(`${name}.pcbcam.json`, projectText());
         message = { tone: "success", text: t("projectFile.saved") };
     }
 

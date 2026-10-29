@@ -14,6 +14,8 @@ import {
 import { loadSetting, saveSetting } from "./storage";
 
 const STORAGE_KEY = "toolLibrary";
+/** Ids of the built-in tools of the site already given to this user: one the user removed does not come back. */
+const SEEN_KEY = "builtInToolsSeen";
 
 function newId(): string
 {
@@ -25,7 +27,8 @@ function newId(): string
 /** Starting values of a new tool of the given type, close to the built-in ones. */
 export function blankTool(type: ToolType): Tool
 {
-    const base = defaultLibrary().find((tool) => tool.type === type) ?? (defaultLibrary()[0] as Tool);
+    const builtIns = toolLibrary.builtIns;
+    const base = builtIns.find((tool) => tool.type === type) ?? (builtIns[0] ?? (defaultLibrary()[0] as Tool));
     return { ...duplicateTool(base, newId()), name: "", notes: "" };
 }
 
@@ -35,7 +38,12 @@ class ToolLibraryState
     /** False when the browser refused to store the library (private browsing): changes last for this session only. */
     public persistent = $state(true);
 
+    /** Built-in tools: those of the site (defaults.json) once read, else those of the code. */
+    public builtIns: Tool[] = $state.raw(defaultLibrary());
+
     private mLoaded = false;
+    /** True once a library of the user was read from storage. */
+    private mStored = false;
 
     public async load(): Promise<void>
     {
@@ -48,6 +56,7 @@ class ToolLibraryState
         if (Array.isArray(stored) && stored.length > 0)
         {
             this.tools = stored.map(cleanToolNumbers);
+            this.mStored = true;
         }
     }
 
@@ -90,7 +99,29 @@ class ToolLibraryState
 
     public reset(): void
     {
-        this.set(defaultLibrary());
+        this.set([...this.builtIns]);
+    }
+
+    /**
+     * Built-in tools chosen by the site. A first visit gets them as they are, not stored, so a later change of the site
+     * file still applies. A stored library gets the new values of its built-in tools (those the user changed are their
+     * own, no longer built-in) and the built-in tools it has never had; one the user removed stays removed.
+     */
+    public async useSiteTools(tools: readonly Tool[]): Promise<void>
+    {
+        this.builtIns = [...tools];
+        if (!this.mStored)
+        {
+            this.tools = [...tools];
+            return;
+        }
+        const seen = new Set((await loadSetting<string[]>(SEEN_KEY)) ?? []);
+        const site = new Map(tools.map((tool) => [tool.id, tool]));
+        const updated = this.tools.map((tool) => (tool.builtIn ? site.get(tool.id) ?? tool : tool));
+        const missing = tools.filter((tool) => !seen.has(tool.id) && !this.tools.some((entry) => entry.id === tool.id));
+        // Kept in memory only: the user's file is written when they change something
+        this.tools = [...updated, ...missing];
+        void saveSetting(SEEN_KEY, [...new Set([...seen, ...site.keys()])]);
     }
 
     public exportJson(): string
@@ -113,6 +144,7 @@ class ToolLibraryState
     private set(tools: Tool[]): void
     {
         this.tools = tools;
+        this.mStored = true;
         // IndexedDB clones what it stores and refuses reactive proxies: always hand it plain data
         void saveSetting(STORAGE_KEY, $state.snapshot(tools)).then((saved) =>
         {

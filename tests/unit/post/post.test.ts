@@ -115,7 +115,7 @@ describe("golden G-code", () =>
         expect(grbl).not.toMatch(/M0?6\b/);
         expect((grbl.match(/^G01 [XY][^F]*$/gm) ?? []).length).toBeGreaterThan(5);
         // Marlin: ';' comments, feed on every move, M400 before stopping the spindle, dwell in milliseconds
-        expect(marlin).toMatch(/^; 8-CAM 0\.0\.1 - Marlin$/m);
+        expect(marlin).toMatch(/^; pcbCAM 0\.0\.1 - Marlin$/m);
         expect(marlin).toMatch(/^M400\nM5$/m);
         expect(marlin).toMatch(/^G4 P500$/m);
         expect(marlin).toMatch(/^G0 Z15\.0000 F1000\.0$/m);
@@ -247,7 +247,7 @@ describe("Snapmaker Artisan", () =>
         // Fastest spindle 12 000 rpm out of 18 000
         expect(lines).toContain(";power(%): 67");
         expect(lines).toContain(";jog_speed(mm/minute): 3000");
-        expect(lines.indexOf(";Header End")).toBeLessThan(lines.findIndex((line) => line.startsWith("; 8-CAM")));
+        expect(lines.indexOf(";Header End")).toBeLessThan(lines.findIndex((line) => line.startsWith("; pcbCAM")));
         // Spindle in rpm, pause for the tool change, no arc, nothing the firmware refuses
         expect(output.text).toMatch(/^M3 S12000$/m);
         // No pause for the first tool, mounted and zeroed before the file starts; one for each of the two others

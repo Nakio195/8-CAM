@@ -159,7 +159,7 @@ class MachineState
         return machine;
     }
 
-    /** New machine from a preset (CNC 3018, Snapmaker Artisan...), made active. */
+    /** New machine from a preset (GRBL machine, Snapmaker Artisan...), made active. */
     public addPreset(preset: MachineProfile): MachineProfile
     {
         const machine = { ...preset, id: newId("machine") };

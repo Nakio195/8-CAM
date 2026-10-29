@@ -19,7 +19,7 @@ export interface MachinePosition
 
 /**
  * Rapid speed assumed for time estimates when no machine profile is given (the user interface passes the rapid speed
- * of the active machine): a cautious value for a 3018 CNC, mm/min, the same in XY and Z.
+ * of the active machine): a cautious value for a small hobby CNC, mm/min, the same in XY and Z.
  */
 export const DEFAULT_RAPID_FEED = 1000;
 

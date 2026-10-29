@@ -23,7 +23,7 @@ export interface PostJob
     operations: PostOperation[];
     /** Given, not read from the clock, so that tests can compare whole files. */
     date: Date;
-    /** Version of 8-CAM written in the header. */
+    /** Version of pcbCAM written in the header. */
     version: string;
     /** Instructions written in the header comments, e.g. which tool to mount and which zero to set. */
     notes?: string[];
@@ -330,7 +330,7 @@ export function writeGcode(job: PostJob, profile: PostProfile, machine: MachineP
         }
     }
 
-    writer.comment(`8-CAM ${job.version} - ${profile.name}`);
+    writer.comment(`pcbCAM ${job.version} - ${profile.name}`);
     writer.comment(`Job: ${job.name}`);
     for (const note of job.notes ?? [])
     {

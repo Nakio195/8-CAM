@@ -147,7 +147,7 @@
             <p class="bebas" style:font-size="40px">Isolation · Perçage · Détourage</p>
             <p class="bebas" style:font-size="24px">0,1 mm · 30° · 10 000 tr/min</p>
             <p class="note">{t("sg.homeTitle")}</p>
-            <p class="bebas slanted">8-CAM</p>
+            <p class="bebas slanted">pcbCAM</p>
             <p class="note">{t("sg.body")}</p>
             {#each [300, 400, 500, 600, 700, 800] as weight (weight)}
                 <p style:font-weight={weight}>{weight} — Le V-bit de 30° grave une piste de 0,2 mm sur du FR4.</p>

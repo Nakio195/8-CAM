@@ -110,13 +110,19 @@
     {
         document.documentElement.lang = i18n.locale;
         // The analysis needs the tool library even before the Tools tab is opened
-        void toolLibrary.load();
         // A first visit takes the machine chosen by the site, once both the stored machines and the site file are read
         void Promise.all([machineState.load(), defaults.load()]).then(() =>
         {
             if (defaults.values.machine)
             {
                 machineState.useSiteMachine(defaults.values.machine);
+            }
+        });
+        void Promise.all([toolLibrary.load(), defaults.load()]).then(() =>
+        {
+            if (defaults.values.tools)
+            {
+                void toolLibrary.useSiteTools(defaults.values.tools);
             }
         });
         // Development helper: ?load=url1,url2 imports files served by the dev server (performance checks)

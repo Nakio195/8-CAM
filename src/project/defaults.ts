@@ -1,10 +1,11 @@
-// Default settings of new operations, and the machine of a first visit, for every user of the site. The maintainer sets them in public/defaults.json,
-// read when the application starts: changing a value on the server needs no new build. A setting missing or invalid
+// Default settings of new operations, the machine of a first visit and the built-in tools, for every user of the site.
+// The maintainer sets them in public/defaults.json, read when the application starts: changing a value on the server needs no new build. A setting missing or invalid
 // in the file keeps the value built into the code, and is reported in the browser console.
 
 import { DEFAULT_CUTOUT, type CutoutParams } from "@cam/cutout/index";
 import { DEFAULT_DRILLING, type DrillingParams } from "@cam/drilling/index";
 import { DEFAULT_ISOLATION, type IsolationParams } from "@cam/isolation/index";
+import { readTool, validateTool, type Tool } from "@cam/tools/index";
 import { importMachine, type MachineProfile } from "@post/index";
 import { boolean, direction, integer, number, oneOf, type Check } from "./checks";
 
@@ -15,10 +16,15 @@ export interface AppDefaults
     drilling: Pick<DrillingParams, "cycle" | "peckDepth" | "dwell">;
     cutout: Pick<CutoutParams, "mode" | "direction" | "tabWidth" | "tabHeight"> & { tabCount: number };
     /**
-     * Machine of a user who has none stored yet (first visit), same fields as a machine file (.8cam-machine.json).
-     * Null: the built-in CNC 3018. Users keep the machines they already have.
+     * Machine of a user who has none stored yet (first visit), same fields as a machine file (.pcbcam-machine.json).
+     * Null: the generic GRBL machine of the code. Users keep the machines they already have.
      */
     machine: MachineProfile | null;
+    /**
+     * Built-in tool library (same fields as a library file): the tools of a first visit, of "restore the built-in
+     * tools", and the new values of built-in tools the user has not changed. Null: the library of the code.
+     */
+    tools: Tool[] | null;
 }
 
 export const BUILT_IN_DEFAULTS: Readonly<AppDefaults> = {
@@ -37,7 +43,8 @@ export const BUILT_IN_DEFAULTS: Readonly<AppDefaults> = {
         tabHeight: DEFAULT_CUTOUT.tabHeight,
         tabCount: 4
     },
-    machine: null
+    machine: null,
+    tools: null
 };
 
 /** Values accepted for each setting of the file. */
@@ -46,6 +53,35 @@ const CHECKS: { [Kind in "isolation" | "drilling" | "cutout"]: Record<keyof AppD
     drilling: { cycle: oneOf("simple", "peck"), peckDepth: number(0.01, 10), dwell: number(0, 60) },
     cutout: { mode: oneOf("shape", "rectangle"), direction, tabWidth: number(0, 50), tabHeight: number(0, 10), tabCount: integer(0, 50) }
 };
+
+/** Tools of the site file, each checked like an imported tool; invalid ones and repeated ids are left out. */
+function siteTools(values: unknown, issues: string[]): Tool[] | null
+{
+    if (!Array.isArray(values))
+    {
+        issues.push("tools: not a list");
+        return null;
+    }
+    const tools: Tool[] = [];
+    values.forEach((value, index) =>
+    {
+        const tool = readTool(value);
+        const problems = tool ? validateTool(tool).map((issue) => issue.code) : ["missing or invalid field"];
+        if (tool && tools.some((entry) => entry.id === tool.id))
+        {
+            problems.push(`id ${tool.id} repeated`);
+        }
+        if (tool && problems.length === 0)
+        {
+            tools.push({ ...tool, builtIn: true });
+        }
+        else
+        {
+            issues.push(`tools[${index}]: ${problems.join(", ")}`);
+        }
+    });
+    return tools.length > 0 ? tools : null;
+}
 
 /**
  * Defaults of the file over the built-in ones. Issues name each setting left at its built-in value: "cutout.tabCount",
@@ -72,6 +108,11 @@ export function parseAppDefaults(text: string): { defaults: AppDefaults; issues:
     {
         if (kind.startsWith("$"))
         {
+            continue;
+        }
+        if (kind === "tools")
+        {
+            defaults.tools = siteTools(values, issues);
             continue;
         }
         if (kind === "machine")

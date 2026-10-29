@@ -5,7 +5,10 @@
     import { i18n } from "../state/i18n.svelte";
     import Button from "./base/Button.svelte";
 
-    // "About" screen (specification 6.13): the "8FABLAB.FR" cartouche and a two-colour brand pattern in the background
+    // "About" screen (specification 6.13): the "8FABLAB.FR" cartouche and a two-colour brand pattern in the background,
+    // the source code and the licence
+    const SOURCE_URL = "https://github.com/Nakio195/8-CAM";
+    const LICENSE_URL = "https://creativecommons.org/licenses/by-sa/4.0/deed.fr";
     let { open = $bindable(false) }: { open: boolean } = $props();
 
     const t = i18n.t;
@@ -36,15 +39,26 @@
         <p>{t("about.body")}</p>
         <p>{t("about.privacy")}</p>
         <p class="muted">{t("about.reference")}</p>
+        <p class="muted">
+            {t("about.license")}
+            <a class="inline" href={LICENSE_URL} target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>
+        </p>
         <p class="muted">{t("app.version", { version: APP_VERSION })}</p>
         <div class="actions">
             <a class="link" href="https://8fablab.fr" target="_blank" rel="noopener noreferrer">{t("about.site")}</a>
+            <a class="link" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">{t("about.source")}</a>
             <Button variant="primary" help="" onclick={() => (open = false)}>{t("about.close")}</Button>
         </div>
     </div>
 </dialog>
 
 <style>
+    .inline
+    {
+        color: inherit;
+        font-weight: 600;
+    }
+
     dialog
     {
         position: relative;

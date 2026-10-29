@@ -3,7 +3,7 @@
   "version": 1,
   "id": "grbl-1.1",
   "name": "GRBL 1.1",
-  "description": "CNC 3018 and most hobby controllers. GRBL refuses M6: the tool change stops the spindle, rises to the safe height and pauses (M0) so the tool can be changed by hand.",
+  "description": "Most hobby milling machines. GRBL refuses M6: the tool change stops the spindle, rises to the safe height and pauses (M0) so the tool can be changed by hand.",
   "builtIn": true,
   "units": "mm",
   "decimals": { "coordinates": 4, "feed": 1 },

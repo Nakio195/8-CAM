@@ -1,4 +1,4 @@
-// Post-processor profiles shipped with 8-CAM (specification 6.8), from FlatCAM preprocessors GRBL_11.py, Marlin.py
+// Post-processor profiles shipped with pcbCAM (specification 6.8), from FlatCAM preprocessors GRBL_11.py, Marlin.py
 // and default.py, and for the Snapmaker Artisan from Snapmaker sources (Artisan-Controller firmware, Artisan screen app,
 // snapmaker_cnc_post_process): see docs/architecture.md section 19.
 

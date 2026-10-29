@@ -99,7 +99,7 @@ export function serializeProject(project: ProjectFile): string
     return `${JSON.stringify(project)}\n`;
 }
 
-/** Quick test, before parsing a whole file: does this text look like an 8-CAM project? */
+/** Quick test, before parsing a whole file: does this text look like an pcbCAM project? */
 export function looksLikeProject(text: string): boolean
 {
     return /^\s*\{/.test(text) && text.slice(0, 200).includes(`"${PROJECT_FORMAT}"`);

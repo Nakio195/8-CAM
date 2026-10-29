@@ -36,15 +36,18 @@ export interface MachineProfile
 
 export type ToolChangeMode = "pause" | "separateFiles";
 
-/** CNC 3018 with GRBL: the machine of 8 Fablab Drôme, values to be checked on each machine. */
+/**
+ * Small hobby milling machine with GRBL: the machine used when the site sets none (defaults.json), and the values given
+ * to fields missing from older machine files. Values to be checked on each machine.
+ */
 export const DEFAULT_MACHINE: Readonly<MachineProfile> = {
     format: MACHINE_FORMAT,
     version: MACHINE_VERSION,
-    id: "cnc-3018",
-    name: "CNC 3018",
+    id: "grbl-machine",
+    name: "Fraiseuse GRBL",
     travelX: 300,
-    travelY: 180,
-    travelZ: 45,
+    travelY: 200,
+    travelZ: 50,
     safeZ: 5,
     // The built-in corn cob mill runs at 12 000 rpm (specification 6.10)
     maxSpindleSpeed: 12_000,

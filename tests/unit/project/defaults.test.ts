@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { defaultLibrary, type Tool } from "@cam/tools/index";
 import { BUILT_IN_DEFAULTS, parseAppDefaults } from "@project/index";
 
 const SITE_FILE = join(import.meta.dirname, "..", "..", "..", "public", "defaults.json");
@@ -13,6 +14,23 @@ describe("site defaults", () =>
         expect(issues).toEqual([]);
         expect(defaults.isolation.direction).toBe("climb");
         expect(defaults.machine).toMatchObject({ name: "SnapMaker", travelX: 400, postProfileId: "snapmaker-artisan" });
+        // The built-in tools of the site are those of the code to start with, marked built-in
+        expect(defaults.tools).toEqual(defaultLibrary());
+    });
+
+    it("keeps the valid tools of the site, leaves out the others and says which", () =>
+    {
+        const [vbit, endmill] = defaultLibrary() as [Tool, Tool];
+        const { defaults, issues } = parseAppDefaults(JSON.stringify({
+            tools: [{ ...vbit, builtIn: false }, { ...endmill, feedXY: -1 }, { ...vbit }, { id: "x" }]
+        }));
+        expect(defaults.tools).toEqual([vbit]);
+        expect(issues).toEqual([
+            "tools[1]: feedNotPositive",
+            `tools[2]: id ${vbit.id} repeated`,
+            "tools[3]: missing or invalid field"
+        ]);
+        expect(parseAppDefaults(JSON.stringify({ tools: {} }))).toMatchObject({ defaults: { tools: null }, issues: ["tools: not a list"] });
     });
 
     it("refuses an invalid machine and keeps the built-in one", () =>

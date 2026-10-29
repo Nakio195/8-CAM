@@ -31,7 +31,7 @@ function builtIn(id: string, type: ToolType, values: Partial<Tool> & { diameter:
 }
 
 /**
- * Starting values for a 3018 CNC on FR4 (specification 6.10 table), clearly marked as to be validated on each machine.
+ * Starting values for a small hobby CNC on FR4 (specification 6.10 table), clearly marked as to be validated on each machine.
  * V-bit depths: middle of the advised range (0.05 to 0.1 mm for the 20° one).
  */
 export function defaultLibrary(): Tool[]

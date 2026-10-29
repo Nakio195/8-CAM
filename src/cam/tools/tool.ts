@@ -32,7 +32,7 @@ export interface Tool
     travelZ: number;
     safeZ: number;
     usages: ToolUsage[];
-    /** Built-in starting values for a 3018 CNC on FR4: to be validated on each machine (specification 6.10). */
+    /** Built-in starting values for a hobby CNC on FR4: to be validated on each machine (specification 6.10). */
     builtIn: boolean;
     notes: string;
 }

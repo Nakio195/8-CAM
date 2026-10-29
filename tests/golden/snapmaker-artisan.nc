@@ -12,10 +12,10 @@
 ;jog_speed(mm/minute): 1000
 ;power(%): 100
 ;Header End
-; 8-CAM 0.0.1 - Snapmaker Artisan [CNC 200 W]
+; pcbCAM 0.0.1 - Snapmaker Artisan [CNC 200 W]
 ; Job: Golden test board
 ; Date: 2026-10-28 14:05
-; Machine: CNC 3018, travel X300 Y180 Z45 mm
+; Machine: Fraiseuse GRBL, travel X300 Y200 Z50 mm
 ; Units: mm
 ; X range: -1.750 .. 13.750 mm
 ; Y range: -1.750 .. 11.750 mm

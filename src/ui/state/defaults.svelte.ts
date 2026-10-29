@@ -7,7 +7,16 @@ class DefaultsState
 {
     public values: AppDefaults = $state(structuredClone(BUILT_IN_DEFAULTS) as AppDefaults);
 
-    public async load(): Promise<void>
+    private mLoading: Promise<void> | null = null;
+
+    /** Reads the site file once; every caller waits for the same reading. */
+    public load(): Promise<void>
+    {
+        this.mLoading ??= this.read();
+        return this.mLoading;
+    }
+
+    private async read(): Promise<void>
     {
         try
         {
@@ -15,19 +24,19 @@ class DefaultsState
             const response = await fetch(`${import.meta.env.BASE_URL}defaults.json`, { cache: "no-cache" });
             if (!response.ok)
             {
-                console.warn(`8-CAM: defaults.json not found (HTTP ${response.status}), built-in defaults used`);
+                console.warn(`pcbCAM: defaults.json not found (HTTP ${response.status}), built-in defaults used`);
                 return;
             }
             const { defaults, issues } = parseAppDefaults(await response.text());
             for (const issue of issues)
             {
-                console.warn(`8-CAM defaults.json, built-in value kept: ${issue}`);
+                console.warn(`pcbCAM defaults.json, built-in value kept: ${issue}`);
             }
             this.values = defaults;
         }
         catch (error)
         {
-            console.warn("8-CAM: defaults.json could not be read, built-in defaults used", error);
+            console.warn("pcbCAM: defaults.json could not be read, built-in defaults used", error);
         }
     }
 }

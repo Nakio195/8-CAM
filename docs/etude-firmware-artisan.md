@@ -1,6 +1,6 @@
 # Étude : refaire le zéro Z pendant une pause CNC sur la Snapmaker Artisan
 
-Étude de faisabilité, sans changement du code de 8-CAM. Sources lues le 28/10/2026 sur GitHub (branche `main`) :
+Étude de faisabilité, sans changement du code de pcbCAM. Sources lues le 28/10/2026 sur GitHub (branche `main`) :
 `Snapmaker/Artisan-Controller` (firmware du contrôleur, Marlin 2.1) et `Snapmaker/Snapmaker-Artisan-Screen-App`
 (application Android de l'écran). Les numéros de ligne renvoient à ces versions.
 
@@ -9,16 +9,16 @@ est 0,1 mm aujourd'hui), refaire le zéro Z avec le nouvel outil, puis reprendre
 
 ## En bref
 
-| Partie                                | Constat                                                                                                    | Difficulté                                         |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| Contrôleur : mouvement et `G92` en pause | **pas refusés** ; le nouveau zéro reste après la reprise                                                    | rien à changer pour cela                           |
-| Contrôleur : reprise                  | revient au Z **machine** enregistré : un outil plus long descend plus bas, de la différence de longueur    | petit correctif (~20 lignes) + compilation, essais |
-| Écran : jog et « zéro Z » en pause    | code simple à écrire (composants existants)                                                                | 1 à 2 jours de code                                |
-| Écran : installation                  | **bloquante** : l'app tourne avec l'identité système et la clé de Snapmaker, une APK modifiée est refusée | pas faisable sans les clés de Snapmaker            |
-| Contrôleur : installation             | le paquet de mise à jour n'a qu'une somme de contrôle, pas de signature : un firmware modifié semble installable | possible, risque de machine bloquée            |
+| Partie                                   | Constat                                                                                                          | Difficulté                                         |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Contrôleur : mouvement et `G92` en pause | **pas refusés** ; le nouveau zéro reste après la reprise                                                         | rien à changer pour cela                           |
+| Contrôleur : reprise                     | revient au Z **machine** enregistré : un outil plus long descend plus bas, de la différence de longueur          | petit correctif (~20 lignes) + compilation, essais |
+| Écran : jog et « zéro Z » en pause       | code simple à écrire (composants existants)                                                                      | 1 à 2 jours de code                                |
+| Écran : installation                     | **bloquante** : l'app tourne avec l'identité système et la clé de Snapmaker, une APK modifiée est refusée        | pas faisable sans les clés de Snapmaker            |
+| Contrôleur : installation                | le paquet de mise à jour n'a qu'une somme de contrôle, pas de signature : un firmware modifié semble installable | possible, risque de machine bloquée                |
 
 Conclusion : **modifier l'écran n'est pas réaliste** ; modifier le seul contrôleur est possible mais n'apporte pas
-l'interface (pas de jog sur l'écran en pause). La voie raisonnable reste celle de 8-CAM aujourd'hui (un fichier par
+l'interface (pas de jog sur l'écran en pause). La voie raisonnable reste celle de pcbCAM aujourd'hui (un fichier par
 outil), ou un pilotage depuis un ordinateur (section 4).
 
 ## 1. Le contrôleur (firmware)
@@ -53,7 +53,7 @@ suivantes du fichier. C'est **l'écran** qui ne les propose pas (section 2).
 - À la reprise, `resume_env` (`job_ctrl.cpp`, l. 467-621) va en X/Y puis **redescend au Z machine enregistré**
   (`dest.z = _env.current_pos.z`, l. 564-565), puis le fichier continue.
 
-Avec 8-CAM, le `M600` suit une montée à la hauteur de sécurité (Zs). Si le nouvel outil dépasse de Δ de plus que
+Avec pcbCAM, le `M600` suit une montée à la hauteur de sécurité (Zs). Si le nouvel outil dépasse de Δ de plus que
 l'ancien, la reprise met sa pointe à **Zs − Δ** au-dessus de la carte, puis le G-code suivant (en coordonnées de
 travail, avec le nouveau zéro) est juste. Conséquence :
 
@@ -64,7 +64,7 @@ travail, avec le nouveau zéro) est juste. Conséquence :
 tâche CNC, corriger la cible : `dest.z = _env.current_pos.z + (position_shift.z − shift_enregistré)`, c'est-à-dire
 revenir au même Z **de travail** et non au même Z machine. Par prudence : descendre d'abord au-dessus de la cible,
 puis finir lentement. Environ 20 lignes dans `job_ctrl.h` / `job_ctrl.cpp`. Une autre solution, plus simple, est de
-ne pas redescendre du tout en CNC et de laisser le G-code redescendre lui-même (8-CAM écrit déjà un rapide à la
+ne pas redescendre du tout en CNC et de laisser le G-code redescendre lui-même (pcbCAM écrit déjà un rapide à la
 hauteur de sécurité après chaque changement d'outil).
 
 ### 1.3 Reprise après coupure de courant
@@ -117,7 +117,7 @@ documenté et risqué).
 
 - **Format** : un fichier `Artisan_V<version>_<date>.bin` (ex. `Artisan_V2.8.0_20260210.bin`) qui peut contenir le
   firmware du contrôleur, ceux des modules et l'APK de l'écran (`snapmaker/scripts/pack_for_hmi.py`, types 0, 1 et 3,
-  l. 20-23 et 86-165). Installation : clé USB dans le contrôleur, *Settings > Firmware Update > Local Update > USB*.
+  l. 20-23 et 86-165). Installation : clé USB dans le contrôleur, _Settings > Firmware Update > Local Update > USB_.
 - **Pas de signature** : le script ne calcule qu'une somme des octets (`pack_minor_image`) ; le contrôleur vérifie
   l'en-tête et cette somme (`snapmaker/src/service/upgrade/upgrade_host_to_controller.cpp`, l. 133-178 et 227-236) ;
   l'app de l'écran lit l'en-tête sans vérification cryptographique
@@ -139,11 +139,11 @@ documenté et risqué).
 
 ### 4.1 Estimation
 
-| Travail                                                     | Effort                                            |
-| ----------------------------------------------------------- | ------------------------------------------------- |
-| Correctif de reprise dans le contrôleur (1.2, 1.3)           | 0,5 jour de code ; 2 à 4 jours avec la compilation, le paquet et les essais sur la machine |
-| Jog et zéro Z sur l'écran de pause, pas fins (2.1)           | 1 à 2 jours de code, **non installable** (2.2)    |
-| Suivre les mises à jour officielles                         | refaire le correctif à chaque version             |
+| Travail                                            | Effort                                                                                     |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Correctif de reprise dans le contrôleur (1.2, 1.3) | 0,5 jour de code ; 2 à 4 jours avec la compilation, le paquet et les essais sur la machine |
+| Jog et zéro Z sur l'écran de pause, pas fins (2.1) | 1 à 2 jours de code, **non installable** (2.2)                                             |
+| Suivre les mises à jour officielles                | refaire le correctif à chaque version                                                      |
 
 ### 4.2 Risques
 
@@ -156,7 +156,7 @@ documenté et risqué).
 
 ### 4.3 Alternatives sans modifier le firmware
 
-1. **Un fichier par outil** (ce que fait 8-CAM, `docs/architecture.md` section 19.5) : zéro Z refait avec les écrans
+1. **Un fichier par outil** (ce que fait pcbCAM, `docs/architecture.md` section 19.5) : zéro Z refait avec les écrans
    officiels entre deux fichiers. Aucun risque nouveau ; seule limite, le pas de 0,1 mm. Méthode du papier : descendre
    à 0,1 mm jusqu'au contact puis retirer l'épaisseur de la feuille (~0,1 mm) dans le zéro ; ou une cale d'épaisseur
    connue.
@@ -170,7 +170,7 @@ documenté et risqué).
    nouveau zéro est pris en compte. Logiciels possibles : Luban (connexion série, panneau de contrôle et pause), ou un
    hôte Marlin (Pronterface, OctoPrint, avec des pas de jog réglables ou des commandes tapées). À vérifier sur la
    machine : un débranchement du câble arrête la tâche sans reprise possible ; un utilisateur signale que la console de
-   Luban 4.15.2 répond « ok » sans agir, alors que Pronterface fonctionnait. 8-CAM pourrait alors écrire un repère de
+   Luban 4.15.2 répond « ok » sans agir, alors que Pronterface fonctionnait. pcbCAM pourrait alors écrire un repère de
    pause propre à l'hôte au lieu de `M600`.
 4. **Luban en Wi-Fi pendant une pause de l'écran** : le contrôleur accepte déplacement et origine en pause (1.1). Si
    le panneau de contrôle de Luban reste utilisable pendant une tâche en pause, le zéro Z pourrait être refait ainsi,

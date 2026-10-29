@@ -134,7 +134,7 @@
         const text = machineState.exportProfile(profile.id);
         if (text)
         {
-            downloadText(`${profile.name.replace(/[^\w.-]+/g, "_")}.8cam-post.json`, text);
+            downloadText(`${profile.name.replace(/[^\w.-]+/g, "_")}.pcbcam-post.json`, text);
         }
     }
 
@@ -175,7 +175,7 @@
         </select>
         <Button variant="ghost" icon="upload" help="" onclick={() => machineInput.click()}>{t("machine.import")}</Button>
         <Button variant="ghost" icon="download" help=""
-            onclick={() => downloadText(`${machine.name.replace(/[^\w.-]+/g, "_")}.8cam-machine.json`, machineState.exportMachine())}>
+            onclick={() => downloadText(`${machine.name.replace(/[^\w.-]+/g, "_")}.pcbcam-machine.json`, machineState.exportMachine())}>
             {t("machine.export")}
         </Button>
         {#if machineState.machines.length > 1}
