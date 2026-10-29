@@ -9,6 +9,8 @@ Tout se passe dans le navigateur : rien à installer, pas de compte, et **aucun 
 Il reprend le fonctionnement de [FlatCAM](http://flatcam.org/) (version FlatCAM Plus), avec ses algorithmes réécrits
 en TypeScript. Le but est d'avoir une interface plus simple, guidée pas à pas, pour une première carte.
 
+Il est disponible en ligne à cette adresse : https://pcbcam.8fablab.fr
+
 ## Ce que fait pcbCAM
 
 **Lecture des fichiers**
