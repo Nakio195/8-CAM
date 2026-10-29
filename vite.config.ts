@@ -53,6 +53,7 @@ export default defineConfig({
     worker: { format: "es" },
     test: {
         include: ["tests/unit/**/*.test.ts"],
+        setupFiles: ["tests/setup/locale.ts"],
         environment: "node",
         coverage: {
             provider: "v8",
