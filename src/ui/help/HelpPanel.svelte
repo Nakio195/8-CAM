@@ -51,7 +51,7 @@
 </script>
 
 {#if help.panelOpen}
-    <div class="panel" bind:this={panel} use:modalLayer tabindex="-1" role="dialog" aria-modal="false" aria-labelledby="help-panel-title"
+    <div class="panel" bind:this={panel} data-modal-dock use:modalLayer tabindex="-1" role="dialog" aria-modal="false" aria-labelledby="help-panel-title"
         onkeydown={(event) => event.key === "Escape" && help.closePanel()}>
         <header>
             <Icon name="book" />
@@ -129,6 +129,14 @@
         color: var(--text);
         border-left: 1px solid var(--border);
         box-shadow: var(--shadow);
+    }
+
+    /* Inside an open dialog (tool editor...): docked on the right of the screen, the dialog moved aside to make room */
+    .panel:global([data-in-modal])
+    {
+        position: fixed;
+        height: 100vh;
+        max-height: none;
     }
 
     .panel:focus

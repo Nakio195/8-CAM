@@ -214,3 +214,15 @@ textarea
     transition: none !important;
   }
 }
+
+/* A dialog open while the help panel is shown makes room for it on the right (help/modalLayer.ts): both stay readable.
+   On a narrow screen there is no room, the panel covers the dialog as before. */
+@media (min-width: 900px)
+{
+    /* The dialog is centred in the space left of the panel (a modal dialog is fixed, centred by its auto margins) */
+    dialog[data-help-docked]:modal
+    {
+        right: 400px;
+        max-width: calc(100vw - 400px - 24px);
+    }
+}
